@@ -407,17 +407,6 @@ async function initFirebase(){
 }
 initFirebase();
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC-zzdN5aBvZ0SNABA2nUvThNOvcC5MGbA",
-  authDomain: "lpamanagement.firebaseapp.com",
-  projectId: "lpamanagement",
-  storageBucket: "lpamanagement.firebasestorage.app",
-  messagingSenderId: "401279993684",
-  appId: "1:401279993684:web:124f9827bff9a41cf22ac1",
-};
-const fbApp = initializeApp(firebaseConfig);
-const db = getFirestore(fbApp);
-
 const API = "https://script.google.com/macros/s/AKfycbyE7Vqczhafvx74GRIkz_8bc2D9ip4SW_QFW-sEK95fo3s7JkOxdR-HDk1F1X4urw8B/exec";
 const qs = new URLSearchParams(location.search);
 
