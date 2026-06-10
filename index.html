@@ -390,10 +390,13 @@
 <script>
 // Firebase loaded dynamically
 let db = null;
+let storage = null;
 async function initFirebase(){
   const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
   const { getFirestore, collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const { getStorage, ref, uploadString, getDownloadURL } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
   window._fbFirestore = { getFirestore, collection, query, orderBy, getDocs };
+  window._fbStorage = { getStorage, ref, uploadString, getDownloadURL };
   const firebaseConfig = {
     apiKey: "AIzaSyC-zzdN5aBvZ0SNABA2nUvThNOvcC5MGbA",
     authDomain: "lpamanagement.firebaseapp.com",
@@ -404,6 +407,7 @@ async function initFirebase(){
   };
   const fbApp = initializeApp(firebaseConfig);
   db = getFirestore(fbApp);
+  storage = getStorage(fbApp);
 }
 initFirebase();
 
@@ -742,6 +746,15 @@ window.loadAdvHistory=async function(){
 window.clearAdvFilters=function(){$('ahPerson').value='';$('ahFrom').value='';$('ahTo').value='';loadAdvHistory();};
 
 // ── Signatures ────────────────────────────────────────────
+async function uploadDepositImage(base64DataUrl, fileName){
+  if(!storage||!window._fbStorage) throw new Error('Storage not ready');
+  const {ref, uploadString, getDownloadURL} = window._fbStorage;
+  const storageRef = ref(storage, `deposits/${Date.now()}_${fileName}`);
+  await uploadString(storageRef, base64DataUrl, 'data_url');
+  const url = await getDownloadURL(storageRef);
+  return url;
+}
+
 async function saveSignatureToFirebase({type, person, amount, method, paidBy, note, signatureBase64}){
   try{
     const { addDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
@@ -912,7 +925,17 @@ window.addDeposit=async function(){
     });
   }
   msg.textContent='Saving...';
-  const res=await jsonp('add_deposit',{token,customer_name:name,res_date:resDate,covers,amount,method,note,image_base64:imageBase64});
+  let imageUrl='';
+  if($('depImage').files[0]){
+    try{
+      msg.textContent='Uploading image...';
+      imageUrl = await uploadDepositImage(imageBase64, $('depImage').files[0].name);
+    }catch(e){
+      msg.textContent='Image upload failed: '+e.message;
+      return;
+    }
+  }
+  const res=await jsonp('add_deposit',{token,customer_name:name,res_date:resDate,covers,amount,method,note,image_url:imageUrl});
   if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
   msg.textContent='✅ Deposit saved!';
   $('depName').value='';$('depDate').value='';$('depCovers').value='';$('depAmount').value='';$('depNote').value='';$('depImgPreview').innerHTML='';$('depImage').value='';
@@ -939,7 +962,7 @@ window.loadDeposits=async function(){
       </div>
       ${d.note?`<div class="muted" style="margin-top:5px;">📝 ${d.note}</div>`:''}
       ${d.added_by?`<div class="muted">Added by: ${d.added_by}</div>`:''}
-      ${d.image_base64?`<img src="${d.image_base64}" class="dep-img" onclick="openDepImg('${d.image_base64}')" />`:''}`;
+      ${d.image_url?`<img src="${d.image_url}" class="dep-img" onclick="openDepImg('${d.image_url}')" />`:''}`;
     box.appendChild(div);
   });
 };
