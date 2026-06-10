@@ -104,8 +104,7 @@
   <div class="card tabs">
     <div class="tabs-main">
       <button id="tabStatus" class="primary">Status</button>
-      <button id="tabPayments">Payments</button>
-      <button id="tabAdvances">Advances</button>
+      <button id="tabHistory">History</button>
       <button id="tabSignatures">Signatures</button>
       <button id="tabSettings">Settings</button>
     </div>
@@ -129,80 +128,60 @@
     <div id="peopleList"></div>
   </div>
 
-  <!-- PAYMENTS sub tabs -->
-  <div class="card hidden" id="payTabsCard">
-    <div class="tabs-sub">
-      <button id="subPayCurrent" class="primary">Payments</button>
-      <button id="subPayWageHistory">Wage History</button>
+  <!-- PAYMENTS - wage history only -->
+  <!-- hidden inputs kept for JS compatibility -->
+  <select id="payPerson" style="display:none"></select>
+  <input id="payAmount" style="display:none" />
+  <select id="payMethod" style="display:none"></select>
+  <input id="payBy" style="display:none" />
+  <input id="payNote" style="display:none" />
+  <div id="dueLine" style="display:none"></div>
+  <div id="payMsg" style="display:none"></div>
+  <div id="pmMsg" style="display:none"></div>
+  <div id="pmList" style="display:none"></div>
+  <!-- HISTORY TAB -->
+  <div class="card hidden" id="historyCard">
+    <div class="tabs-sub" style="margin-bottom:14px;">
+      <button id="subHistWage" class="primary">Wage History</button>
+      <button id="subHistAdv">Advance History</button>
     </div>
-  </div>
-  <div class="card hidden" id="payCard">
-    <div style="font-weight:900;margin-bottom:8px;">Add Payment</div>
-    <div class="grid2">
-      <div><div class="muted">Person</div><select id="payPerson"></select></div>
-      <div><div class="muted">Amount</div><input id="payAmount" inputmode="decimal" placeholder="200" /></div>
+
+    <!-- Wage History -->
+    <div id="wageHistorySection">
+      <div class="wh-filters">
+        <div><div class="muted">Person</div><select id="whPerson"><option value="">All</option></select></div>
+        <div><div class="muted">From</div><input id="whFrom" type="date" /></div>
+        <div><div class="muted">To</div><input id="whTo" type="date" /></div>
+        <div class="wh-actions"><button id="btnWhApply" class="primary">Apply</button><button id="btnWhClear">Clear</button></div>
+      </div>
+      <div class="muted" id="whMsg"></div>
+      <div id="wageHistoryList"></div>
     </div>
-    <div class="muted" id="dueLine" style="margin-top:6px;">Due: —</div>
-    <div style="margin-top:10px;"><div class="muted">Payment Method</div>
-      <select id="payMethod"><option value="CASH">Cash</option><option value="BANK">Bank</option></select>
+
+    <!-- Advance History -->
+    <div id="advHistorySection" style="display:none;">
+      <div class="ah-filters">
+        <div><div class="muted">Person</div><select id="ahPerson"><option value="">All</option></select></div>
+        <div><div class="muted">From</div><input id="ahFrom" type="date" /></div>
+        <div><div class="muted">To</div><input id="ahTo" type="date" /></div>
+        <div class="ah-actions"><button id="btnAhApply" class="primary">Apply</button><button id="btnAhClear">Clear</button></div>
+      </div>
+      <div class="muted" id="ahMsg"></div>
+      <div id="advanceHistoryList"></div>
     </div>
-    <div style="margin-top:10px;"><div class="muted">Paid By</div><input id="payBy" placeholder="Saruhan" /></div>
-    <div style="margin-top:10px;"><div class="muted">Note</div><input id="payNote" placeholder="Payment note" /></div>
-    <div style="margin-top:12px;"><button id="btnAddPayment" class="primary">Add Payment</button></div>
-    <div class="muted" id="payMsg" style="margin-top:8px;"></div>
-    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;"/>
-    <div style="font-weight:900;margin-bottom:8px;">This Month Payments</div>
-    <div class="muted" id="pmMsg"></div>
-    <div id="pmList"></div>
-  </div>
-  <div class="card hidden" id="wageHistoryCard">
-    <div style="font-weight:900;margin-bottom:8px;">Wage History</div>
-    <div class="wh-filters">
-      <div><div class="muted">Person</div><select id="whPerson"><option value="">All</option></select></div>
-      <div><div class="muted">From</div><input id="whFrom" type="date" /></div>
-      <div><div class="muted">To</div><input id="whTo" type="date" /></div>
-      <div class="wh-actions"><button id="btnWhApply" class="primary">Apply</button><button id="btnWhClear">Clear</button></div>
-    </div>
-    <div class="muted" id="whMsg"></div>
-    <div id="wageHistoryList"></div>
   </div>
 
-  <!-- ADVANCES sub tabs -->
-  <div class="card hidden" id="advTabsCard">
-    <div class="tabs-sub">
-      <button id="subAdvCurrent" class="primary">Advances</button>
-      <button id="subAdvHistory">Advance History</button>
-    </div>
-  </div>
-  <div class="card hidden" id="advanceCard">
-    <div style="font-weight:900;margin-bottom:8px;">Add Advance</div>
-    <div class="grid2">
-      <div><div class="muted">Person</div><select id="advPerson"></select></div>
-      <div><div class="muted">Amount</div><input id="advAmount" inputmode="decimal" placeholder="100" /></div>
-    </div>
-    <div style="margin-top:10px;"><div class="muted">Method</div>
-      <select id="advMethod"><option value="CASH">Cash</option><option value="BANK">Bank</option></select>
-    </div>
-    <div style="margin-top:10px;"><div class="muted">Given By</div><input id="advBy" placeholder="Saruhan" /></div>
-    <div style="margin-top:10px;"><div class="muted">Note</div><input id="advNote" placeholder="Advance note" /></div>
-    <div style="margin-top:12px;"><button id="btnAddAdvance" class="primary">Add Advance</button></div>
-    <div class="muted" id="advMsg" style="margin-top:8px;"></div>
-    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;"/>
-    <div style="font-weight:900;margin-bottom:8px;">This Month Advances</div>
-    <div class="muted" id="amMsg"></div>
-    <div id="amList"></div>
-  </div>
-  <div class="card hidden" id="advanceHistoryCard">
-    <div style="font-weight:900;margin-bottom:8px;">Advance History</div>
-    <div class="ah-filters">
-      <div><div class="muted">Person</div><select id="ahPerson"><option value="">All</option></select></div>
-      <div><div class="muted">From</div><input id="ahFrom" type="date" /></div>
-      <div><div class="muted">To</div><input id="ahTo" type="date" /></div>
-      <div class="ah-actions"><button id="btnAhApply" class="primary">Apply</button><button id="btnAhClear">Clear</button></div>
-    </div>
-    <div class="muted" id="ahMsg"></div>
-    <div id="advanceHistoryList"></div>
-  </div>
+  <!-- ADVANCES - history only -->
+  <!-- hidden inputs for JS compatibility -->
+  <select id="advPerson" style="display:none"></select>
+  <input id="advAmount" style="display:none" />
+  <select id="advMethod" style="display:none"><option value="CASH">Cash</option><option value="BANK">Bank</option></select>
+  <input id="advBy" style="display:none" />
+  <input id="advNote" style="display:none" />
+  <div id="advMsg" style="display:none"></div>
+  <div id="amMsg" style="display:none"></div>
+  <div id="amList" style="display:none"></div>
+
 
   <!-- SIGNATURES TAB -->
   <div class="card hidden" id="signaturesCard">
@@ -331,21 +310,16 @@
   function prevStart(d=new Date()){ return new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,10); }
   function prevEnd(d=new Date()){ return new Date(d.getFullYear(),d.getMonth(),0).toISOString().slice(0,10); }
 
-  let currentView='status', paySubView='current', advSubView='current';
+  let currentView='status';
   let peopleDueMap={}, lastRole='', allPeopleData=[];
 
   function setView(view){
     currentView=view;
     ['summaryCard','peopleCard'].forEach(id=>document.getElementById(id).classList.toggle('hidden',view!=='status'));
-    document.getElementById('payTabsCard').classList.toggle('hidden',view!=='payments');
-    document.getElementById('payCard').classList.toggle('hidden',!(view==='payments'&&paySubView==='current'));
-    document.getElementById('wageHistoryCard').classList.toggle('hidden',!(view==='payments'&&paySubView==='history'));
-    document.getElementById('advTabsCard').classList.toggle('hidden',view!=='advances');
-    document.getElementById('advanceCard').classList.toggle('hidden',!(view==='advances'&&advSubView==='current'));
-    document.getElementById('advanceHistoryCard').classList.toggle('hidden',!(view==='advances'&&advSubView==='history'));
+    document.getElementById('historyCard').classList.toggle('hidden',view!=='history');
     document.getElementById('signaturesCard').classList.toggle('hidden',view!=='signatures');
     document.getElementById('settingsCard').classList.toggle('hidden',view!=='settings');
-    ['tabStatus','tabPayments','tabAdvances','tabSignatures','tabSettings'].forEach(id=>{
+    ['tabStatus','tabHistory','tabSignatures','tabSettings'].forEach(id=>{
       document.getElementById(id).classList.toggle('primary', id==='tab'+view.charAt(0).toUpperCase()+view.slice(1));
     });
     const isAdmin=lastRole==='ADMIN';
@@ -409,9 +383,6 @@
     const p=document.getElementById('payPerson').value;
     document.getElementById('dueLine').textContent=p?`Due: ${fmt(peopleDueMap[p]?.cash_due||0)}`:'Due: —';
 
-    const canPay=['ADMIN','PAYER','EDITOR'].includes(data.me.role);
-    document.getElementById('payCard').classList.toggle('hidden',!(currentView==='payments'&&paySubView==='current'&&canPay));
-    document.getElementById('advanceCard').classList.toggle('hidden',!(currentView==='advances'&&advSubView==='current'&&canPay));
     document.getElementById('adminCard').classList.toggle('hidden',!(currentView==='settings'&&data.me.role==='ADMIN'));
   }
 
@@ -595,24 +566,43 @@
   };
 
   document.getElementById('tabStatus').onclick=async()=>{setView('status');await refresh();};
-  document.getElementById('tabPayments').onclick=async()=>{setView('payments');await refresh();await loadPaymentsThisMonth();};
-  document.getElementById('tabAdvances').onclick=async()=>{setView('advances');await refresh();await loadAdvancesThisMonth();};
+  document.getElementById('tabHistory').onclick=async()=>{
+    setView('history');
+    document.getElementById('whFrom').value=prevStart();document.getElementById('whTo').value=prevEnd();
+    await loadWageHistory({from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+  };
   document.getElementById('tabSignatures').onclick=async()=>{setView('signatures');await refresh();await loadSignatures();};
   document.getElementById('tabSettings').onclick=async()=>{setView('settings');await refresh();};
 
+  // History sub-tabs
+  let histSubTab = 'wage';
+  document.getElementById('subHistWage').onclick=async()=>{
+    histSubTab='wage';
+    document.getElementById('subHistWage').classList.add('primary');
+    document.getElementById('subHistAdv').classList.remove('primary');
+    document.getElementById('wageHistorySection').style.display='';
+    document.getElementById('advHistorySection').style.display='none';
+    document.getElementById('whFrom').value=prevStart();document.getElementById('whTo').value=prevEnd();
+    await loadWageHistory({from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+  };
+  document.getElementById('subHistAdv').onclick=async()=>{
+    histSubTab='advance';
+    document.getElementById('subHistAdv').classList.add('primary');
+    document.getElementById('subHistWage').classList.remove('primary');
+    document.getElementById('advHistorySection').style.display='';
+    document.getElementById('wageHistorySection').style.display='none';
+    document.getElementById('ahFrom').value=prevStart();document.getElementById('ahTo').value=prevEnd();
+    await loadAdvanceHistory({from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});
+  };
+
   document.getElementById('btnRefresh').onclick=async()=>{
     await refresh();
-    if(currentView==='payments'&&paySubView==='current')await loadPaymentsThisMonth();
-    if(currentView==='payments'&&paySubView==='history')await loadWageHistory({person:document.getElementById('whPerson').value,from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
-    if(currentView==='advances'&&advSubView==='current')await loadAdvancesThisMonth();
-    if(currentView==='advances'&&advSubView==='history')await loadAdvanceHistory({person:document.getElementById('ahPerson').value,from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});
+    if(currentView==='history'&&histSubTab==='wage')await loadWageHistory({person:document.getElementById('whPerson').value,from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+    if(currentView==='history'&&histSubTab==='advance')await loadAdvanceHistory({person:document.getElementById('ahPerson').value,from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});
     if(currentView==='signatures')await loadSignatures();
   };
 
-  document.getElementById('subPayCurrent').onclick=async()=>{paySubView='current';document.getElementById('subPayCurrent').classList.add('primary');document.getElementById('subPayWageHistory').classList.remove('primary');setView('payments');await refresh();await loadPaymentsThisMonth();};
-  document.getElementById('subPayWageHistory').onclick=async()=>{paySubView='history';document.getElementById('subPayWageHistory').classList.add('primary');document.getElementById('subPayCurrent').classList.remove('primary');setView('payments');document.getElementById('whFrom').value=prevStart();document.getElementById('whTo').value=prevEnd();await loadWageHistory({from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});};
-  document.getElementById('subAdvCurrent').onclick=async()=>{advSubView='current';document.getElementById('subAdvCurrent').classList.add('primary');document.getElementById('subAdvHistory').classList.remove('primary');setView('advances');await refresh();await loadAdvancesThisMonth();};
-  document.getElementById('subAdvHistory').onclick=async()=>{advSubView='history';document.getElementById('subAdvHistory').classList.add('primary');document.getElementById('subAdvCurrent').classList.remove('primary');setView('advances');document.getElementById('ahFrom').value=prevStart();document.getElementById('ahTo').value=prevEnd();await loadAdvanceHistory({from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});};
+
 
   document.getElementById('btnWhApply').onclick=async()=>loadWageHistory({person:document.getElementById('whPerson').value,from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
   document.getElementById('btnWhClear').onclick=async()=>{document.getElementById('whPerson').value='';document.getElementById('whFrom').value='';document.getElementById('whTo').value='';await loadWageHistory({});};
@@ -625,27 +615,7 @@
     localStorage.setItem("wage_token",t);tokenMsg.textContent="Saved. Refreshing...";await refresh();
   };
 
-  document.getElementById('btnAddPayment').onclick=async()=>{
-    const token=getToken(),person=document.getElementById('payPerson').value,amount=document.getElementById('payAmount').value;
-    const paid_by=document.getElementById('payBy').value.trim(),note=document.getElementById('payNote').value.trim(),method=document.getElementById('payMethod').value;
-    const msg=document.getElementById('payMsg');msg.textContent="Sending...";
-    const res=await jsonp("add_payment",{token,person,amount,paid_by,note,method});
-    if(!res.ok){msg.textContent="Error: "+(res.error||"");return;}
-    msg.textContent="Added ✅";
-    document.getElementById('payAmount').value='';document.getElementById('payNote').value='';
-    await refresh();await loadPaymentsThisMonth();
-  };
 
-  document.getElementById('btnAddAdvance').onclick=async()=>{
-    const token=getToken(),person=document.getElementById('advPerson').value,amount=document.getElementById('advAmount').value;
-    const paid_by=document.getElementById('advBy').value.trim(),note=document.getElementById('advNote').value.trim(),method=document.getElementById('advMethod').value;
-    const msg=document.getElementById('advMsg');msg.textContent="Sending...";
-    const res=await jsonp("add_advance",{token,person,amount,paid_by,note,method});
-    if(!res.ok){msg.textContent="Error: "+(res.error||"");return;}
-    msg.textContent="Added ✅";
-    document.getElementById('advAmount').value='';document.getElementById('advNote').value='';
-    await refresh();await loadAdvancesThisMonth();
-  };
 
   document.getElementById('btnAddUser').onclick=async()=>{
     const token=getToken(),name=document.getElementById('newUserName').value.trim(),role=document.getElementById('newUserRole').value;
