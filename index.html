@@ -130,7 +130,7 @@
 
   <!-- Status -->
   <div id="wagesStatus">
-    <div class="card">
+    <div class="card" id="totalsCard">
       <div class="card-title">Totals</div>
       <div class="grid2">
         <div class="total-box"><div class="total-label">Total WAGE</div><div class="total-val" id="tWage">—</div></div>
@@ -438,7 +438,13 @@ let currentPage='wages', currentMe=null, peopleDueMap={}, modalPerson=null;
 function hasPerm(perm){
   if(!currentMe)return false;
   if(currentMe.role==='ADMIN')return true;
-  return (currentMe.permissions||'').split(',').map(s=>s.trim()).includes(perm);
+  const perms=(currentMe.permissions||'').split(',').map(s=>s.trim());
+  if(perm==='wages') return perms.some(p=>['wages_pay','wages_view','wages_full'].includes(p));
+  if(perm==='wages_pay') return perms.some(p=>['wages_pay','wages_full'].includes(p));
+  if(perm==='wages_view') return perms.some(p=>['wages_view','wages_full'].includes(p));
+  if(perm==='deposits') return perms.some(p=>['deposits','deposits_view','deposits_full'].includes(p));
+  if(perm==='signatures_view') return perms.includes('signatures_view');
+  return perms.includes(perm);
 }
 
 // ── Page Nav ──────────────────────────────────────────────
@@ -491,11 +497,18 @@ async function refreshSummary(){
   $('meLine').textContent=`${data.me.name} • ${data.me.role}`;
   $('lastUpdated').textContent='Last updated: '+new Date().toLocaleString('en-GB');
 
-  const hasWages=hasPerm('wages'), hasDeps=hasPerm('deposits'), hasAdv=hasPerm('wages');
+  const hasWages=hasPerm('wages'), hasDeps=hasPerm('deposits');
+  const canPay=data.canPay||currentMe.role==='ADMIN';
+  const canView=data.canViewAmounts||currentMe.role==='ADMIN';
+  const hasSigView=hasPerm('signatures_view')||currentMe.role==='ADMIN';
   $('tabWages').style.display=hasWages?'':'none';
-  $('tabAdvances').style.display=hasAdv?'':'none';
+  $('tabAdvances').style.display=canPay?'':'none';
   $('tabDeposits').style.display=hasDeps?'':'none';
   $('adminSection').classList.toggle('hidden',data.me.role!=='ADMIN');
+  // Show/hide totals based on view permission
+  $('totalsCard')&&$('totalsCard').classList.toggle('hidden',!canView);
+  // Show/hide signatures sub-tab
+  if($('wSubSignatures')) $('wSubSignatures').style.display=hasSigView?'':'none';
 
   if(data.totals){
     $('tWage').textContent=fmt(data.totals.total_wage);
@@ -514,13 +527,14 @@ async function refreshSummary(){
   const list=$('peopleList'); list.innerHTML='';
   sorted.filter(p=>Math.abs(Number(p.cash_due||0))>=0.005).forEach(p=>{
     const div=document.createElement('div'); div.className='person-row';
+    const showDetails = p.wage_total !== null;
     div.innerHTML=`<div style="flex:1;min-width:0;">
       <div class="row-name">${p.person}</div>
-      <div class="chips">
+      ${showDetails?`<div class="chips">
         <span class="chip">W: ${fmt(p.wage_total)}</span>
         <span class="chip">💵 ${fmt(p.cash_paid_total)}</span>
         <span class="chip">🏦 ${fmt(p.bank_paid_total)}</span>
-      </div>
+      </div>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
       <span style="font-size:16px;font-weight:800;${p.cash_due<0?'color:#c00':''}">${fmt(p.cash_due)}</span>
@@ -964,8 +978,17 @@ window.loadUsers=async function(){
     div.innerHTML=`
       <div style="font-size:14px;font-weight:700;">${u.name} <span style="font-size:11px;color:#aaa;">(${u.role})</span></div>
       <div style="font-size:11px;color:#aaa;font-family:monospace;">${u.token}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">WAGES</div>
       <div class="perm-row">
-        ${['wages','deposits'].map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" data-perm="${p}" onclick="togglePerm('${u.token}','${p}',this)">${p}</button>`).join('')}
+        ${['wages_pay','wages_view'].map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" data-perm="${p}" onclick="togglePerm('${u.token}','${p}',this)">${p==='wages_pay'?'💵 Pay':'👁 View'}</button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">DEPOSITS</div>
+      <div class="perm-row">
+        ${['deposits','deposits_view'].map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" data-perm="${p}" onclick="togglePerm('${u.token}','${p}',this)">${p==='deposits'?'📋 Full':'👁 View'}</button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">OTHER</div>
+      <div class="perm-row">
+        <button class="perm-btn ${perms.includes('signatures_view')?'on':''}" data-perm="signatures_view" onclick="togglePerm('${u.token}','signatures_view',this)">✍️ Signatures</button>
         <button class="perm-btn" style="${u.active?'background:#1a6a1a;color:#fff;border-color:#1a6a1a':'background:#c00;color:#fff;border-color:#c00'}" onclick="toggleActive('${u.token}',${u.active},this)">${u.active?'✅ Active':'❌ Inactive'}</button>
         <button class="perm-btn" style="background:#007AFF;color:#fff;border-color:#007AFF;" onclick="changeRole('${u.token}','${u.name}','${u.role}')">👤 ${u.role}</button>
         <button class="perm-btn" style="background:#fff0f0;color:#c00;border-color:#ffcccc;" onclick="deleteUser('${u.token}','${u.name}')">🗑 Delete</button>
