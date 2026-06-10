@@ -237,6 +237,665 @@
       <div class="tab-row">
         <button class="tab-btn active" id="modalTabPay" onclick="switchModalTab('payment')">💵 Payment</button>
         <button class="tab-btn" id="modalTabAdv" onclick="switchModalTab('advance')">💳 Advance</button>
+        <button class="tab-btn" id="modalTabDebt" onclick="switchModalTab('debt')">🔴 Collect Debt</button>
+      </div>
+      <div class="grid2">
+        <div>
+          <label class="form-label">Amount</label>
+          <input id="modalAmount" inputmode="decimal" placeholder="0.00" />
+        </div>
+        <div>
+          <label class="form-label">Method</label>
+          <select id="modalMethod"><option value="CASH">Cash</option><option value="BANK">Bank</option></select>
+        </div>
+      </div>
+      <label class="form-label" id="modalByLabel">Paid By</label>
+      <input id="modalBy" />
+      <label class="form-label">Note</label>
+      <input id="modalNote" placeholder="Optional" />
+      <button class="add-btn" id="modalAddBtn">Add Payment</button>
+      <div class="form-msg" id="modalMsg"></div>
+    </div>
+  </div>
+
+  <!-- Signature image modal -->
+  <div id="sigImgModal" class="sig-modal-overlay hidden">
+    <div class="sig-modal-box">
+      <button class="sig-modal-close" onclick="closeSigImgModal()">✕ Close</button>
+      <div style="font-weight:700;font-size:16px;" id="sigImgTitle"></div>
+      <div class="muted" id="sigImgMeta"></div>
+      <img id="sigImgEl" style="max-width:100%;border-radius:8px;margin-top:10px;" />
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC-zzdN5aBvZ0SNABA2nUvThNOvcC5MGbA",
+    authDomain: "lpamanagement.firebaseapp.com",
+    projectId: "lpamanagement",
+    storageBucket: "lpamanagement.firebasestorage.app",
+    messagingSenderId: "401279993684",
+    appId: "1:401279993684:web:124f9827bff9a41cf22ac1",
+  };
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+
+  const API_URL = "https://script.google.com/macros/s/AKfycbyE7Vqczhafvx74GRIkz_8bc2D9ip4SW_QFW-sEK95fo3s7JkOxdR-HDk1F1X4urw8B/exec";
+  const qs = new URLSearchParams(location.search);
+  const tokenInput = document.getElementById('tokenInput');
+  const tokenMsg = document.getElementById('tokenMsg');
+
+  function fmt(n){ return Number(n||0).toLocaleString('en-GB',{style:'currency',currency:'GBP'}); }
+
+  function jsonp(action, params={}){
+    return new Promise((resolve,reject)=>{
+      const cb="__cb_"+Math.random().toString(36).slice(2);
+      const u=new URL(API_URL);
+      u.searchParams.set("action",action);u.searchParams.set("callback",cb);
+      Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+      const s=document.createElement("script");
+      window[cb]=(d)=>{delete window[cb];s.remove();resolve(d);};
+      s.onerror=()=>{delete window[cb];s.remove();reject(new Error("JSONP failed"));};
+      s.src=u.toString();document.body.appendChild(s);
+    });
+  }
+
+  function getToken(){ return tokenInput.value.trim(); }
+  function shortMethod(t){ const s=String(t||'').toUpperCase(); if(s.includes('BANK'))return'Bank'; if(s.includes('CASH'))return'Cash'; return''; }
+  function inRange(d,f,t){ if(!d)return false; if(f&&d<f)return false; if(t&&d>t)return false; return true; }
+  function monthStart(d=new Date()){ return new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10); }
+  function monthEnd(d=new Date()){ return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10); }
+  function prevStart(d=new Date()){ return new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,10); }
+  function prevEnd(d=new Date()){ return new Date(d.getFullYear(),d.getMonth(),0).toISOString().slice(0,10); }
+
+  let currentView='status';
+  let peopleDueMap={}, lastRole='', allPeopleData=[];
+
+  function setView(view){
+    currentView=view;
+    ['summaryCard','peopleCard'].forEach(id=>document.getElementById(id).classList.toggle('hidden',view!=='status'));
+    document.getElementById('historyCard').classList.toggle('hidden',view!=='history');
+    document.getElementById('signaturesCard').classList.toggle('hidden',view!=='signatures');
+    document.getElementById('settingsCard').classList.toggle('hidden',view!=='settings');
+    ['tabStatus','tabHistory','tabSignatures','tabSettings'].forEach(id=>{
+      document.getElementById(id).classList.toggle('primary', id==='tab'+view.charAt(0).toUpperCase()+view.slice(1));
+    });
+    const isAdmin=lastRole==='ADMIN';
+    document.getElementById('adminCard').classList.toggle('hidden',!(view==='settings'&&isAdmin));
+  }
+
+  async function refresh(){
+    const token=getToken(); if(!token)return;
+    const data=await jsonp("summary",{token});
+    if(!data.ok){tokenMsg.textContent="Error: "+(data.error||"");return;}
+    tokenMsg.textContent=""; lastRole=data.me.role||'';
+    document.getElementById('meLine').textContent=`${data.me.name} • ${data.me.role}`;
+    document.getElementById('tWage').textContent=fmt(data.totals.total_wage);
+    document.getElementById('tCashPaid').textContent=fmt(data.totals.total_cash_paid);
+    document.getElementById('tCashDue').textContent=fmt(data.totals.total_cash_due);
+    document.getElementById('tBankPaid').textContent=fmt(data.totals.total_bank_paid);
+    document.getElementById('lastUpdated').textContent='Last updated: '+new Date().toLocaleString('en-GB');
+
+    allPeopleData=data.people||[];
+    peopleDueMap={};
+    const sorted=[...allPeopleData].sort((a,b)=>{
+      const az=Math.abs(Number(a.cash_due||0))<0.005, bz=Math.abs(Number(b.cash_due||0))<0.005;
+      if(az!==bz)return az?1:-1; return Number(b.cash_due)-Number(a.cash_due);
+    });
+    sorted.forEach(p=>{peopleDueMap[p.person]=p;});
+
+    // Build people list with clickable rows
+    const list=document.getElementById('peopleList'); list.innerHTML='';
+    sorted.filter(p=>Math.abs(Number(p.cash_due||0))>=0.005).forEach(p=>{
+      const div=document.createElement('div'); div.className='person-row';
+      div.innerHTML=`
+        <div>
+          <b>${p.person}</b>
+          <div class="person-chips">
+            <span class="chip">W: ${fmt(p.wage_total)}</span>
+            <span class="chip">💵 ${fmt(p.cash_paid_total)}</span>
+            <span class="chip">🏦 ${fmt(p.bank_paid_total)}</span>
+          </div>
+        </div>
+        <div class="person-right">
+          <span style="font-size:16px;font-weight:800;${p.cash_due<0?'color:#c00':''}">${fmt(p.cash_due)}</span>
+          <span class="arrow">›</span>
+        </div>`;
+      div.onclick=()=>openPersonModal(p, data.me);
+      list.appendChild(div);
+    });
+
+    // Update selects
+    const selects=['payPerson','advPerson','whPerson','ahPerson','sigPerson'];
+    selects.forEach(id=>{
+      const sel=document.getElementById(id); const prev=sel.value;
+      sel.innerHTML=id.includes('Person')&&(id==='whPerson'||id==='ahPerson'||id==='sigPerson')?'<option value="">All</option>':'';
+      sorted.forEach(p=>{const o=document.createElement('option');o.value=p.person;o.textContent=p.person;sel.appendChild(o);});
+      if(Array.from(sel.options).some(o=>o.value===prev))sel.value=prev;
+    });
+
+    const payBy=document.getElementById('payBy'); if(!payBy.value)payBy.value=data.me.name;
+    const advBy=document.getElementById('advBy'); if(!advBy.value)advBy.value=data.me.name;
+    document.getElementById('modalBy').value=document.getElementById('modalBy').value||data.me.name;
+
+    const p=document.getElementById('payPerson').value;
+    document.getElementById('dueLine').textContent=p?`Due: ${fmt(peopleDueMap[p]?.cash_due||0)}`:'Due: —';
+
+    document.getElementById('adminCard').classList.toggle('hidden',!(currentView==='settings'&&data.me.role==='ADMIN'));
+  }
+
+  // ── Person Modal ─────────────────────────────────────────
+  let modalPerson=null, modalTab='payment', modalMe=null;
+
+  window.switchModalTab = function(tab){
+    modalTab=tab;
+    document.getElementById('modalTabPay').classList.toggle('active',tab==='payment');
+    document.getElementById('modalTabAdv').classList.toggle('active',tab==='advance');
+    document.getElementById('modalTabDebt').classList.toggle('active',tab==='debt');
+    if(tab==='payment'){ document.getElementById('modalByLabel').textContent='Paid By'; document.getElementById('modalAddBtn').textContent='Add Payment'; document.getElementById('modalAddBtn').style.background='#111'; }
+    else if(tab==='advance'){ document.getElementById('modalByLabel').textContent='Given By'; document.getElementById('modalAddBtn').textContent='Add Advance'; document.getElementById('modalAddBtn').style.background='#111'; }
+    else if(tab==='debt'){ document.getElementById('modalByLabel').textContent='Received By'; document.getElementById('modalAddBtn').textContent='💰 Collect Debt'; document.getElementById('modalAddBtn').style.background='#c00'; }
+  };
+
+  function openPersonModal(p, me){
+    if(!['ADMIN','PAYER','EDITOR'].includes(me.role))return;
+    modalPerson=p; modalMe=me; modalTab='payment';
+    document.getElementById('modalName').textContent=p.person;
+    document.getElementById('modalDue').textContent='Due: '+fmt(p.cash_due);
+    document.getElementById('modalWage').textContent=fmt(p.wage_total);
+    document.getElementById('modalCash').textContent=fmt(p.cash_paid_total);
+    document.getElementById('modalBank').textContent=fmt(p.bank_paid_total);
+    document.getElementById('modalBy').value=me.name;
+    document.getElementById('modalAmount').value='';
+    document.getElementById('modalNote').value='';
+    document.getElementById('modalMsg').textContent='';
+    switchModalTab('payment');
+    document.getElementById('personModal').classList.remove('hidden');
+  }
+
+  document.getElementById('modalCloseBtn').onclick=()=>{
+    document.getElementById('personModal').classList.add('hidden');
+  };
+  document.getElementById('personModal').onclick=(e)=>{
+    if(e.target===document.getElementById('personModal'))
+      document.getElementById('personModal').classList.add('hidden');
+  };
+
+  document.getElementById('modalAddBtn').onclick=async()=>{
+    const token=getToken(); if(!token||!modalPerson)return;
+    const amount=document.getElementById('modalAmount').value;
+    const method=document.getElementById('modalMethod').value;
+    const by=document.getElementById('modalBy').value.trim();
+    const note=document.getElementById('modalNote').value.trim();
+    const msg=document.getElementById('modalMsg');
+
+    if(!amount||isNaN(parseFloat(amount))||parseFloat(amount)<=0){msg.textContent='Enter a valid amount';return;}
+    msg.textContent='Saving...';
+    document.getElementById('modalAddBtn').disabled=true;
+
+    try{
+      let res;
+      if(modalTab==='payment'){
+        res=await jsonp('add_payment',{token,person:modalPerson.person,amount,method,paid_by:by,note});
+      } else if(modalTab==='advance'){
+        res=await jsonp('add_advance',{token,person:modalPerson.person,amount,method,paid_by:by,note});
+      } else if(modalTab==='debt'){
+        // Collect debt = add positive WAGE to cancel out negative balance
+        res=await jsonp('add_wage',{token,person:modalPerson.person,amount,note:note||'Debt collected'});
+      }
+      if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
+      const labels={'payment':'Payment','advance':'Advance','debt':'Debt collected'};
+      msg.textContent='✅ '+labels[modalTab]+'!';
+      document.getElementById('modalAmount').value='';
+      document.getElementById('modalNote').value='';
+      await refresh();
+      // Update modal stats
+      const updated=peopleDueMap[modalPerson.person];
+      if(updated){
+        modalPerson=updated;
+        document.getElementById('modalDue').textContent='Due: '+fmt(updated.cash_due);
+        document.getElementById('modalWage').textContent=fmt(updated.wage_total);
+        document.getElementById('modalCash').textContent=fmt(updated.cash_paid_total);
+        document.getElementById('modalBank').textContent=fmt(updated.bank_paid_total);
+      }
+    }catch(e){msg.textContent='Error: '+e.message;}
+    finally{document.getElementById('modalAddBtn').disabled=false;}
+  };
+
+  // ── Signatures ───────────────────────────────────────────
+  window.openSigImgModal=function(src,title,meta){
+    document.getElementById('sigImgTitle').textContent=title;
+    document.getElementById('sigImgMeta').textContent=meta;
+    document.getElementById('sigImgEl').src=src;
+    document.getElementById('sigImgModal').classList.remove('hidden');
+  };
+  window.closeSigImgModal=function(){
+    document.getElementById('sigImgModal').classList.add('hidden');
+  };
+
+  async function loadSignatures(){
+    const msg=document.getElementById('sigMsg'),box=document.getElementById('sigList');
+    msg.textContent='Loading...'; box.innerHTML='';
+    try{
+      const pf=document.getElementById('sigPerson').value;
+      const tf=document.getElementById('sigType').value;
+      const snap=await getDocs(query(collection(db,'signatures'),orderBy('createdAt','desc')));
+      let docs=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(pf)docs=docs.filter(d=>d.person===pf);
+      if(tf)docs=docs.filter(d=>d.type===tf);
+      msg.textContent=docs.length?'':'No signatures found.';
+      docs.forEach(sig=>{
+        const div=document.createElement('div'); div.className='sig-row';
+        const title=`${sig.type==='payment'?'Payment':'Advance'}: ${fmt(sig.amount)} – ${sig.person}`;
+        const meta=`${sig.paidBy||''} · ${sig.date||''} · ${sig.method||''}${sig.note?' · '+sig.note:''}`;
+        div.innerHTML=`
+          <div class="sig-header">
+            <div><b>${sig.person}</b><div class="muted">${meta}</div></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="badge" style="font-size:12px;">${fmt(sig.amount)}</span>
+              <span class="sig-badge ${sig.type}">${sig.type}</span>
+            </div>
+          </div>
+          <img class="sig-img" src="${sig.signatureBase64}"
+            onclick="openSigImgModal('${sig.signatureBase64}','${title}','${meta}')"
+            title="Click to enlarge" />`;
+        box.appendChild(div);
+      });
+    }catch(e){msg.textContent='Error: '+e.message;}
+  }
+
+  // ── History helpers ──────────────────────────────────────
+  async function loadPaymentsThisMonth(){
+    const token=getToken();if(!token)return;
+    const msg=document.getElementById('pmMsg'),box=document.getElementById('pmList');
+    msg.textContent='Loading...';box.innerHTML='';
+    const data=await jsonp("wage_history",{token,from:monthStart(),to:monthEnd()});
+    if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
+    const rows=(data.wage_history||[]).filter(r=>{const t=String(r.type||'').toUpperCase();return t==='PAYMENT_CASH'||t==='PAYMENT_BANK';});
+    msg.textContent='';
+    rows.forEach(w=>{
+      const div=document.createElement('div');div.className='row';
+      const label=shortMethod(w.type);const bc=String(w.type||'').includes('BANK')?'bank':'cash';
+      div.innerHTML=`<div><b>${w.person||''}</b><div class="muted">${w.paid_by||''} • ${w.date||''}${label?' • '+label:''}</div>${w.note?`<div class="muted">${w.note}</div>`:''}</div><div class="badge ${bc}">${fmt(w.amount)}</div>`;
+      box.appendChild(div);
+    });
+    if(!rows.length)msg.textContent='No results.';
+  }
+
+  async function loadWageHistory(filters={}){
+    const token=getToken();if(!token)return;
+    const msg=document.getElementById('whMsg');msg.textContent='Loading...';
+    const params={token};if(filters.person)params.person=filters.person;if(filters.from)params.from=filters.from;if(filters.to)params.to=filters.to;
+    const data=await jsonp("wage_history",params);
+    if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
+    msg.textContent='';
+    const box=document.getElementById('wageHistoryList');box.innerHTML='';
+    (data.wage_history||[]).forEach(w=>{
+      const div=document.createElement('div');div.className='row';
+      const label=shortMethod(w.type);const bc=String(w.type||'').includes('BANK')?'bank':'cash';
+      div.innerHTML=`<div><b>${w.person||''}</b><div class="muted">${w.paid_by||''} • ${w.date||''}${label?' • '+label:''}</div>${w.note?`<div class="muted">${w.note}</div>`:''}</div><div class="badge ${bc}">${fmt(w.amount)}</div>`;
+      box.appendChild(div);
+    });
+    if(!(data.wage_history||[]).length)msg.textContent='No results.';
+  }
+
+  async function loadAdvancesThisMonth(){
+    const token=getToken();if(!token)return;
+    const msg=document.getElementById('amMsg'),box=document.getElementById('amList');
+    msg.textContent='Loading...';box.innerHTML='';
+    const data=await jsonp("advance_history",{token});
+    if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
+    const rows=(data.advance_history||[]).filter(r=>String(r.type||'').toUpperCase()==='ADVANCE'&&inRange(r.date,monthStart(),monthEnd()));
+    msg.textContent='';
+    rows.forEach(a=>{
+      const div=document.createElement('div');div.className='row';
+      const label=shortMethod(a.type||a.method);
+      div.innerHTML=`<div><b>${a.person||''}</b><div class="muted">${a.paid_by||''} • ${a.date||''}${label?' • '+label:''}</div>${a.note?`<div class="muted">${a.note}</div>`:''}</div><div class="badge advance">${fmt(a.amount)}</div>`;
+      box.appendChild(div);
+    });
+    if(!rows.length)msg.textContent='No results.';
+  }
+
+  async function loadAdvanceHistory(filters={}){
+    const token=getToken();if(!token)return;
+    const msg=document.getElementById('ahMsg');msg.textContent='Loading...';
+    const data=await jsonp("advance_history",{token});
+    if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
+    let rows=data.advance_history||[];
+    const fp=String(filters.person||'').trim(),ff=String(filters.from||'').trim(),ft=String(filters.to||'').trim();
+    if(fp)rows=rows.filter(a=>a.person===fp);
+    if(ff||ft)rows=rows.filter(a=>inRange(a.date,ff,ft));
+    msg.textContent='';
+    const box=document.getElementById('advanceHistoryList');box.innerHTML='';
+    rows.forEach(a=>{
+      const div=document.createElement('div');div.className='row';
+      const label=shortMethod(a.type||a.method);
+      div.innerHTML=`<div><b>${a.person||''}</b><div class="muted">${a.paid_by||''} • ${a.date||''}${label?' • '+label:''}</div>${a.note?`<div class="muted">${a.note}</div>`:''}</div><div class="badge advance">${fmt(a.amount)}</div>`;
+      box.appendChild(div);
+    });
+    if(!rows.length)msg.textContent='No results.';
+  }
+
+  // ── Event listeners ──────────────────────────────────────
+  document.getElementById('payPerson').onchange=()=>{
+    const p=document.getElementById('payPerson').value;
+    document.getElementById('dueLine').textContent=p?`Due: ${fmt(peopleDueMap[p]?.cash_due||0)}`:'Due: —';
+  };
+
+  document.getElementById('tabStatus').onclick=async()=>{setView('status');await refresh();};
+  document.getElementById('tabHistory').onclick=async()=>{
+    setView('history');
+    document.getElementById('whFrom').value=prevStart();document.getElementById('whTo').value=prevEnd();
+    await loadWageHistory({from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+  };
+  document.getElementById('tabSignatures').onclick=async()=>{setView('signatures');await refresh();await loadSignatures();};
+  document.getElementById('tabSettings').onclick=async()=>{setView('settings');await refresh();};
+
+  // History sub-tabs
+  let histSubTab = 'wage';
+  document.getElementById('subHistWage').onclick=async()=>{
+    histSubTab='wage';
+    document.getElementById('subHistWage').classList.add('primary');
+    document.getElementById('subHistAdv').classList.remove('primary');
+    document.getElementById('wageHistorySection').style.display='';
+    document.getElementById('advHistorySection').style.display='none';
+    document.getElementById('whFrom').value=prevStart();document.getElementById('whTo').value=prevEnd();
+    await loadWageHistory({from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+  };
+  document.getElementById('subHistAdv').onclick=async()=>{
+    histSubTab='advance';
+    document.getElementById('subHistAdv').classList.add('primary');
+    document.getElementById('subHistWage').classList.remove('primary');
+    document.getElementById('advHistorySection').style.display='';
+    document.getElementById('wageHistorySection').style.display='none';
+    document.getElementById('ahFrom').value=prevStart();document.getElementById('ahTo').value=prevEnd();
+    await loadAdvanceHistory({from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});
+  };
+
+  document.getElementById('btnRefresh').onclick=async()=>{
+    await refresh();
+    if(currentView==='history'&&histSubTab==='wage')await loadWageHistory({person:document.getElementById('whPerson').value,from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+    if(currentView==='history'&&histSubTab==='advance')await loadAdvanceHistory({person:document.getElementById('ahPerson').value,from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});
+    if(currentView==='signatures')await loadSignatures();
+  };
+
+
+
+  document.getElementById('btnWhApply').onclick=async()=>loadWageHistory({person:document.getElementById('whPerson').value,from:document.getElementById('whFrom').value,to:document.getElementById('whTo').value});
+  document.getElementById('btnWhClear').onclick=async()=>{document.getElementById('whPerson').value='';document.getElementById('whFrom').value='';document.getElementById('whTo').value='';await loadWageHistory({});};
+  document.getElementById('btnAhApply').onclick=async()=>loadAdvanceHistory({person:document.getElementById('ahPerson').value,from:document.getElementById('ahFrom').value,to:document.getElementById('ahTo').value});
+  document.getElementById('btnAhClear').onclick=async()=>{document.getElementById('ahPerson').value='';document.getElementById('ahFrom').value='';document.getElementById('ahTo').value='';await loadAdvanceHistory({});};
+  document.getElementById('btnSigLoad').onclick=loadSignatures;
+
+  document.getElementById('btnSaveToken').onclick=async()=>{
+    const t=tokenInput.value.trim();if(!t){tokenMsg.textContent="Token cannot be empty.";return;}
+    localStorage.setItem("wage_token",t);tokenMsg.textContent="Saved. Refreshing...";await refresh();
+  };
+
+
+
+  document.getElementById('btnAddUser').onclick=async()=>{
+    const token=getToken(),name=document.getElementById('newUserName').value.trim(),role=document.getElementById('newUserRole').value;
+    const msg=document.getElementById('adminMsg');msg.textContent="Creating...";
+    const res=await jsonp("add_user",{token,name,role});
+    if(!res.ok){msg.textContent="Error: "+(res.error||"");return;}
+    msg.textContent=`✅ ${res.user.name} (${res.user.role})  Token: ${res.user.token}`;
+    document.getElementById('newUserName').value='';
+  };
+
+  // Init
+  const saved=localStorage.getItem("wage_token"),tokenFromUrl=qs.get('token');
+  if(tokenFromUrl)tokenInput.value=tokenFromUrl;
+  else if(saved)tokenInput.value=saved;
+
+  setView('status');
+  refresh();
+  setInterval(()=>{if(currentView==='status')refresh();},15000);
+</script>
+</body>
+</html>
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>LPA Management APP</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; margin: 12px; }
+
+    .top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .card { border:1px solid #ddd; border-radius:12px; padding:12px; margin:12px 0; overflow:hidden; max-width:100%; }
+
+    .row { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #eee; }
+    .row:last-child { border-bottom:none; }
+    .row > div:first-child { min-width:0; flex:1; }
+    .row b { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .person-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.1s; }
+    .person-row:last-child { border-bottom:none; }
+    .person-row:hover { background:#f9f9f9; border-radius:8px; padding-left:6px; }
+    .person-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+    .chip { font-size:11px; color:#666; background:#f0f0f0; padding:2px 8px; border-radius:20px; }
+    .person-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .arrow { color:#ccc; font-size:18px; }
+
+    .badge { padding:6px 12px; border-radius:999px; font-weight:800; white-space:nowrap; flex:0 0 auto; }
+    .badge.cash { background:#f2f2f2; color:#111; }
+    .badge.bank { background:#e7f0ff; color:#0b3a9a; }
+    .badge.advance { background:#fff0e5; color:#8a3a00; }
+
+    button { padding:10px 12px; border-radius:10px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+    button.primary { background:#111; color:#fff; border-color:#111; }
+    button.primary:hover { background:#333; }
+    input, select { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:14px; }
+
+    .muted { color:#666; font-size:12px; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .hidden { display:none !important; }
+
+    .card.tabs { padding:10px; }
+    .tabs-main { display:flex; gap:6px; justify-content:center; align-items:center; }
+    .tabs-main button { flex:1 1 0; min-width:0; font-size:13px; padding:10px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+    .tabs-sub { display:flex; gap:10px; }
+    .tabs-sub button { flex:1 1 0; font-size:13px; padding:12px 8px; text-align:center; }
+
+    .wh-filters, .ah-filters, .sig-filters {
+      display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:10px; margin-bottom:10px;
+    }
+    .wh-actions, .ah-actions, .sig-actions { grid-column:1 / -1; display:flex; gap:10px; }
+    .wh-actions button, .ah-actions button, .sig-actions button { flex:1; }
+    input[type="date"] { width:100%; background:#eee; color:#111; -webkit-appearance:none; appearance:none; }
+
+    /* Person Modal */
+    .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:flex-end; justify-content:center; z-index:1000; }
+    .modal-overlay.hidden { display:none !important; }
+    .modal-sheet { background:#fff; border-radius:20px 20px 0 0; padding:20px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; padding-bottom:40px; }
+    .modal-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+    .modal-name { font-size:22px; font-weight:900; }
+    .modal-due { font-size:14px; color:#666; margin-top:2px; }
+    .modal-close-btn { background:#f0f0f0; border:none; border-radius:20px; width:36px; height:36px; font-size:16px; cursor:pointer; }
+    .stats-row { display:flex; gap:8px; margin-bottom:16px; }
+    .stat-box { flex:1; background:#f8f8f8; border-radius:12px; padding:10px; text-align:center; }
+    .stat-label { font-size:10px; color:#888; margin-bottom:4px; }
+    .stat-val { font-size:13px; font-weight:700; }
+    .tab-row { display:flex; gap:8px; margin-bottom:14px; }
+    .tab-btn { flex:1; padding:10px; border-radius:10px; border:none; background:#f0f0f0; color:#666; font-weight:600; font-size:14px; cursor:pointer; }
+    .tab-btn.active { background:#111; color:#fff; }
+    .form-label { font-size:12px; color:#666; margin-bottom:4px; margin-top:12px; display:block; }
+    .add-btn { width:100%; background:#111; color:#fff; border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; margin-top:14px; }
+    .add-btn:hover { background:#333; }
+    .form-msg { font-size:13px; color:#555; text-align:center; margin-top:8px; }
+
+    /* Sig modal */
+    .sig-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:2000; padding:20px; }
+    .sig-modal-overlay.hidden { display:none !important; }
+    .sig-modal-box { background:#fff; border-radius:16px; padding:20px; max-width:500px; width:100%; }
+    .sig-modal-box img { max-width:100%; border-radius:8px; margin:10px 0; }
+    .sig-modal-close { float:right; border:none; background:#eee; border-radius:8px; padding:6px 14px; cursor:pointer; font-weight:700; }
+
+    .sig-row { padding:12px 0; border-bottom:1px solid #eee; }
+    .sig-row:last-child { border-bottom:none; }
+    .sig-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .sig-img { max-width:100%; border:1px solid #ddd; border-radius:8px; background:#fff; margin-top:6px; max-height:120px; object-fit:contain; cursor:pointer; }
+    .sig-badge { padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+    .sig-badge.payment { background:#e0f0e0; color:#1a6a1a; }
+    .sig-badge.advance { background:#fff0e5; color:#8a3a00; }
+
+    h1,h2,h3 { margin:0; }
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <div style="min-width:0;">
+      <div style="font-size:18px;font-weight:900;line-height:1.15;">LPA Management APP</div>
+      <div class="muted" id="meLine">Enter your token in Settings.</div>
+    </div>
+    <div><button id="btnRefresh" class="primary">Refresh</button></div>
+  </div>
+
+  <div class="card tabs">
+    <div class="tabs-main">
+      <button id="tabStatus" class="primary">Status</button>
+      <button id="tabHistory">History</button>
+      <button id="tabSignatures">Signatures</button>
+      <button id="tabSettings">Settings</button>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="card hidden" id="summaryCard">
+    <div style="font-weight:900;margin-bottom:8px;">Totals</div>
+    <div class="grid2">
+      <div><div class="muted">Total WAGE</div><div style="font-size:20px;font-weight:900;" id="tWage">—</div></div>
+      <div><div class="muted">Total Due</div><div style="font-size:20px;font-weight:900;" id="tCashDue">—</div></div>
+      <div><div class="muted">Cash Paid</div><div style="font-size:20px;font-weight:900;" id="tCashPaid">—</div></div>
+      <div><div class="muted">Bank Paid</div><div style="font-size:20px;font-weight:900;" id="tBankPaid">—</div></div>
+    </div>
+    <div class="muted" id="lastUpdated" style="margin-top:8px;">—</div>
+  </div>
+
+  <div class="card hidden" id="peopleCard">
+    <div style="font-weight:900;margin-bottom:4px;">Staff Status</div>
+    <div class="muted" style="margin-bottom:10px;font-style:italic;">Tap a person to add payment or advance</div>
+    <div id="peopleList"></div>
+  </div>
+
+  <!-- PAYMENTS - wage history only -->
+  <!-- hidden inputs kept for JS compatibility -->
+  <select id="payPerson" style="display:none"></select>
+  <input id="payAmount" style="display:none" />
+  <select id="payMethod" style="display:none"></select>
+  <input id="payBy" style="display:none" />
+  <input id="payNote" style="display:none" />
+  <div id="dueLine" style="display:none"></div>
+  <div id="payMsg" style="display:none"></div>
+  <div id="pmMsg" style="display:none"></div>
+  <div id="pmList" style="display:none"></div>
+  <!-- HISTORY TAB -->
+  <div class="card hidden" id="historyCard">
+    <div class="tabs-sub" style="margin-bottom:14px;">
+      <button id="subHistWage" class="primary">Wage History</button>
+      <button id="subHistAdv">Advance History</button>
+    </div>
+
+    <!-- Wage History -->
+    <div id="wageHistorySection">
+      <div class="wh-filters">
+        <div><div class="muted">Person</div><select id="whPerson"><option value="">All</option></select></div>
+        <div><div class="muted">From</div><input id="whFrom" type="date" /></div>
+        <div><div class="muted">To</div><input id="whTo" type="date" /></div>
+        <div class="wh-actions"><button id="btnWhApply" class="primary">Apply</button><button id="btnWhClear">Clear</button></div>
+      </div>
+      <div class="muted" id="whMsg"></div>
+      <div id="wageHistoryList"></div>
+    </div>
+
+    <!-- Advance History -->
+    <div id="advHistorySection" style="display:none;">
+      <div class="ah-filters">
+        <div><div class="muted">Person</div><select id="ahPerson"><option value="">All</option></select></div>
+        <div><div class="muted">From</div><input id="ahFrom" type="date" /></div>
+        <div><div class="muted">To</div><input id="ahTo" type="date" /></div>
+        <div class="ah-actions"><button id="btnAhApply" class="primary">Apply</button><button id="btnAhClear">Clear</button></div>
+      </div>
+      <div class="muted" id="ahMsg"></div>
+      <div id="advanceHistoryList"></div>
+    </div>
+  </div>
+
+  <!-- ADVANCES - history only -->
+  <!-- hidden inputs for JS compatibility -->
+  <select id="advPerson" style="display:none"></select>
+  <input id="advAmount" style="display:none" />
+  <select id="advMethod" style="display:none"><option value="CASH">Cash</option><option value="BANK">Bank</option></select>
+  <input id="advBy" style="display:none" />
+  <input id="advNote" style="display:none" />
+  <div id="advMsg" style="display:none"></div>
+  <div id="amMsg" style="display:none"></div>
+  <div id="amList" style="display:none"></div>
+
+
+  <!-- SIGNATURES TAB -->
+  <div class="card hidden" id="signaturesCard">
+    <div style="font-weight:900;margin-bottom:12px;">Signatures</div>
+    <div class="sig-filters">
+      <div><div class="muted">Person</div><select id="sigPerson"><option value="">All</option></select></div>
+      <div><div class="muted">Type</div>
+        <select id="sigType"><option value="">All</option><option value="payment">Payment</option><option value="advance">Advance</option></select>
+      </div>
+      <div class="sig-actions"><button id="btnSigLoad" class="primary">Load Signatures</button></div>
+    </div>
+    <div class="muted" id="sigMsg"></div>
+    <div id="sigList"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="card hidden" id="settingsCard">
+    <div style="font-weight:900;margin-bottom:8px;">Settings</div>
+    <div class="muted">Token</div>
+    <input id="tokenInput" placeholder="token..." />
+    <div class="muted" style="margin-top:6px;">You can also share by link: <b>?token=...</b></div>
+    <div style="margin-top:10px;"><button id="btnSaveToken" class="primary">Save Token</button></div>
+    <div class="muted" id="tokenMsg" style="margin-top:8px;"></div>
+    <div class="hidden" id="adminCard" style="margin-top:18px;">
+      <hr style="border:none;border-top:1px solid #eee;margin:16px 0;"/>
+      <div style="font-weight:900;margin-bottom:8px;">Admin — Add User</div>
+      <div class="grid2">
+        <div><div class="muted">Name</div><input id="newUserName" placeholder="Ali" /></div>
+        <div><div class="muted">Role</div>
+          <select id="newUserRole"><option>VIEWER</option><option>PAYER</option><option>EDITOR</option></select>
+        </div>
+      </div>
+      <div style="margin-top:12px;"><button id="btnAddUser" class="primary">Create User</button></div>
+      <div class="muted" id="adminMsg" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- Person Modal (bottom sheet) -->
+  <div id="personModal" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <div class="modal-name" id="modalName">—</div>
+          <div class="modal-due" id="modalDue">Due: —</div>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-label">WAGE</div><div class="stat-val" id="modalWage">—</div></div>
+        <div class="stat-box"><div class="stat-label">Cash Paid</div><div class="stat-val" id="modalCash">—</div></div>
+        <div class="stat-box"><div class="stat-label">Bank Paid</div><div class="stat-val" id="modalBank">—</div></div>
+      </div>
+      <div class="tab-row">
+        <button class="tab-btn active" id="modalTabPay" onclick="switchModalTab('payment')">💵 Payment</button>
+        <button class="tab-btn" id="modalTabAdv" onclick="switchModalTab('advance')">💳 Advance</button>
       </div>
       <div class="grid2">
         <div>
