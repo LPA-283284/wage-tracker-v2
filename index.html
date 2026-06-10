@@ -13,8 +13,8 @@
     .app-title { font-size:17px; font-weight:900; }
     .app-sub { font-size:12px; color:#666; margin-top:2px; }
 
-    .main-tabs { display:flex; gap:6px; padding:10px 12px; background:#fff; border-bottom:1px solid #eee; }
-    .main-tab { flex:1; padding:9px 6px; border-radius:10px; border:1px solid #ddd; background:#f9f9f9; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; }
+    .main-tabs { display:flex; gap:6px; padding:10px 12px; background:#fff; border-bottom:1px solid #eee; overflow-x:auto; }
+    .main-tab { flex:1; min-width:0; padding:9px 6px; border-radius:10px; border:1px solid #ddd; background:#f9f9f9; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; white-space:nowrap; }
     .main-tab.active { background:#111; color:#fff; border-color:#111; }
 
     .page { display:none; padding:12px; }
@@ -43,7 +43,6 @@
     .badge.cash { background:#f0f0f0; color:#111; }
     .badge.bank { background:#e7f0ff; color:#0b3a9a; }
     .badge.advance { background:#fff0e5; color:#8a3a00; }
-    .badge.deposit { background:#e5f5e5; color:#1a6a1a; }
 
     .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .total-box { background:#f8f8f8; border-radius:12px; padding:12px; }
@@ -51,12 +50,9 @@
     .total-val { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
 
     input, select, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; font-size:14px; background:#fafafa; }
-    textarea { min-height:70px; resize:vertical; }
     label { font-size:12px; color:#666; margin-bottom:4px; display:block; margin-top:10px; }
     .btn { width:100%; padding:13px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; margin-top:14px; }
     .btn-black { background:#111; color:#fff; }
-    .btn-black:hover { background:#333; }
-    .btn-red { background:#c00; color:#fff; }
     .btn-green { background:#1a6a1a; color:#fff; }
     .form-msg { font-size:13px; color:#555; text-align:center; margin-top:8px; }
 
@@ -64,6 +60,11 @@
     .filters-actions { grid-column:1/-1; display:flex; gap:8px; }
     .filters-actions button { flex:1; padding:9px; border-radius:10px; border:1px solid #ddd; font-size:13px; font-weight:600; cursor:pointer; }
     input[type="date"] { background:#eee; }
+
+    /* App redirect banner */
+    .app-banner { background:#fff3cd; border:1px solid #ffc107; border-radius:12px; padding:14px; margin-bottom:12px; text-align:center; }
+    .app-banner-title { font-size:15px; font-weight:800; margin-bottom:6px; }
+    .app-banner-sub { font-size:13px; color:#555; }
 
     /* Person Modal */
     .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:100; display:flex; align-items:flex-end; justify-content:center; }
@@ -88,21 +89,16 @@
     /* Deposit card */
     .dep-card { background:#fff; border-radius:14px; padding:14px; margin-bottom:10px; border-left:4px solid #1a6a1a; }
     .dep-name { font-size:15px; font-weight:800; }
-    .dep-date { font-size:12px; color:#666; }
-    .dep-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
     .dep-img { max-width:100%; border-radius:8px; margin-top:8px; cursor:pointer; max-height:100px; object-fit:contain; }
 
     /* Permission toggles */
     .user-card { background:#fff; border-radius:12px; padding:12px; margin-bottom:8px; }
-    .user-name { font-size:14px; font-weight:700; }
-    .user-token { font-size:11px; color:#aaa; font-family:monospace; }
     .perm-row { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
     .perm-btn { padding:5px 12px; border-radius:20px; border:1px solid #ddd; font-size:12px; font-weight:600; cursor:pointer; background:#f5f5f5; color:#666; }
     .perm-btn.on { background:#111; color:#fff; border-color:#111; }
 
     .muted { color:#666; font-size:12px; }
     .hidden { display:none !important; }
-    h1,h2,h3 { margin:0; }
   </style>
 </head>
 <body>
@@ -119,6 +115,7 @@
 <!-- MAIN TABS -->
 <div class="main-tabs">
   <button class="main-tab active" id="tabWages" onclick="showPage('wages')">💰 Wages</button>
+  <button class="main-tab" id="tabAdvances" onclick="showPage('advances')">💳 Advances</button>
   <button class="main-tab" id="tabDeposits" onclick="showPage('deposits')">📋 Deposits</button>
   <button class="main-tab" id="tabSettings" onclick="showPage('settings')">⚙️ Settings</button>
 </div>
@@ -133,7 +130,7 @@
 
   <!-- Status -->
   <div id="wagesStatus">
-    <div class="card" id="totalsCard">
+    <div class="card">
       <div class="card-title">Totals</div>
       <div class="grid2">
         <div class="total-box"><div class="total-label">Total WAGE</div><div class="total-val" id="tWage">—</div></div>
@@ -143,48 +140,34 @@
       </div>
       <div class="muted" id="lastUpdated" style="margin-top:10px;">—</div>
     </div>
+
+    <!-- App Banner for payments -->
+    <div class="app-banner">
+      <div class="app-banner-title">📱 Signatures Required</div>
+      <div class="app-banner-sub">To add payments or advances, please use the <strong>mobile app</strong>. Signatures are collected there and synced here automatically.</div>
+    </div>
+
     <div class="card">
       <div class="card-title">Staff Status</div>
-      <div class="muted" style="margin-bottom:10px;font-style:italic;">Tap to add payment, advance or collect debt</div>
+      <div class="muted" style="margin-bottom:10px;font-style:italic;">Tap to view details or collect debt</div>
       <div id="peopleList"></div>
     </div>
   </div>
 
   <!-- History -->
   <div id="wagesHistory" class="hidden">
-    <div class="sub-tabs">
-      <button class="sub-tab active" id="hSubWage" onclick="showHistSub('wage')">Wage History</button>
-      <button class="sub-tab" id="hSubAdv" onclick="showHistSub('advance')">Advance History</button>
-    </div>
-    <div id="histWage">
-      <div class="card">
-        <div class="filters">
-          <div><label>Person</label><select id="whPerson"><option value="">All</option></select></div>
-          <div><label>From</label><input id="whFrom" type="date" /></div>
-          <div><label>To</label><input id="whTo" type="date" /></div>
-          <div class="filters-actions">
-            <button class="btn-black" style="color:#fff;background:#111;border-color:#111;" onclick="loadWageHistory()">Apply</button>
-            <button onclick="clearWageFilters()">Clear</button>
-          </div>
+    <div class="card">
+      <div class="filters">
+        <div><label>Person</label><select id="whPerson"><option value="">All</option></select></div>
+        <div><label>From</label><input id="whFrom" type="date" /></div>
+        <div><label>To</label><input id="whTo" type="date" /></div>
+        <div class="filters-actions">
+          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadWageHistory()">Apply</button>
+          <button onclick="clearWageFilters()">Clear</button>
         </div>
-        <div class="muted" id="whMsg"></div>
-        <div id="wageHistoryList"></div>
       </div>
-    </div>
-    <div id="histAdv" class="hidden">
-      <div class="card">
-        <div class="filters">
-          <div><label>Person</label><select id="ahPerson"><option value="">All</option></select></div>
-          <div><label>From</label><input id="ahFrom" type="date" /></div>
-          <div><label>To</label><input id="ahTo" type="date" /></div>
-          <div class="filters-actions">
-            <button class="btn-black" style="color:#fff;background:#111;border-color:#111;" onclick="loadAdvHistory()">Apply</button>
-            <button onclick="clearAdvFilters()">Clear</button>
-          </div>
-        </div>
-        <div class="muted" id="ahMsg"></div>
-        <div id="advanceHistoryList"></div>
-      </div>
+      <div class="muted" id="whMsg"></div>
+      <div id="wageHistoryList"></div>
     </div>
   </div>
 
@@ -197,11 +180,50 @@
           <select id="sigType"><option value="">All</option><option value="payment">Payment</option><option value="advance">Advance</option></select>
         </div>
         <div class="filters-actions">
-          <button class="btn-black" style="color:#fff;background:#111;" onclick="loadSignatures()">Load</button>
+          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadSignatures()">Load</button>
         </div>
       </div>
       <div class="muted" id="sigMsg"></div>
       <div id="sigList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADVANCES PAGE ═══════════════════════════════════════ -->
+<div class="page hidden" id="pageAdvances">
+  <div class="sub-tabs">
+    <button class="sub-tab active" id="aSubList" onclick="showAdvSub('list')">This Month</button>
+    <button class="sub-tab" id="aSubHistory" onclick="showAdvSub('history')">History</button>
+  </div>
+
+  <!-- App Banner -->
+  <div class="app-banner">
+    <div class="app-banner-title">📱 Signatures Required</div>
+    <div class="app-banner-sub">To add advances, please use the <strong>mobile app</strong>. Signatures are collected there.</div>
+  </div>
+
+  <!-- This month -->
+  <div id="advList">
+    <div class="card">
+      <div class="muted" id="advListMsg"></div>
+      <div id="advThisMonthList"></div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div id="advHistory" class="hidden">
+    <div class="card">
+      <div class="filters">
+        <div><label>Person</label><select id="ahPerson"><option value="">All</option></select></div>
+        <div><label>From</label><input id="ahFrom" type="date" /></div>
+        <div><label>To</label><input id="ahTo" type="date" /></div>
+        <div class="filters-actions">
+          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadAdvHistory()">Apply</button>
+          <button onclick="clearAdvFilters()">Clear</button>
+        </div>
+      </div>
+      <div class="muted" id="ahMsg"></div>
+      <div id="advanceHistoryList"></div>
     </div>
   </div>
 </div>
@@ -213,7 +235,6 @@
     <button class="sub-tab" id="dSubList" onclick="showDepSub('list')">List</button>
   </div>
 
-  <!-- Add Deposit -->
   <div id="depAdd">
     <div class="card">
       <div class="card-title">New Deposit</div>
@@ -221,7 +242,7 @@
       <input id="depName" placeholder="John Smith" />
       <div class="grid2">
         <div><label>Reservation Date</label><input id="depDate" type="date" /></div>
-        <div><label>Covers (people)</label><input id="depCovers" type="number" placeholder="4" /></div>
+        <div><label>Covers</label><input id="depCovers" type="number" placeholder="4" /></div>
       </div>
       <div class="grid2">
         <div><label>Amount</label><input id="depAmount" inputmode="decimal" placeholder="100" /></div>
@@ -232,23 +253,20 @@
       <label>Note</label>
       <input id="depNote" placeholder="Any notes..." />
       <label>Receipt / Slip Photo (optional)</label>
-      <div style="margin-top:4px;">
-        <input type="file" id="depImage" accept="image/*" style="background:#fff;" />
-      </div>
+      <input type="file" id="depImage" accept="image/*" style="background:#fff;margin-top:4px;" />
       <div id="depImgPreview" style="margin-top:8px;"></div>
-      <button class="btn btn-green" onclick="addDeposit()">Save Deposit</button>
+      <button class="btn btn-green" onclick="addDeposit()">💾 Save Deposit</button>
       <div class="form-msg" id="depMsg"></div>
     </div>
   </div>
 
-  <!-- Deposit List -->
   <div id="depList" class="hidden">
     <div class="card">
       <div class="filters">
         <div><label>From</label><input id="depFrom" type="date" /></div>
         <div><label>To</label><input id="depTo" type="date" /></div>
         <div class="filters-actions">
-          <button class="btn-black" style="color:#fff;background:#111;" onclick="loadDeposits()">Apply</button>
+          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadDeposits()">Apply</button>
           <button onclick="clearDepFilters()">Clear</button>
         </div>
       </div>
@@ -283,14 +301,14 @@
 
     <div class="card">
       <div class="card-title">User Permissions</div>
-      <div class="muted" style="margin-bottom:10px;">Tap a permission to toggle on/off</div>
+      <div class="muted" style="margin-bottom:10px;">Tap to toggle permissions on/off</div>
       <div id="userPermList"></div>
-      <button class="btn btn-black" style="margin-top:10px;" onclick="loadUsers()">↻ Refresh Users</button>
+      <button class="btn btn-black" style="margin-top:10px;" onclick="loadUsers()">↻ Refresh</button>
     </div>
   </div>
 </div>
 
-<!-- Person Modal -->
+<!-- Person Modal (debt collect only from web) -->
 <div class="modal-bg hidden" id="personModal">
   <div class="modal-sheet">
     <div class="modal-hdr">
@@ -305,25 +323,30 @@
       <div class="mstat"><div class="mstat-l">Cash Paid</div><div class="mstat-v" id="mCash">—</div></div>
       <div class="mstat"><div class="mstat-l">Bank Paid</div><div class="mstat-v" id="mBank">—</div></div>
     </div>
-    <div class="modal-tabs">
-      <button class="modal-tab active" id="mtPay" onclick="switchMTab('payment')">💵 Payment</button>
-      <button class="modal-tab" id="mtAdv" onclick="switchMTab('advance')">💳 Advance</button>
-      <button class="modal-tab red" id="mtDebt" onclick="switchMTab('debt')">🔴 Collect</button>
+
+    <!-- App redirect notice -->
+    <div class="app-banner" style="margin-bottom:14px;">
+      <div class="app-banner-title">📱 Use Mobile App for Payments</div>
+      <div class="app-banner-sub">Payments and advances require a signature. Use the mobile app to add them.</div>
     </div>
-    <div class="grid2">
-      <div><label>Amount</label><input id="mAmount" inputmode="decimal" placeholder="0.00" /></div>
-      <div><label>Method</label><select id="mMethod"><option value="CASH">Cash</option><option value="BANK">Bank</option></select></div>
+
+    <!-- Only debt collection allowed from web -->
+    <div style="background:#fff5f5;border:1px solid #ffcccc;border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:700;margin-bottom:8px;">🔴 Collect Debt (Web Only)</div>
+      <div class="muted" style="margin-bottom:10px;">Only use this when an employee has paid back money in person.</div>
+      <label>Amount</label>
+      <input id="mAmount" inputmode="decimal" placeholder="0.00" />
+      <label>Received By</label>
+      <input id="mBy" />
+      <label>Note</label>
+      <input id="mNote" placeholder="e.g. Cash received" />
+      <button class="btn" style="background:#c00;color:#fff;margin-top:12px;" onclick="modalSubmit()">💰 Collect Debt</button>
+      <div class="form-msg" id="mMsg"></div>
     </div>
-    <label id="mByLabel">Paid By</label>
-    <input id="mBy" />
-    <label>Note</label>
-    <input id="mNote" placeholder="Optional" />
-    <button class="btn btn-black" id="mAddBtn" onclick="modalSubmit()">Add Payment</button>
-    <div class="form-msg" id="mMsg"></div>
   </div>
 </div>
 
-<!-- Sig Image Modal -->
+<!-- Sig / Receipt Image Modal -->
 <div class="sigimg-bg hidden" id="sigImgModal">
   <div class="sigimg-box">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -355,9 +378,9 @@ const db = getFirestore(fbApp);
 const API = "https://script.google.com/macros/s/AKfycbyE7Vqczhafvx74GRIkz_8bc2D9ip4SW_QFW-sEK95fo3s7JkOxdR-HDk1F1X4urw8B/exec";
 const qs = new URLSearchParams(location.search);
 
-// ── Helpers ──────────────────────────────────────────────
 const fmt = n => Number(n||0).toLocaleString('en-GB',{style:'currency',currency:'GBP'});
 const $ = id => document.getElementById(id);
+
 function jsonp(action, params={}){
   return new Promise((res,rej)=>{
     const cb='__cb_'+Math.random().toString(36).slice(2);
@@ -369,45 +392,54 @@ function jsonp(action, params={}){
     s.src=u.toString(); document.body.appendChild(s);
   });
 }
+
 function shortM(t){const s=String(t||'').toUpperCase();if(s.includes('BANK'))return'Bank';if(s.includes('CASH'))return'Cash';return'';}
 function inRange(d,f,t){if(!d)return false;if(f&&d<f)return false;if(t&&d>t)return false;return true;}
 function prevStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,10);}
 function prevEnd(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),0).toISOString().slice(0,10);}
+function monthStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10);}
+function monthEnd(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);}
 function getToken(){return $('tokenInput').value.trim();}
 
-// ── State ─────────────────────────────────────────────────
-let currentPage='wages', currentMe=null, peopleDueMap={}, modalPerson=null, modalTab='payment';
+let currentPage='wages', currentMe=null, peopleDueMap={}, modalPerson=null;
 
-// ── Page navigation ───────────────────────────────────────
+function hasPerm(perm){
+  if(!currentMe)return false;
+  if(currentMe.role==='ADMIN')return true;
+  return (currentMe.permissions||'').split(',').map(s=>s.trim()).includes(perm);
+}
+
+// ── Page Nav ──────────────────────────────────────────────
 window.showPage = function(page){
   currentPage=page;
-  ['wages','deposits','settings'].forEach(p=>{
-    $(`page${p.charAt(0).toUpperCase()+p.slice(1)}`).classList.toggle('active',p===page);
-    $(`page${p.charAt(0).toUpperCase()+p.slice(1)}`).classList.toggle('hidden',p!==page);
+  const pages=['wages','advances','deposits','settings'];
+  pages.forEach(p=>{
+    const el=$(`page${p.charAt(0).toUpperCase()+p.slice(1)}`);
+    el.classList.toggle('active',p===page);
+    el.classList.toggle('hidden',p!==page);
     $(`tab${p.charAt(0).toUpperCase()+p.slice(1)}`).classList.toggle('active',p===page);
   });
-  if(page==='wages'){refreshSummary();}
-  if(page==='deposits'&&currentMe&&hasPerm('deposits')){showDepSub('add');}
-  if(page==='settings'){refreshSummary();}
+  if(page==='wages') refreshSummary();
+  if(page==='advances') loadAdvThisMonth();
+  if(page==='settings') refreshSummary();
 };
 
 window.showWagesSub = function(sub){
   ['status','history','signatures'].forEach(s=>{
     $(`wSub${s.charAt(0).toUpperCase()+s.slice(1)}`).classList.toggle('active',s===sub);
-    const el=$(`wages${s.charAt(0).toUpperCase()+s.slice(1)}`);
-    el.classList.toggle('hidden',s!==sub);
+    $(`wages${s.charAt(0).toUpperCase()+s.slice(1)}`).classList.toggle('hidden',s!==sub);
   });
   if(sub==='history'){$('whFrom').value=prevStart();$('whTo').value=prevEnd();loadWageHistory();}
-  if(sub==='signatures')loadSignatures();
+  if(sub==='signatures') loadSignatures();
 };
 
-window.showHistSub = function(sub){
-  $('hSubWage').classList.toggle('active',sub==='wage');
-  $('hSubAdv').classList.toggle('active',sub==='advance');
-  $('histWage').classList.toggle('hidden',sub!=='wage');
-  $('histAdv').classList.toggle('hidden',sub!=='advance');
-  if(sub==='wage')loadWageHistory();
-  if(sub==='advance'){$('ahFrom').value=prevStart();$('ahTo').value=prevEnd();loadAdvHistory();}
+window.showAdvSub = function(sub){
+  $('aSubList').classList.toggle('active',sub==='list');
+  $('aSubHistory').classList.toggle('active',sub==='history');
+  $('advList').classList.toggle('hidden',sub!=='list');
+  $('advHistory').classList.toggle('hidden',sub!=='history');
+  if(sub==='list') loadAdvThisMonth();
+  if(sub==='history'){$('ahFrom').value=prevStart();$('ahTo').value=prevEnd();loadAdvHistory();}
 };
 
 window.showDepSub = function(sub){
@@ -415,14 +447,8 @@ window.showDepSub = function(sub){
   $('dSubList').classList.toggle('active',sub==='list');
   $('depAdd').classList.toggle('hidden',sub!=='add');
   $('depList').classList.toggle('hidden',sub!=='list');
-  if(sub==='list')loadDeposits();
+  if(sub==='list') loadDeposits();
 };
-
-function hasPerm(perm){
-  if(!currentMe)return false;
-  if(currentMe.role==='ADMIN')return true;
-  return (currentMe.permissions||'').split(',').map(s=>s.trim()).includes(perm);
-}
 
 // ── Summary ───────────────────────────────────────────────
 async function refreshSummary(){
@@ -433,9 +459,9 @@ async function refreshSummary(){
   $('meLine').textContent=`${data.me.name} • ${data.me.role}`;
   $('lastUpdated').textContent='Last updated: '+new Date().toLocaleString('en-GB');
 
-  // Show/hide sections based on permissions
-  const hasWages=hasPerm('wages'), hasDeps=hasPerm('deposits');
+  const hasWages=hasPerm('wages'), hasDeps=hasPerm('deposits'), hasAdv=hasPerm('wages');
   $('tabWages').style.display=hasWages?'':'none';
+  $('tabAdvances').style.display=hasAdv?'':'none';
   $('tabDeposits').style.display=hasDeps?'':'none';
   $('adminSection').classList.toggle('hidden',data.me.role!=='ADMIN');
 
@@ -472,7 +498,6 @@ async function refreshSummary(){
     list.appendChild(div);
   });
 
-  // Update person selects
   ['whPerson','ahPerson','sigPerson'].forEach(id=>{
     const sel=$(id); const prev=sel.value;
     sel.innerHTML='<option value="">All</option>';
@@ -480,18 +505,17 @@ async function refreshSummary(){
     if([...sel.options].some(o=>o.value===prev))sel.value=prev;
   });
 
-  // Set modal by field
   if(currentMe) $('mBy').value=$('mBy').value||currentMe.name;
 }
 
 window.doRefresh = async function(){
   await refreshSummary();
-  if(currentPage==='deposits')loadDeposits();
+  if(currentPage==='advances') loadAdvThisMonth();
+  if(currentPage==='deposits') loadDeposits();
 };
 
-// ── Modal ────────────────────────────────────────────────
+// ── Modal (Debt collect only) ─────────────────────────────
 function openModal(p){
-  if(!hasPerm('wages'))return;
   modalPerson=p;
   $('mName').textContent=p.person;
   $('mDue').textContent='Due: '+fmt(p.cash_due);
@@ -499,41 +523,23 @@ function openModal(p){
   $('mCash').textContent=fmt(p.cash_paid_total);
   $('mBank').textContent=fmt(p.bank_paid_total);
   $('mAmount').value=''; $('mNote').value=''; $('mMsg').textContent='';
-  if(currentMe)$('mBy').value=currentMe.name;
-  switchMTab('payment');
+  if(currentMe) $('mBy').value=currentMe.name;
   $('personModal').classList.remove('hidden');
 }
 
 window.closeModal=()=>$('personModal').classList.add('hidden');
 $('personModal').onclick=e=>{if(e.target===$('personModal'))closeModal();};
 
-window.switchMTab=function(tab){
-  modalTab=tab;
-  ['Pay','Adv','Debt'].forEach(t=>{
-    const id='mt'+t;
-    $(`mt${t}`).classList.toggle('active',
-      (t==='Pay'&&tab==='payment')||(t==='Adv'&&tab==='advance')||(t==='Debt'&&tab==='debt')
-    );
-  });
-  if(tab==='payment'){$('mByLabel').textContent='Paid By';$('mAddBtn').textContent='Add Payment';$('mAddBtn').style.background='#111';}
-  else if(tab==='advance'){$('mByLabel').textContent='Given By';$('mAddBtn').textContent='Add Advance';$('mAddBtn').style.background='#111';}
-  else{$('mByLabel').textContent='Received By';$('mAddBtn').textContent='💰 Collect Debt';$('mAddBtn').style.background='#c00';}
-};
-
 window.modalSubmit=async function(){
   const token=getToken(); if(!token||!modalPerson)return;
-  const amount=$('mAmount').value, method=$('mMethod').value;
-  const by=$('mBy').value.trim(), note=$('mNote').value.trim();
+  const amount=$('mAmount').value, by=$('mBy').value.trim(), note=$('mNote').value.trim();
   const msg=$('mMsg');
   if(!amount||isNaN(parseFloat(amount))||parseFloat(amount)<=0){msg.textContent='Enter a valid amount';return;}
-  msg.textContent='Saving...'; $('mAddBtn').disabled=true;
+  msg.textContent='Saving...';
   try{
-    let res;
-    if(modalTab==='payment') res=await jsonp('add_payment',{token,person:modalPerson.person,amount,method,paid_by:by,note});
-    else if(modalTab==='advance') res=await jsonp('add_advance',{token,person:modalPerson.person,amount,method,paid_by:by,note});
-    else res=await jsonp('add_wage',{token,person:modalPerson.person,amount,note:note||'Debt collected'});
+    const res=await jsonp('collect_debt',{token,person:modalPerson.person,amount,paid_by:by,note:note||'Debt collected'});
     if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-    msg.textContent='✅ Saved!';
+    msg.textContent='✅ Collected!';
     $('mAmount').value=''; $('mNote').value='';
     await refreshSummary();
     const updated=peopleDueMap[modalPerson.person];
@@ -541,11 +547,8 @@ window.modalSubmit=async function(){
       modalPerson=updated;
       $('mDue').textContent='Due: '+fmt(updated.cash_due);
       $('mWage').textContent=fmt(updated.wage_total);
-      $('mCash').textContent=fmt(updated.cash_paid_total);
-      $('mBank').textContent=fmt(updated.bank_paid_total);
     }
   }catch(e){msg.textContent='Error: '+e.message;}
-  finally{$('mAddBtn').disabled=false;}
 };
 
 // ── Wage History ──────────────────────────────────────────
@@ -567,8 +570,24 @@ window.loadWageHistory=async function(){
   });
   if(!(data.wage_history||[]).length)msg.textContent='No results.';
 };
-
 window.clearWageFilters=function(){$('whPerson').value='';$('whFrom').value='';$('whTo').value='';loadWageHistory();};
+
+// ── Advance This Month ────────────────────────────────────
+async function loadAdvThisMonth(){
+  const token=getToken();if(!token)return;
+  const msg=$('advListMsg'); msg.textContent='Loading...';
+  const data=await jsonp('advance_history',{token});
+  if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
+  const rows=(data.advance_history||[]).filter(r=>inRange(r.date,monthStart(),monthEnd()));
+  msg.textContent='';
+  const box=$('advThisMonthList'); box.innerHTML='';
+  if(!rows.length){msg.textContent='No advances this month.';return;}
+  rows.forEach(a=>{
+    const div=document.createElement('div');div.className='row';
+    div.innerHTML=`<div class="row-left"><div class="row-name">${a.person||''}</div><div class="row-sub">${a.paid_by||''} • ${a.date||''}${shortM(a.method)?' • '+shortM(a.method):''}</div>${a.note?`<div class="row-sub">${a.note}</div>`:''}</div><span class="badge advance">${fmt(a.amount)}</span>`;
+    box.appendChild(div);
+  });
+}
 
 // ── Advance History ───────────────────────────────────────
 window.loadAdvHistory=async function(){
@@ -589,7 +608,6 @@ window.loadAdvHistory=async function(){
   });
   if(!rows.length)msg.textContent='No results.';
 };
-
 window.clearAdvFilters=function(){$('ahPerson').value='';$('ahFrom').value='';$('ahTo').value='';loadAdvHistory();};
 
 // ── Signatures ────────────────────────────────────────────
@@ -629,40 +647,32 @@ window.closeSigImg=()=>$('sigImgModal').classList.add('hidden');
 $('depImage').onchange=function(){
   const file=this.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    $('depImgPreview').innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:150px;border-radius:8px;margin-top:4px;" />`;
-  };
+  reader.onload=e=>$('depImgPreview').innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:150px;border-radius:8px;margin-top:4px;" />`;
   reader.readAsDataURL(file);
 };
 
 window.addDeposit=async function(){
   const token=getToken(); if(!token)return;
-  const name=$('depName').value.trim();
-  const resDate=$('depDate').value;
-  const covers=$('depCovers').value||'0';
-  const amount=$('depAmount').value;
-  const method=$('depMethod').value;
-  const note=$('depNote').value.trim();
+  const name=$('depName').value.trim(), resDate=$('depDate').value;
+  const covers=$('depCovers').value||'0', amount=$('depAmount').value;
+  const method=$('depMethod').value, note=$('depNote').value.trim();
   const msg=$('depMsg');
   if(!name){msg.textContent='Customer name required';return;}
   if(!resDate){msg.textContent='Reservation date required';return;}
   if(!amount||isNaN(parseFloat(amount))){msg.textContent='Enter a valid amount';return;}
-
   let imageBase64='';
-  const fileInput=$('depImage');
-  if(fileInput.files[0]){
+  if($('depImage').files[0]){
     imageBase64=await new Promise(res=>{
       const reader=new FileReader();
       reader.onload=e=>res(e.target.result);
-      reader.readAsDataURL(fileInput.files[0]);
+      reader.readAsDataURL($('depImage').files[0]);
     });
   }
-
   msg.textContent='Saving...';
   const res=await jsonp('add_deposit',{token,customer_name:name,res_date:resDate,covers,amount,method,note,image_base64:imageBase64});
   if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
   msg.textContent='✅ Deposit saved!';
-  $('depName').value='';$('depDate').value='';$('depCovers').value='';$('depAmount').value='';$('depNote').value='';$('depImgPreview').innerHTML='';fileInput.value='';
+  $('depName').value='';$('depDate').value='';$('depCovers').value='';$('depAmount').value='';$('depNote').value='';$('depImgPreview').innerHTML='';$('depImage').value='';
 };
 
 window.loadDeposits=async function(){
@@ -678,16 +688,15 @@ window.loadDeposits=async function(){
   msg.textContent=deps.length?'':'No deposits found.';
   deps.forEach(d=>{
     const div=document.createElement('div'); div.className='dep-card';
-    const methodBadge=d.method==='CC'?'💳 Credit Card':d.method==='BANK'?'🏦 Bank':'💵 Cash';
+    const mIcon=d.method==='CC'?'💳':d.method==='BANK'?'🏦':'💵';
     div.innerHTML=`
-      <div class="dep-row">
-        <div><div class="dep-name">${d.customer_name}</div><div class="dep-date">📅 ${d.res_date} · 👥 ${d.covers} covers</div></div>
-        <div style="text-align:right;"><div style="font-size:18px;font-weight:900;">${fmt(d.amount)}</div><div class="muted">${methodBadge}</div></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="dep-name">${d.customer_name}</div><div class="muted">📅 ${d.res_date} · 👥 ${d.covers} covers</div></div>
+        <div style="text-align:right;"><div style="font-size:18px;font-weight:900;">${fmt(d.amount)}</div><div class="muted">${mIcon} ${d.method}</div></div>
       </div>
-      ${d.note?`<div class="muted" style="margin-top:6px;">📝 ${d.note}</div>`:''}
+      ${d.note?`<div class="muted" style="margin-top:5px;">📝 ${d.note}</div>`:''}
       ${d.added_by?`<div class="muted">Added by: ${d.added_by}</div>`:''}
-      ${d.image_base64?`<img src="${d.image_base64}" class="dep-img" onclick="openDepImg('${d.image_base64}')" title="Click to enlarge" />`:''}
-    `;
+      ${d.image_base64?`<img src="${d.image_base64}" class="dep-img" onclick="openDepImg('${d.image_base64}')" />`:''}`;
     box.appendChild(div);
   });
 };
@@ -702,8 +711,6 @@ window.saveToken=async function(){
   localStorage.setItem('lpa_token',t);
   $('tokenMsg').textContent='Saved. Refreshing...';
   await refreshSummary();
-  if(hasPerm('wages'))showPage('wages');
-  else if(hasPerm('deposits'))showPage('deposits');
 };
 
 window.addUser=async function(){
@@ -725,34 +732,49 @@ window.loadUsers=async function(){
   (data.users||[]).forEach(u=>{
     const div=document.createElement('div'); div.className='user-card';
     const perms=(u.permissions||'').split(',').map(s=>s.trim()).filter(Boolean);
-    const allPerms=['wages','deposits'];
     div.innerHTML=`
-      <div class="user-name">${u.name} <span style="font-size:11px;color:#aaa;">(${u.role})</span></div>
-      <div class="user-token">${u.token}</div>
+      <div style="font-size:14px;font-weight:700;">${u.name} <span style="font-size:11px;color:#aaa;">(${u.role})</span></div>
+      <div style="font-size:11px;color:#aaa;font-family:monospace;">${u.token}</div>
       <div class="perm-row">
-        ${allPerms.map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" onclick="togglePerm('${u.token}','${p}',this)">${p}</button>`).join('')}
-        <button class="perm-btn ${u.active?'on':''}" style="${u.active?'background:#1a6a1a;border-color:#1a6a1a;':'background:#c00;color:#fff;border-color:#c00;'}" onclick="toggleActive('${u.token}',${u.active},this)">${u.active?'✅ Active':'❌ Inactive'}</button>
-      </div>
-    `;
+        ${['wages','deposits'].map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" data-perm="${p}" onclick="togglePerm('${u.token}','${p}',this)">${p}</button>`).join('')}
+        <button class="perm-btn" style="${u.active?'background:#1a6a1a;color:#fff;border-color:#1a6a1a':'background:#c00;color:#fff;border-color:#c00'}" onclick="toggleActive('${u.token}',${u.active},this)">${u.active?'✅ Active':'❌ Inactive'}</button>
+        <button class="perm-btn" style="background:#007AFF;color:#fff;border-color:#007AFF;" onclick="changeRole('${u.token}','${u.name}','${u.role}')">👤 ${u.role}</button>
+        <button class="perm-btn" style="background:#fff0f0;color:#c00;border-color:#ffcccc;" onclick="deleteUser('${u.token}','${u.name}')">🗑 Delete</button>
+      </div>`;
     box.appendChild(div);
   });
 };
 
+window.changeRole=function(userToken, userName, currentRole){
+  const roles=['VIEWER','PAYER','EDITOR','ADMIN'].filter(r=>r!==currentRole);
+  const choice=prompt(`Change role for ${userName}\nCurrent: ${currentRole}\n\nNew role:\n${roles.map((r,i)=>`${i+1}. ${r}`).join('\n')}\n\nEnter number:`);
+  if(!choice)return;
+  const idx=parseInt(choice)-1;
+  if(idx<0||idx>=roles.length){alert('Invalid choice');return;}
+  const newRole=roles[idx];
+  const token=getToken();
+  jsonp('set_role',{token,user_token:userToken,role:newRole}).then(res=>{
+    if(!res.ok){alert('Error: '+(res.error||''));return;}
+    loadUsers();
+  });
+};
+
+window.deleteUser=async function(userToken, userName){
+  if(!confirm(`Delete user "${userName}"? This cannot be undone.`))return;
+  const token=getToken();
+  const res=await jsonp('delete_user',{token,user_token:userToken});
+  if(!res.ok){alert('Error: '+(res.error||''));return;}
+  loadUsers();
+};
+
 window.togglePerm=async function(userToken, perm, btn){
   const token=getToken();
-  // Get current permissions from sibling buttons
   const row=btn.parentElement;
   const currentPerms=[];
-  row.querySelectorAll('.perm-btn').forEach(b=>{
-    if(b.textContent==='✅ Active'||b.textContent==='❌ Inactive')return;
-    if(b.classList.contains('on'))currentPerms.push(b.textContent.trim());
-  });
-  // Toggle
+  row.querySelectorAll('[data-perm]').forEach(b=>{if(b.classList.contains('on'))currentPerms.push(b.dataset.perm);});
   const idx=currentPerms.indexOf(perm);
-  if(idx>=0)currentPerms.splice(idx,1);
-  else currentPerms.push(perm);
-  const newPerms=currentPerms.join(',');
-  const res=await jsonp('set_permissions',{token,user_token:userToken,permissions:newPerms});
+  if(idx>=0)currentPerms.splice(idx,1); else currentPerms.push(perm);
+  const res=await jsonp('set_permissions',{token,user_token:userToken,permissions:currentPerms.join(',')});
   if(!res.ok){alert('Error: '+(res.error||''));return;}
   btn.classList.toggle('on',currentPerms.includes(perm));
 };
