@@ -141,15 +141,9 @@
       <div class="muted" id="lastUpdated" style="margin-top:10px;">—</div>
     </div>
 
-    <!-- App Banner for payments -->
-    <div class="app-banner">
-      <div class="app-banner-title">📱 Signatures Required</div>
-      <div class="app-banner-sub">To add payments or advances, please use the <strong>mobile app</strong>. Signatures are collected there and synced here automatically.</div>
-    </div>
-
     <div class="card">
       <div class="card-title">Staff Status</div>
-      <div class="muted" style="margin-bottom:10px;font-style:italic;">Tap to view details or collect debt</div>
+      <div class="muted" style="margin-bottom:10px;font-style:italic;">Tap to add payment, advance or collect debt</div>
       <div id="peopleList"></div>
     </div>
   </div>
@@ -196,10 +190,22 @@
     <button class="sub-tab" id="aSubHistory" onclick="showAdvSub('history')">History</button>
   </div>
 
-  <!-- App Banner -->
-  <div class="app-banner">
-    <div class="app-banner-title">📱 Signatures Required</div>
-    <div class="app-banner-sub">To add advances, please use the <strong>mobile app</strong>. Signatures are collected there.</div>
+  <!-- Add Advance Form -->
+  <div class="card" id="advAddForm">
+    <div class="card-title">Add Advance</div>
+    <div class="grid2">
+      <div><label>Person</label><select id="advPerson2"></select></div>
+      <div><label>Amount</label><input id="advAmount2" inputmode="decimal" placeholder="100" /></div>
+    </div>
+    <div class="grid2">
+      <div><label>Method</label><select id="advMethod2"><option value="CASH">Cash</option><option value="BANK">Bank</option></select></div>
+      <div><label>Given By</label><input id="advBy2" /></div>
+    </div>
+    <label>Note</label>
+    <input id="advNote2" placeholder="Optional" />
+    <button class="btn btn-black" onclick="addAdvanceWeb()" style="margin-top:12px;">Add Advance</button>
+    <div class="form-msg" id="advMsg2"></div>
+    <div class="muted" style="margin-top:8px;text-align:center;">📱 For signature, use mobile app</div>
   </div>
 
   <!-- This month -->
@@ -308,7 +314,7 @@
   </div>
 </div>
 
-<!-- Person Modal (debt collect only from web) -->
+<!-- Person Modal -->
 <div class="modal-bg hidden" id="personModal">
   <div class="modal-sheet">
     <div class="modal-hdr">
@@ -324,24 +330,39 @@
       <div class="mstat"><div class="mstat-l">Bank Paid</div><div class="mstat-v" id="mBank">—</div></div>
     </div>
 
-    <!-- App redirect notice -->
-    <div class="app-banner" style="margin-bottom:14px;">
-      <div class="app-banner-title">📱 Use Mobile App for Payments</div>
-      <div class="app-banner-sub">Payments and advances require a signature. Use the mobile app to add them.</div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="mtPay" onclick="switchMTab('payment')">💵 Payment</button>
+      <button class="modal-tab" id="mtAdv" onclick="switchMTab('advance')">💳 Advance</button>
+      <button class="modal-tab red" id="mtDebt" onclick="switchMTab('debt')">🔴 Collect</button>
     </div>
 
-    <!-- Only debt collection allowed from web -->
-    <div style="background:#fff5f5;border:1px solid #ffcccc;border-radius:12px;padding:14px;margin-bottom:14px;">
-      <div style="font-weight:700;margin-bottom:8px;">🔴 Collect Debt (Web Only)</div>
-      <div class="muted" style="margin-bottom:10px;">Only use this when an employee has paid back money in person.</div>
-      <label>Amount</label>
-      <input id="mAmount" inputmode="decimal" placeholder="0.00" />
-      <label>Received By</label>
-      <input id="mBy" />
-      <label>Note</label>
-      <input id="mNote" placeholder="e.g. Cash received" />
-      <button class="btn" style="background:#c00;color:#fff;margin-top:12px;" onclick="modalSubmit()">💰 Collect Debt</button>
-      <div class="form-msg" id="mMsg"></div>
+    <div class="grid2">
+      <div><label>Amount</label><input id="mAmount" inputmode="decimal" placeholder="0.00" /></div>
+      <div id="mMethodDiv"><label>Method</label><select id="mMethod"><option value="CASH">Cash</option><option value="BANK">Bank</option></select></div>
+    </div>
+    <label id="mByLabel">Paid By</label>
+    <input id="mBy" />
+    <label>Note</label>
+    <input id="mNote" placeholder="Optional" />
+    <button class="btn btn-black" id="mAddBtn" onclick="modalSubmit()">Add Payment</button>
+    <div class="form-msg" id="mMsg"></div>
+    <div class="muted" style="margin-top:10px;text-align:center;">📱 For signature capture, use the mobile app</div>
+  </div>
+</div>
+
+<!-- Signature Canvas Modal -->
+<div class="sigimg-bg hidden" id="sigCanvasModal">
+  <div class="sigimg-box" style="max-width:420px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:700;font-size:15px;" id="sigCanvasTitle">Please sign below</div>
+      <button onclick="cancelSigCanvas()" style="background:#eee;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;">✕ Cancel</button>
+    </div>
+    <div class="muted" style="margin-bottom:10px;">Sign with mouse or finger</div>
+    <canvas id="sigCanvas" width="380" height="180"
+      style="border:2px solid #111;border-radius:10px;background:#fff;cursor:crosshair;touch-action:none;max-width:100%;"></canvas>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button onclick="clearSigCanvas()" style="flex:1;padding:10px;border-radius:10px;border:1px solid #ddd;background:#eee;font-weight:600;cursor:pointer;">Clear</button>
+      <button onclick="confirmSigCanvas()" style="flex:1;padding:10px;border-radius:10px;border:none;background:#111;color:#fff;font-weight:700;cursor:pointer;">Confirm ✓</button>
     </div>
   </div>
 </div>
@@ -505,6 +526,16 @@ async function refreshSummary(){
     if([...sel.options].some(o=>o.value===prev))sel.value=prev;
   });
 
+  // Populate advance person select
+  const advSel2=$('advPerson2');
+  if(advSel2){
+    const prev2=advSel2.value; advSel2.innerHTML='';
+    sorted.forEach(p=>{const o=document.createElement('option');o.value=p.person;o.textContent=p.person;advSel2.appendChild(o);});
+    if([...advSel2.options].some(o=>o.value===prev2))advSel2.value=prev2;
+  }
+  const advBy2=$('advBy2');
+  if(advBy2&&!advBy2.value&&currentMe)advBy2.value=currentMe.name;
+
   if(currentMe) $('mBy').value=$('mBy').value||currentMe.name;
 }
 
@@ -524,22 +555,69 @@ function openModal(p){
   $('mBank').textContent=fmt(p.bank_paid_total);
   $('mAmount').value=''; $('mNote').value=''; $('mMsg').textContent='';
   if(currentMe) $('mBy').value=currentMe.name;
+  switchMTab('payment');
   $('personModal').classList.remove('hidden');
 }
 
 window.closeModal=()=>$('personModal').classList.add('hidden');
 $('personModal').onclick=e=>{if(e.target===$('personModal'))closeModal();};
 
+let modalTab='payment';
+
+window.switchMTab=function(tab){
+  modalTab=tab;
+  $('mtPay').classList.toggle('active',tab==='payment');
+  $('mtAdv').classList.toggle('active',tab==='advance');
+  $('mtDebt').classList.toggle('active',tab==='debt');
+  if(tab==='payment'){$('mByLabel').textContent='Paid By';$('mAddBtn').textContent='Add Payment';$('mAddBtn').style.background='#111';}
+  else if(tab==='advance'){$('mByLabel').textContent='Given By';$('mAddBtn').textContent='Add Advance';$('mAddBtn').style.background='#111';}
+  else{$('mByLabel').textContent='Received By';$('mAddBtn').textContent='💰 Collect Debt';$('mAddBtn').style.background='#c00';}
+};
+
 window.modalSubmit=async function(){
   const token=getToken(); if(!token||!modalPerson)return;
-  const amount=$('mAmount').value, by=$('mBy').value.trim(), note=$('mNote').value.trim();
+  const amount=$('mAmount').value, method=$('mMethod').value;
+  const by=$('mBy').value.trim(), note=$('mNote').value.trim();
   const msg=$('mMsg');
   if(!amount||isNaN(parseFloat(amount))||parseFloat(amount)<=0){msg.textContent='Enter a valid amount';return;}
+
+  // Collect Debt requires signature
+  if(modalTab==='debt'){
+    requestSignature(`Collect £${parseFloat(amount).toFixed(2)} from ${modalPerson.person}`, async(base64)=>{
+      msg.textContent='Saving...';
+      $('mAddBtn').disabled=true;
+      try{
+        const res=await jsonp('collect_debt',{token,person:modalPerson.person,amount,paid_by:by,note:note||'Debt collected'});
+        if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
+        // Save signature to Firebase
+        await saveSignatureToFirebase({
+          type:'debt', person:modalPerson.person, amount:parseFloat(amount),
+          method:'CASH', paidBy:by, note:note||'Debt collected',
+          signatureBase64:base64
+        });
+        msg.textContent='✅ Debt collected with signature!';
+        $('mAmount').value=''; $('mNote').value='';
+        await refreshSummary();
+        const updated=peopleDueMap[modalPerson.person];
+        if(updated){ modalPerson=updated; $('mDue').textContent='Due: '+fmt(updated.cash_due); $('mWage').textContent=fmt(updated.wage_total); }
+      }catch(e){msg.textContent='Error: '+e.message;}
+      finally{$('mAddBtn').disabled=false;}
+    });
+    return;
+  }
+
   msg.textContent='Saving...';
+  $('mAddBtn').disabled=true;
   try{
-    const res=await jsonp('collect_debt',{token,person:modalPerson.person,amount,paid_by:by,note:note||'Debt collected'});
+    let res;
+    if(modalTab==='payment'){
+      res=await jsonp('add_payment',{token,person:modalPerson.person,amount,method,paid_by:by,note});
+    } else {
+      res=await jsonp('add_advance',{token,person:modalPerson.person,amount,method,paid_by:by,note});
+    }
     if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-    msg.textContent='✅ Collected!';
+    const labels={payment:'Payment added ✅ (no signature)',advance:'Advance added ✅ (no signature)'};
+    msg.textContent=labels[modalTab];
     $('mAmount').value=''; $('mNote').value='';
     await refreshSummary();
     const updated=peopleDueMap[modalPerson.person];
@@ -547,8 +625,11 @@ window.modalSubmit=async function(){
       modalPerson=updated;
       $('mDue').textContent='Due: '+fmt(updated.cash_due);
       $('mWage').textContent=fmt(updated.wage_total);
+      $('mCash').textContent=fmt(updated.cash_paid_total);
+      $('mBank').textContent=fmt(updated.bank_paid_total);
     }
   }catch(e){msg.textContent='Error: '+e.message;}
+  finally{$('mAddBtn').disabled=false;}
 };
 
 // ── Wage History ──────────────────────────────────────────
@@ -573,6 +654,24 @@ window.loadWageHistory=async function(){
 window.clearWageFilters=function(){$('whPerson').value='';$('whFrom').value='';$('whTo').value='';loadWageHistory();};
 
 // ── Advance This Month ────────────────────────────────────
+window.addAdvanceWeb=async function(){
+  const token=getToken();if(!token)return;
+  const person=$('advPerson2').value;
+  const amount=$('advAmount2').value;
+  const method=$('advMethod2').value;
+  const by=$('advBy2').value.trim();
+  const note=$('advNote2').value.trim();
+  const msg=$('advMsg2');
+  if(!person){msg.textContent='Select a person';return;}
+  if(!amount||isNaN(parseFloat(amount))||parseFloat(amount)<=0){msg.textContent='Enter a valid amount';return;}
+  msg.textContent='Saving...';
+  const res=await jsonp('add_advance',{token,person,amount,method,paid_by:by,note});
+  if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
+  msg.textContent='✅ Advance added!';
+  $('advAmount2').value='';$('advNote2').value='';
+  loadAdvThisMonth();
+};
+
 async function loadAdvThisMonth(){
   const token=getToken();if(!token)return;
   const msg=$('advListMsg'); msg.textContent='Loading...';
@@ -611,6 +710,19 @@ window.loadAdvHistory=async function(){
 window.clearAdvFilters=function(){$('ahPerson').value='';$('ahFrom').value='';$('ahTo').value='';loadAdvHistory();};
 
 // ── Signatures ────────────────────────────────────────────
+async function saveSignatureToFirebase({type, person, amount, method, paidBy, note, signatureBase64}){
+  try{
+    const { addDoc, collection: col, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await addDoc(col(db,'signatures'),{
+      transactionId: Date.now().toString(),
+      type, person, amount, method, signedBy:person, paidBy, note,
+      date: new Date().toISOString().slice(0,10),
+      signatureBase64,
+      createdAt: {seconds: Math.floor(Date.now()/1000), nanoseconds:0}
+    });
+  }catch(e){ console.error('Sig save error:',e); }
+}
+
 window.loadSignatures=async function(){
   const msg=$('sigMsg'),box=$('sigList');
   msg.textContent='Loading...'; box.innerHTML='';
@@ -789,6 +901,65 @@ window.toggleActive=async function(userToken, currentActive, btn){
   btn.style.borderColor=newActive?'#1a6a1a':'#c00';
 };
 
+// ── Signature Canvas ─────────────────────────────────────
+let sigCanvasCallback = null;
+let sigDrawing = false;
+let sigHasDrawn = false;
+
+function initSigCanvas(){
+  const canvas = document.getElementById('sigCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  function getPos(e){
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+  }
+
+  canvas.onmousedown = e => { sigDrawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); };
+  canvas.onmousemove = e => { if(!sigDrawing)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); sigHasDrawn=true; };
+  canvas.onmouseup = () => sigDrawing=false;
+  canvas.onmouseleave = () => sigDrawing=false;
+
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); sigDrawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); },{passive:false});
+  canvas.addEventListener('touchmove', e=>{ e.preventDefault(); if(!sigDrawing)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); sigHasDrawn=true; },{passive:false});
+  canvas.addEventListener('touchend', ()=>sigDrawing=false);
+}
+
+window.clearSigCanvas = function(){
+  const canvas = document.getElementById('sigCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  sigHasDrawn = false;
+};
+
+window.cancelSigCanvas = function(){
+  $('sigCanvasModal').classList.add('hidden');
+  sigCanvasCallback = null;
+};
+
+window.confirmSigCanvas = function(){
+  if(!sigHasDrawn){ alert('Please sign first'); return; }
+  const canvas = document.getElementById('sigCanvas');
+  const base64 = canvas.toDataURL('image/png');
+  $('sigCanvasModal').classList.add('hidden');
+  if(sigCanvasCallback) sigCanvasCallback(base64);
+  sigCanvasCallback = null;
+};
+
+function requestSignature(title, callback){
+  $('sigCanvasTitle').textContent = title;
+  clearSigCanvas();
+  $('sigCanvasModal').classList.remove('hidden');
+  sigCanvasCallback = callback;
+}
+
 // ── Init ──────────────────────────────────────────────────
 const saved=localStorage.getItem('lpa_token'), fromUrl=qs.get('token');
 if(fromUrl)$('tokenInput').value=fromUrl;
@@ -796,6 +967,7 @@ else if(saved)$('tokenInput').value=saved;
 
 refreshSummary();
 setInterval(()=>{if(currentPage==='wages')refreshSummary();},15000);
+initSigCanvas();
 </script>
 </body>
 </html>
