@@ -387,9 +387,25 @@
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+<script>
+// Firebase loaded dynamically
+let db = null;
+async function initFirebase(){
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const { getFirestore, collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  window._fbFirestore = { getFirestore, collection, query, orderBy, getDocs };
+  const firebaseConfig = {
+    apiKey: "AIzaSyC-zzdN5aBvZ0SNABA2nUvThNOvcC5MGbA",
+    authDomain: "lpamanagement.firebaseapp.com",
+    projectId: "lpamanagement",
+    storageBucket: "lpamanagement.firebasestorage.app",
+    messagingSenderId: "401279993684",
+    appId: "1:401279993684:web:124f9827bff9a41cf22ac1",
+  };
+  const fbApp = initializeApp(firebaseConfig);
+  db = getFirestore(fbApp);
+}
+initFirebase();
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-zzdN5aBvZ0SNABA2nUvThNOvcC5MGbA",
@@ -725,7 +741,8 @@ window.clearAdvFilters=function(){$('ahPerson').value='';$('ahFrom').value='';$(
 // ── Signatures ────────────────────────────────────────────
 async function saveSignatureToFirebase({type, person, amount, method, paidBy, note, signatureBase64}){
   try{
-    const { addDoc, collection: col, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const { addDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const {collection: col} = window._fbFirestore;
     await addDoc(col(db,'signatures'),{
       transactionId: Date.now().toString(),
       type, person, amount, method, signedBy:person, paidBy, note,
@@ -742,6 +759,8 @@ window.loadSignatures=async function(){
   const msg=$('sigMsg'),box=$('sigList');
   msg.textContent='Loading...'; box.innerHTML='';
   try{
+    if(!db){msg.textContent='Firebase not ready, try again';return;}
+    const {getDocs,query,collection,orderBy}=window._fbFirestore;
     const pf=$('sigPerson').value, tf=$('sigType').value;
     const snap=await getDocs(query(collection(db,'signatures'),orderBy('createdAt','desc')));
     let docs=snap.docs.map(d=>({id:d.id,...d.data()}));
