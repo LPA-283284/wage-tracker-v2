@@ -171,10 +171,16 @@
       <div class="filters">
         <div><label>Person</label><select id="sigPerson"><option value="">All</option></select></div>
         <div><label>Type</label>
-          <select id="sigType"><option value="">All</option><option value="payment">Payment</option><option value="advance">Advance</option></select>
+          <select id="sigType">
+            <option value="">All</option>
+            <option value="payment">Payment</option>
+            <option value="advance">Advance</option>
+            <option value="debt">Collect Debt</option>
+          </select>
         </div>
         <div class="filters-actions">
           <button style="background:#111;color:#fff;border-color:#111;" onclick="loadSignatures()">Load</button>
+          <button style="background:#1a6a1a;color:#fff;border-color:#1a6a1a;" onclick="exportAllPDF()">📄 Export PDF</button>
         </div>
       </div>
       <div class="muted" id="sigMsg"></div>
@@ -606,30 +612,37 @@ window.modalSubmit=async function(){
     return;
   }
 
-  msg.textContent='Saving...';
-  $('mAddBtn').disabled=true;
-  try{
-    let res;
-    if(modalTab==='payment'){
-      res=await jsonp('add_payment',{token,person:modalPerson.person,amount,method,paid_by:by,note});
-    } else {
-      res=await jsonp('add_advance',{token,person:modalPerson.person,amount,method,paid_by:by,note});
-    }
-    if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-    const labels={payment:'Payment added ✅ (no signature)',advance:'Advance added ✅ (no signature)'};
-    msg.textContent=labels[modalTab];
-    $('mAmount').value=''; $('mNote').value='';
-    await refreshSummary();
-    const updated=peopleDueMap[modalPerson.person];
-    if(updated){
-      modalPerson=updated;
-      $('mDue').textContent='Due: '+fmt(updated.cash_due);
-      $('mWage').textContent=fmt(updated.wage_total);
-      $('mCash').textContent=fmt(updated.cash_paid_total);
-      $('mBank').textContent=fmt(updated.bank_paid_total);
-    }
-  }catch(e){msg.textContent='Error: '+e.message;}
-  finally{$('mAddBtn').disabled=false;}
+  // Payment and Advance also require signature
+  const actionLabel = modalTab==='payment' ? 'Payment' : 'Advance';
+  requestSignature(`${actionLabel}: £${parseFloat(amount).toFixed(2)} — ${modalPerson.person}`, async(base64)=>{
+    msg.textContent='Saving...';
+    $('mAddBtn').disabled=true;
+    try{
+      let res;
+      if(modalTab==='payment'){
+        res=await jsonp('add_payment',{token,person:modalPerson.person,amount,method,paid_by:by,note});
+      } else {
+        res=await jsonp('add_advance',{token,person:modalPerson.person,amount,method,paid_by:by,note});
+      }
+      if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
+      await saveSignatureToFirebase({
+        type:modalTab, person:modalPerson.person, amount:parseFloat(amount),
+        method, paidBy:by, note, signatureBase64:base64
+      });
+      msg.textContent=`✅ ${actionLabel} saved with signature!`;
+      $('mAmount').value=''; $('mNote').value='';
+      await refreshSummary();
+      const updated=peopleDueMap[modalPerson.person];
+      if(updated){
+        modalPerson=updated;
+        $('mDue').textContent='Due: '+fmt(updated.cash_due);
+        $('mWage').textContent=fmt(updated.wage_total);
+        $('mCash').textContent=fmt(updated.cash_paid_total);
+        $('mBank').textContent=fmt(updated.bank_paid_total);
+      }
+    }catch(e){msg.textContent='Error: '+e.message;}
+    finally{$('mAddBtn').disabled=false;}
+  });
 };
 
 // ── Wage History ──────────────────────────────────────────
@@ -723,6 +736,8 @@ async function saveSignatureToFirebase({type, person, amount, method, paidBy, no
   }catch(e){ console.error('Sig save error:',e); }
 }
 
+let loadedSignatures = [];
+
 window.loadSignatures=async function(){
   const msg=$('sigMsg'),box=$('sigList');
   msg.textContent='Loading...'; box.innerHTML='';
@@ -732,21 +747,115 @@ window.loadSignatures=async function(){
     let docs=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(pf)docs=docs.filter(d=>d.person===pf);
     if(tf)docs=docs.filter(d=>d.type===tf);
-    msg.textContent=docs.length?'':'No signatures found.';
-    docs.forEach(sig=>{
-      const div=document.createElement('div'); div.className='row';
-      const title=`${sig.type==='payment'?'Payment':'Advance'}: ${fmt(sig.amount)} – ${sig.person}`;
-      const meta=`${sig.paidBy||''} · ${sig.date||''} · ${sig.method||''}`;
-      div.innerHTML=`<div class="row-left">
-        <div class="row-name">${sig.person}</div>
-        <div class="row-sub">${meta}${sig.note?' · '+sig.note:''}</div>
-        <img src="${sig.signatureBase64}" style="max-width:100%;max-height:80px;border-radius:6px;margin-top:6px;cursor:pointer;border:1px solid #eee;"
-          onclick="openSigImg('${sig.signatureBase64}','${title}','${meta}')" />
-      </div>
-      <span class="badge ${sig.type==='payment'?'cash':'advance'}" style="align-self:flex-start;">${fmt(sig.amount)}</span>`;
+    loadedSignatures=docs;
+    msg.textContent=docs.length?`${docs.length} signature(s) found`:'No signatures found.';
+
+    docs.forEach((sig,idx)=>{
+      const div=document.createElement('div');
+      div.style.cssText='background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid '+(sig.type==='payment'?'#007AFF':sig.type==='advance'?'#ff8c00':'#c00')+';';
+      const typeLabel={payment:'💵 Payment',advance:'💳 Advance',debt:'🔴 Collect Debt'}[sig.type]||sig.type;
+      const badgeColor={payment:'#e7f0ff',advance:'#fff0e5',debt:'#fff0f0'}[sig.type]||'#f0f0f0';
+      const badgeText={payment:'#0b3a9a',advance:'#8a3a00',debt:'#c00'}[sig.type]||'#111';
+      div.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div>
+            <div style="font-size:15px;font-weight:800;">${sig.person}</div>
+            <div style="font-size:12px;color:#666;">${sig.paidBy||''} · ${sig.date||''} · ${sig.method||''}</div>
+            ${sig.note?`<div style="font-size:12px;color:#888;">📝 ${sig.note}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span style="padding:4px 10px;border-radius:20px;font-weight:800;font-size:13px;background:${badgeColor};color:${badgeText};">${fmt(sig.amount)}</span>
+            <span style="font-size:11px;color:#888;">${typeLabel}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <img src="${sig.signatureBase64}"
+            style="max-height:70px;border-radius:6px;border:1px solid #eee;cursor:pointer;background:#fff;"
+            onclick="openSigImg('${sig.signatureBase64}','${typeLabel}: ${fmt(sig.amount)} – ${sig.person}','${sig.paidBy||''} · ${sig.date||''}')"
+            title="Click to enlarge" />
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button onclick="exportSinglePDF(${idx})" style="padding:6px 12px;border-radius:8px;border:none;background:#1a6a1a;color:#fff;font-weight:600;font-size:12px;cursor:pointer;">📄 PDF</button>
+            <button onclick="shareSig(${idx})" style="padding:6px 12px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;font-size:12px;cursor:pointer;">🔗 Share</button>
+          </div>
+        </div>`;
       box.appendChild(div);
     });
   }catch(e){msg.textContent='Error: '+e.message;}
+};
+
+window.exportSinglePDF=function(idx){
+  const sig=loadedSignatures[idx]; if(!sig)return;
+  const typeLabel={payment:'Payment',advance:'Advance',debt:'Collect Debt'}[sig.type]||sig.type;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signature Receipt</title>
+  <style>
+    body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px;}
+    .header{text-align:center;border-bottom:2px solid #111;padding-bottom:16px;margin-bottom:20px;}
+    .title{font-size:22px;font-weight:900;}
+    .sub{color:#666;font-size:14px;margin-top:4px;}
+    .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;}
+    .detail-label{color:#666;font-size:14px;}
+    .detail-value{font-weight:700;font-size:14px;}
+    .amount{font-size:28px;font-weight:900;text-align:center;margin:20px 0;}
+    .sig-section{margin-top:20px;text-align:center;}
+    .sig-section img{max-width:100%;border:1px solid #ddd;border-radius:8px;padding:10px;background:#fff;}
+    .footer{text-align:center;color:#999;font-size:12px;margin-top:20px;}
+    @media print{button{display:none;}}
+  </style></head><body>
+  <div class="header">
+    <div class="title">LPA Management</div>
+    <div class="sub">${typeLabel} Receipt</div>
+  </div>
+  <div class="amount">${fmt(sig.amount)}</div>
+  <div class="detail-row"><span class="detail-label">Person</span><span class="detail-value">${sig.person}</span></div>
+  <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${typeLabel}</span></div>
+  <div class="detail-row"><span class="detail-label">Method</span><span class="detail-value">${sig.method||'—'}</span></div>
+  <div class="detail-row"><span class="detail-label">Paid By</span><span class="detail-value">${sig.paidBy||'—'}</span></div>
+  <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${sig.date||'—'}</span></div>
+  ${sig.note?`<div class="detail-row"><span class="detail-label">Note</span><span class="detail-value">${sig.note}</span></div>`:''}
+  <div class="sig-section">
+    <div style="font-weight:700;margin-bottom:10px;">Signature</div>
+    <img src="${sig.signatureBase64}" />
+  </div>
+  <div class="footer">Generated by LPA Management App · ${new Date().toLocaleString('en-GB')}</div>
+  <br><button onclick="window.print()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Print / Save as PDF</button>
+  </body></html>`);
+  w.document.close();
+};
+
+window.exportAllPDF=function(){
+  if(!loadedSignatures.length){alert('Load signatures first');return;}
+  const w=window.open('','_blank');
+  const rows=loadedSignatures.map(sig=>{
+    const typeLabel={payment:'Payment',advance:'Advance',debt:'Collect Debt'}[sig.type]||sig.type;
+    return `<div style="page-break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <div><strong>${sig.person}</strong><div style="color:#666;font-size:12px;">${sig.paidBy||''} · ${sig.date||''} · ${typeLabel}</div>${sig.note?`<div style="color:#888;font-size:12px;">${sig.note}</div>`:''}</div>
+        <div style="font-size:20px;font-weight:900;">${fmt(sig.amount)}</div>
+      </div>
+      <img src="${sig.signatureBase64}" style="max-width:200px;border:1px solid #eee;border-radius:6px;background:#fff;" />
+    </div>`;
+  }).join('');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signatures Export</title>
+  <style>body{font-family:Arial,sans-serif;max-width:700px;margin:30px auto;padding:20px;}h1{text-align:center;}@media print{button{display:none;}}</style>
+  </head><body>
+  <h1>LPA Management — Signatures</h1>
+  <p style="color:#666;text-align:center;">Exported: ${new Date().toLocaleString('en-GB')} · ${loadedSignatures.length} records</p>
+  ${rows}
+  <button onclick="window.print()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:20px;">🖨️ Print / Save as PDF</button>
+  </body></html>`);
+  w.document.close();
+};
+
+window.shareSig=function(idx){
+  const sig=loadedSignatures[idx]; if(!sig)return;
+  const typeLabel={payment:'Payment',advance:'Advance',debt:'Collect Debt'}[sig.type]||sig.type;
+  const text=`${typeLabel}: ${fmt(sig.amount)} — ${sig.person}\nDate: ${sig.date}\nBy: ${sig.paidBy||''}`;
+  if(navigator.share){
+    navigator.share({title:'LPA Signature Receipt',text}).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard!'));
+  }
 };
 
 window.openSigImg=function(src,title,meta){
