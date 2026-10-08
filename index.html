@@ -22,28 +22,54 @@
   button, input, select, textarea { font-family:inherit; font-size:14px; }
   a { color:var(--wine); }
 
-  /* Left menu (same style as the HR screen) */
-  #appView { padding-left:230px; }
-  .topbar { background:var(--wine); color:#fff; position:fixed; top:0; left:0; bottom:0; width:230px; padding:18px 12px; overflow-y:auto; z-index:20; display:flex; flex-direction:column; }
-  .brand { font-weight:700; font-size:19px; letter-spacing:.2px; }
-  .sb-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
-  .sb-who { font-size:12px; opacity:.8; margin-top:2px; }
-  .sb-burger { display:none; background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:6px; font-size:20px; padding:4px 12px; cursor:pointer; }
-  .tabs { display:flex; flex-direction:column; gap:2px; }
-  .tab { background:transparent; color:#fff; border:0; border-radius:6px; padding:9px 12px; font-size:14px; font-weight:500; cursor:pointer; text-align:left; }
-  .tab:hover { background:rgba(255,255,255,.15); }
-  .tab.active { background:#fff; color:var(--wine); font-weight:600; }
-  .sb-group { font-size:11px; letter-spacing:.08em; text-transform:uppercase; opacity:.65; margin:14px 8px 4px; font-weight:700; }
-  .sb-sep { border-top:1px solid rgba(255,255,255,.25); margin:14px 6px 8px; }
-  .sb-foot { display:flex; flex-direction:column; }
+  #appView { padding-left:252px; }
+  @media (max-width: 800px) { #appView { padding-left:0; } }
+
+  /* ===== TeamOS side menu (shared look: site + HR) ===== */
+  .side { position:fixed; top:0; left:0; bottom:0; width:252px; z-index:40; display:flex; flex-direction:column;
+          background:radial-gradient(140% 60% at 0% 0%, #6A0E25 0%, transparent 60%), linear-gradient(180deg,#56091D 0%,#43061A 55%,#2C030C 100%);
+          color:#F5E6CC; border-right:1px solid rgba(217,178,111,.28); box-shadow:6px 0 24px rgba(46,3,12,.18); padding:0; overflow:hidden; align-items:stretch; justify-content:flex-start; flex-wrap:nowrap; gap:0; }
+  .side-brand { display:flex; align-items:center; gap:12px; padding:20px 18px 16px; border-bottom:1px solid rgba(217,178,111,.18); }
+  .side-brand img { width:44px; height:auto; filter:drop-shadow(0 3px 8px rgba(0,0,0,.35)); }
+  .side-name { font-size:22px; font-weight:700; letter-spacing:-.01em; line-height:1;
+               background:linear-gradient(180deg,#FFF3DC,#E7C48A 60%,#C99A55); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .side-tag { font-size:8.5px; letter-spacing:.13em; color:#CDB48A; margin-top:5px; white-space:nowrap; }
+  .side-burger { display:none; margin-left:auto; background:rgba(255,255,255,.08); color:#F5E6CC; border:1px solid rgba(217,178,111,.35); border-radius:10px; width:42px; height:38px; font-size:18px; cursor:pointer; }
+  .side-nav { flex:1; overflow-y:auto; padding:6px 12px 12px; display:flex; flex-direction:column; gap:2px; }
+  .side-nav::-webkit-scrollbar { width:6px; } .side-nav::-webkit-scrollbar-thumb { background:rgba(217,178,111,.25); border-radius:3px; }
+  .side .sb-group { display:flex; align-items:center; gap:10px; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:#D9B26F; font-weight:700; margin:16px 8px 6px; opacity:1; }
+  .side .sb-group::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(217,178,111,.35),transparent); }
+  .side .tab, .side-nav button { position:relative; display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:transparent; color:#EADBC2;
+          border:0; border-radius:10px; padding:10px 12px 10px 14px; font-size:14px; font-weight:500; cursor:pointer; transition:background .15s, color .15s; white-space:nowrap; }
+  .side .tab .ic, .side-nav button .ic { width:18px; height:18px; flex:none; opacity:.75; transition:opacity .15s, color .15s; }
+  .side .tab:hover, .side-nav button:hover { background:rgba(255,255,255,.07); color:#fff; }
+  .side .side-nav button:not(.active):hover { background:rgba(255,255,255,.07); }
+  .side .tab:hover .ic, .side-nav button:hover .ic { opacity:1; }
+  .side .tab.active, .side-nav button.active { background:linear-gradient(90deg,rgba(217,178,111,.26),rgba(217,178,111,.06)); color:#FFF4E0; font-weight:600; }
+  .side .tab.active::before, .side-nav button.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:3px; background:linear-gradient(180deg,#F3D9A4,#C99A55); }
+  .side .tab.active .ic, .side-nav button.active .ic { color:#E7C48A; opacity:1; }
+  .side-foot { padding:12px; border-top:1px solid rgba(217,178,111,.18); background:rgba(0,0,0,.12); }
+  .side-user { display:flex; align-items:center; gap:10px; padding:4px 4px 10px; }
+  .side-av { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#4A0817;
+             background:linear-gradient(135deg,#F3D9A4,#C99A55); flex:none; }
+  .side-uname { font-weight:600; font-size:13.5px; color:#FFF4E0; line-height:1.2; }
+  .side-urole { font-size:11px; color:#CDB48A; letter-spacing:.06em; }
+  .side-foot .side-btn { display:flex; align-items:center; gap:10px; width:100%; background:transparent; border:1px solid rgba(217,178,111,.25); color:#EADBC2;
+             border-radius:10px; padding:9px 12px; font-size:13.5px; cursor:pointer; margin-top:6px; }
+  .side-foot .side-btn:hover { background:rgba(255,255,255,.07); color:#fff; }
+  .side-foot .side-btn .ic { width:16px; height:16px; }
   @media (max-width: 800px) {
-    #appView { padding-left:0; }
-    .topbar { position:sticky; bottom:auto; width:auto; padding:10px 14px; }
-    .sb-top { align-items:center; margin:0; }
-    .sb-burger { display:block; }
-    .tabs, .sb-foot { display:none; }
-    body.sb-open .tabs, body.sb-open .sb-foot { display:flex; margin-top:8px; }
+    .side { position:sticky; bottom:auto; width:auto; border-right:0; border-bottom:1px solid rgba(217,178,111,.3); }
+    .side-brand { padding:10px 14px; border-bottom:0; }
+    .side-brand img { width:34px; }
+    .side-name { font-size:19px; }
+    .side-burger { display:block; }
+    .side-nav, .side-foot { display:none; }
+    body.sb-open .side-nav, body.sb-open .side-foot { display:flex; }
+    body.sb-open .side-foot { flex-direction:column; }
+    body.sb-open .side-nav { max-height:70vh; }
   }
+  @media print { .side { display:none !important; } }
 
   .wrap { max-width:1200px; margin:0 auto; padding:20px; }
   .page { display:none; }
@@ -173,13 +199,17 @@
 
 <!-- ───────────── APP ───────────── -->
 <div id="appView" class="hidden">
-  <div class="topbar" id="sidebar">
-    <div class="sb-top">
-      <div><div class="brand">TeamOS</div><div class="sb-who" id="whoSub"></div></div>
-      <button class="sb-burger" onclick="document.body.classList.toggle('sb-open')">☰</button>
+  <div class="side" id="sidebar">
+    <div class="side-brand">
+      <img src="logo.png" alt="">
+      <div><div class="side-name">TeamOS</div><div class="side-tag">MANAGE · GROW · SUCCEED</div></div>
+      <button class="side-burger no-print" onclick="document.body.classList.toggle('sb-open')" aria-label="Menu">☰</button>
     </div>
-    <nav class="tabs" id="tabs"></nav>
-    <div class="sb-foot"><div class="sb-sep"></div><button class="tab" id="logoutBtn">Log out</button></div>
+    <nav class="side-nav" id="tabs"></nav>
+    <div class="side-foot">
+      <div class="side-user"><div class="side-av" id="whoAv">·</div><div><div class="side-uname" id="whoName"></div><div class="side-urole" id="whoSub"></div></div></div>
+      <button class="side-btn" id="logoutBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Log out</button>
+    </div>
   </div>
 
   <div class="wrap">
@@ -479,7 +509,7 @@ async function boot() {
 async function finishBoot(data) {
   ME = data.me;
   $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
-  $('whoSub').textContent = `${ME.name} · ${ME.role}`;
+  $('whoName').textContent = ME.name; $('whoSub').textContent = ME.role; $('whoAv').textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
   buildTabs();
 }
 
@@ -492,6 +522,7 @@ const PAGES = [
   { key:'deposits', group:'Para',    label:'Deposits',  show:() => can('deposits_view') },
   { key:'users',    group:'Ayarlar', label:'Users',     show:() => isAdmin() },
 ];
+const NAV_ICONS = {"wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
 function buildTabs() {
   const tabs = $('tabs'); tabs.innerHTML = '';
   const visible = PAGES.filter(p => p.show());
@@ -499,14 +530,14 @@ function buildTabs() {
   visible.forEach(p => {
     if (p.group !== lastGroup) { const g = document.createElement('div'); g.className = 'sb-group'; g.textContent = p.group; tabs.appendChild(g); lastGroup = p.group; }
     const b = document.createElement('button');
-    b.className = 'tab'; b.textContent = p.label; b.dataset.key = p.key;
+    b.className = 'tab'; b.innerHTML = (NAV_ICONS[p.key] || '') + '<span>' + p.label + '</span>'; b.dataset.key = p.key;
     b.onclick = () => showPage(p.key);
     tabs.appendChild(b);
   });
   if (isAdmin() || can('hr')) {
     const g = document.createElement('div'); g.className = 'sb-group'; g.textContent = 'HR'; tabs.appendChild(g);
     const hr = document.createElement('button');
-    hr.className = 'tab'; hr.textContent = 'HR screens →';
+    hr.className = 'tab'; hr.innerHTML = NAV_ICONS.hr + '<span>HR screens</span>';
     hr.onclick = () => { location.href = 'hr.html'; };
     tabs.appendChild(hr);
   }

@@ -472,7 +472,7 @@
         escH(e.message || e) + ' — <a href="index.html" style="color:#fff">back to TeamOS</a></div>');
       return false;
     }
-    var who = document.getElementById('hrWho'); if (who && ME) who.textContent = ME.name;
+    var who = document.getElementById('hrWho'); if (who && ME) who.textContent = ME.name; var av = document.getElementById('hrAv'); if (av && ME) av.textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
     return true;
   })();
   window.HRSHIM_signOut = async function () { await sb.auth.signOut(); location.href = 'index.html'; };

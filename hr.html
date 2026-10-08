@@ -70,9 +70,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TeamOS · HR</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>LPA HR</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="hr-shim.js"></script>
   <script src="hr-core.js"></script>
@@ -307,57 +305,87 @@
       #holPrintTitle { display: block !important; font-size: 18px; color: #6D1B2F; margin-bottom: 10px; }
     }
 
-    /* ---- web: grouped sidebar menu ---- */
-    body { padding-left: 230px; }
-    header#sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 230px; display: block; padding: 18px 12px; overflow-y: auto; z-index: 50; }
-    header#sidebar h1 { font-size: 17px; width: auto; text-align: left; margin: 0; }
-    .sb-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-    .sb-who { font-size: 12px; opacity: .8; margin-top: 2px; }
-    .sb-burger { display: none; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 6px; font-size: 20px; padding: 4px 12px; cursor: pointer; }
-    header#sidebar nav { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 2px; width: auto; justify-content: flex-start; }
-    header#sidebar nav button { text-align: left; background: transparent; padding: 9px 12px; font-size: 14px; }
-    header#sidebar nav button.active { background: #fff; color: #6D1B2F; }
-    header#sidebar nav button:not(.active):hover { background: rgba(255,255,255,0.15); }
-    .sb-group { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .65; margin: 14px 8px 4px; font-weight: 700; }
-    .sb-sep { border-top: 1px solid rgba(255,255,255,0.25); margin: 14px 6px 8px; }
-    @media (max-width: 800px) {
-      body { padding-left: 0; }
-      header#sidebar { position: sticky; top: 0; bottom: auto; width: auto; padding: 10px 14px; }
-      .sb-top { align-items: center; margin: 0; }
-      .sb-burger { display: block; }
-      header#sidebar nav { display: none; margin-top: 8px; }
-      body.sb-open header#sidebar nav { display: flex; }
-    }
-    @media print { body { padding-left: 0; } }
+    body { padding-left:252px; }
+    @media (max-width: 800px) { body { padding-left:0; } }
+    @media print { body { padding-left:0; } }
+
+  /* ===== TeamOS side menu (shared look: site + HR) ===== */
+  .side { position:fixed; top:0; left:0; bottom:0; width:252px; z-index:40; display:flex; flex-direction:column;
+          background:radial-gradient(140% 60% at 0% 0%, #6A0E25 0%, transparent 60%), linear-gradient(180deg,#56091D 0%,#43061A 55%,#2C030C 100%);
+          color:#F5E6CC; border-right:1px solid rgba(217,178,111,.28); box-shadow:6px 0 24px rgba(46,3,12,.18); padding:0; overflow:hidden; align-items:stretch; justify-content:flex-start; flex-wrap:nowrap; gap:0; }
+  .side-brand { display:flex; align-items:center; gap:12px; padding:20px 18px 16px; border-bottom:1px solid rgba(217,178,111,.18); }
+  .side-brand img { width:44px; height:auto; filter:drop-shadow(0 3px 8px rgba(0,0,0,.35)); }
+  .side-name { font-size:22px; font-weight:700; letter-spacing:-.01em; line-height:1;
+               background:linear-gradient(180deg,#FFF3DC,#E7C48A 60%,#C99A55); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .side-tag { font-size:8.5px; letter-spacing:.13em; color:#CDB48A; margin-top:5px; white-space:nowrap; }
+  .side-burger { display:none; margin-left:auto; background:rgba(255,255,255,.08); color:#F5E6CC; border:1px solid rgba(217,178,111,.35); border-radius:10px; width:42px; height:38px; font-size:18px; cursor:pointer; }
+  .side-nav { flex:1; overflow-y:auto; padding:6px 12px 12px; display:flex; flex-direction:column; gap:2px; }
+  .side-nav::-webkit-scrollbar { width:6px; } .side-nav::-webkit-scrollbar-thumb { background:rgba(217,178,111,.25); border-radius:3px; }
+  .side .sb-group { display:flex; align-items:center; gap:10px; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:#D9B26F; font-weight:700; margin:16px 8px 6px; opacity:1; }
+  .side .sb-group::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(217,178,111,.35),transparent); }
+  .side .tab, .side-nav button { position:relative; display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:transparent; color:#EADBC2;
+          border:0; border-radius:10px; padding:10px 12px 10px 14px; font-size:14px; font-weight:500; cursor:pointer; transition:background .15s, color .15s; white-space:nowrap; }
+  .side .tab .ic, .side-nav button .ic { width:18px; height:18px; flex:none; opacity:.75; transition:opacity .15s, color .15s; }
+  .side .tab:hover, .side-nav button:hover { background:rgba(255,255,255,.07); color:#fff; }
+  .side .side-nav button:not(.active):hover { background:rgba(255,255,255,.07); }
+  .side .tab:hover .ic, .side-nav button:hover .ic { opacity:1; }
+  .side .tab.active, .side-nav button.active { background:linear-gradient(90deg,rgba(217,178,111,.26),rgba(217,178,111,.06)); color:#FFF4E0; font-weight:600; }
+  .side .tab.active::before, .side-nav button.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:3px; background:linear-gradient(180deg,#F3D9A4,#C99A55); }
+  .side .tab.active .ic, .side-nav button.active .ic { color:#E7C48A; opacity:1; }
+  .side-foot { padding:12px; border-top:1px solid rgba(217,178,111,.18); background:rgba(0,0,0,.12); }
+  .side-user { display:flex; align-items:center; gap:10px; padding:4px 4px 10px; }
+  .side-av { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#4A0817;
+             background:linear-gradient(135deg,#F3D9A4,#C99A55); flex:none; }
+  .side-uname { font-weight:600; font-size:13.5px; color:#FFF4E0; line-height:1.2; }
+  .side-urole { font-size:11px; color:#CDB48A; letter-spacing:.06em; }
+  .side-foot .side-btn { display:flex; align-items:center; gap:10px; width:100%; background:transparent; border:1px solid rgba(217,178,111,.25); color:#EADBC2;
+             border-radius:10px; padding:9px 12px; font-size:13.5px; cursor:pointer; margin-top:6px; }
+  .side-foot .side-btn:hover { background:rgba(255,255,255,.07); color:#fff; }
+  .side-foot .side-btn .ic { width:16px; height:16px; }
+  @media (max-width: 800px) {
+    .side { position:sticky; bottom:auto; width:auto; border-right:0; border-bottom:1px solid rgba(217,178,111,.3); }
+    .side-brand { padding:10px 14px; border-bottom:0; }
+    .side-brand img { width:34px; }
+    .side-name { font-size:19px; }
+    .side-burger { display:block; }
+    .side-nav, .side-foot { display:none; }
+    body.sb-open .side-nav, body.sb-open .side-foot { display:flex; }
+    body.sb-open .side-foot { flex-direction:column; }
+    body.sb-open .side-nav { max-height:70vh; }
+  }
+  @media print { .side { display:none !important; } }
   </style>
 </head>
 <body>
 
-<header id="sidebar">
-  <div class="sb-top">
-    <div><h1>LPA Management</h1><div class="sb-who">HR · <span id="hrWho"></span></div></div>
-    <button class="sb-burger no-print" onclick="document.body.classList.toggle('sb-open')">☰</button>
-  </div>
-  <nav id="sbnav">
+<header id="sidebar" class="side">
+    <div class="side-brand">
+      <img src="logo.png" alt="">
+      <div><div class="side-name">TeamOS</div><div class="side-tag">MANAGE · GROW · SUCCEED</div></div>
+      <button class="side-burger no-print" onclick="document.body.classList.toggle('sb-open')" aria-label="Menu">☰</button>
+    </div>
+  <nav class="side-nav" id="sbnav">
     <div class="sb-group">Genel</div>
-    <button id="nav-dashboard" class="active" onclick="showView('dashboard')">Dashboard</button>
-    <button id="nav-monthly" onclick="showView('monthly')">Monthly Summary</button>
+    <button id="nav-dashboard" class="active" onclick="showView('dashboard')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></button>
+    <button id="nav-monthly" onclick="showView('monthly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Monthly Summary</span></button>
     <div class="sb-group">Saatler</div>
-    <button id="nav-hours" onclick="showView('hours')">Hours</button>
-    <button id="nav-staffsummary" onclick="showView('staffsummary')">Hours Report</button>
-    <button id="nav-payperiod" onclick="showView('payperiod')">Staff Hours</button>
-    <button id="nav-holidays" onclick="showView('holidays')">Holidays</button>
+    <button id="nav-hours" onclick="showView('hours')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Hours</span></button>
+    <button id="nav-staffsummary" onclick="showView('staffsummary')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/></svg><span>Hours Report</span></button>
+    <button id="nav-payperiod" onclick="showView('payperiod')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg><span>Staff Hours</span></button>
+    <button id="nav-holidays" onclick="showView('holidays')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg><span>Holidays</span></button>
     <div class="sb-group">Para</div>
-    <button id="nav-revenue" onclick="showView('revenue')">Take-in</button>
-    <button id="nav-tips" onclick="showView('tips')">Tips</button>
-    <button id="nav-cashlist" onclick="showView('cashlist')">Cash List</button>
+    <button id="nav-revenue" onclick="showView('revenue')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg><span>Take-in</span></button>
+    <button id="nav-tips" onclick="showView('tips')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82"/></svg><span>Tips</span></button>
+    <button id="nav-cashlist" onclick="showView('cashlist')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>Cash List</span></button>
     <div class="sb-group">Personel</div>
-    <button id="nav-staff" onclick="showView('staff')">Staff Management</button>
-    <button id="nav-requests" onclick="showView('requests')">Requests</button>
-    <div class="sb-sep"></div>
-    <button class="no-print" onclick="location.href='index.html'">← TeamOS</button>
-    <button class="no-print" onclick="HRSHIM_signOut()">Sign out</button>
+    <button id="nav-staff" onclick="showView('staff')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><circle cx="18" cy="16" r="3"/><path d="M18 11.5v1.5M18 19v1.5M22.5 16H21M15 16h-1.5"/></svg><span>Staff Management</span></button>
+    <button id="nav-requests" onclick="showView('requests')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Requests</span></button>
   </nav>
+  <div class="side-foot no-print">
+    <div class="side-user"><div class="side-av" id="hrAv">·</div><div><div class="side-uname" id="hrWho"></div><div class="side-urole">HR</div></div></div>
+    <button class="side-btn" onclick="location.href='index.html'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M19 12H5"/></svg>Back to TeamOS</button>
+    <button class="side-btn" onclick="HRSHIM_signOut()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button>
+  </div>
 </header>
 
 <main>
