@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --wine:#6E1A2F; --wine-dark:#4E0F20; --wine-soft:#8B2942; --gold:#CBA66A; --gold-soft:#E8D5B0;
@@ -72,6 +73,40 @@
   @media print { .side { display:none !important; } }
 
   .wrap { max-width:1200px; margin:0 auto; padding:20px; }
+  /* ---- dashboard ---- */
+  .dash-head { display:flex; justify-content:space-between; align-items:flex-end; margin:4px 60px 16px 0; }
+  .dash-hello { font-family:'Playfair Display',serif; font-size:28px; color:var(--wine); }
+  .dash-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:16px; }
+  .dk { background:#fff; border-radius:16px; padding:16px 18px; box-shadow:0 2px 10px rgba(78,15,32,.06); border:1px solid #F0E6DA; position:relative; overflow:hidden; }
+  .dk .l { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); font-weight:700; }
+  .dk .v { font-size:26px; font-weight:700; color:var(--wine); margin-top:8px; line-height:1.1; }
+  .dk .s { font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .dk.hero { background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%); border:0; }
+  .dk.hero .l { color:#E7C48A; } .dk.hero .v { color:#FFF4E0; } .dk.hero .s { color:#EAD7B5; }
+  .dk .up { color:#2E7D32; font-weight:700; } .dk .down { color:#C62828; font-weight:700; }
+  .dk.hero .up { color:#9BE3A6; } .dk.hero .down { color:#FFB4B4; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+  .pill.ok { background:#E3F4E5; color:#2E7D32; } .pill.bad { background:#FDE3E3; color:#C62828; }
+  .dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .dash-grid3 { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:16px; }
+  .chart-box { position:relative; height:260px; }
+  .dash-list .it { display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .dash-list .it:last-child { border-bottom:0; }
+  .dot { width:8px; height:8px; border-radius:50%; margin-top:6px; flex:none; background:#C99A55; }
+  .dot.red { background:#C62828; } .dot.amber { background:#E09B2D; } .dot.blue { background:#1F6FEB; } .dot.green { background:#2E7D32; }
+  @media (max-width: 900px) { .dash-grid, .dash-grid3 { grid-template-columns:1fr; } }
+  /* ---- bell ---- */
+  .bell-wrap { position:fixed; top:16px; right:22px; z-index:60; }
+  .bell { position:relative; width:44px; height:44px; border-radius:50%; border:1px solid #E6D6C2; background:#fff; color:var(--wine); cursor:pointer;
+          display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(78,15,32,.12); }
+  .bell svg { width:21px; height:21px; }
+  .bell:hover { background:#FFF8EE; }
+  .bell-badge { position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px; border-radius:10px; background:#C62828; color:#fff;
+                font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff; }
+  .bell-panel { position:absolute; right:0; top:54px; width:340px; max-height:60vh; overflow-y:auto; background:#fff; border-radius:14px;
+                box-shadow:0 16px 40px rgba(46,3,12,.25); border:1px solid #EFE3D3; padding:8px 14px 10px; }
+  .bell-title { font-weight:700; color:var(--wine); padding:6px 0 8px; border-bottom:1px solid var(--line); }
+  @media (max-width: 800px) { .bell-wrap { top:10px; right:66px; } .bell { width:38px; height:38px; } .bell-panel { width:min(340px, 92vw); right:-50px; } .dash-head { margin-right:0; } }
   .page { display:none; }
   .page.active { display:block; }
   .card { background:var(--card); border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 2px 10px rgba(78,15,32,.06); }
@@ -212,9 +247,34 @@
     </div>
   </div>
 
+  <div class="bell-wrap hidden" id="bellWrap">
+    <button class="bell" id="bellBtn" aria-label="Alerts" onclick="toggleBell(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <span class="bell-badge hidden" id="bellBadge">0</span>
+    </button>
+    <div class="bell-panel hidden" id="bellPanel"><div class="bell-title">Alerts</div><div id="bellList"></div></div>
+  </div>
+
   <div class="wrap">
 
     <!-- WAGES -->
+    <section class="page" id="page-dashboard">
+      <div class="dash-head">
+        <div><div class="dash-hello" id="dashHello">Good day</div><div class="muted" id="dashDate"></div></div>
+        <button class="btn ghost small" onclick="loadDashboard()">Refresh</button>
+      </div>
+      <div class="dash-kpis" id="dashKpis"><div class="muted">Loading…</div></div>
+      <div class="dash-grid">
+        <div class="card"><h3>Last 30 days</h3><div class="chart-box"><canvas id="chDaily"></canvas></div></div>
+        <div class="card"><h3 id="chMonthlyTitle">This year</h3><div class="chart-box"><canvas id="chMonthly"></canvas></div></div>
+      </div>
+      <div class="dash-grid3">
+        <div class="card"><h3>Alerts</h3><div id="dashAlerts" class="dash-list"></div></div>
+        <div class="card"><h3>Off today</h3><div id="dashOff" class="dash-list"></div></div>
+        <div class="card" id="dashDepCard"><h3>Upcoming deposits <span class="muted" style="font-weight:400;font-size:12px">next 14 days</span></h3><div id="dashDeps" class="dash-list"></div></div>
+      </div>
+    </section>
+
     <section class="page" id="page-wages">
       <div class="seg" id="wagesSeg">
         <button data-sub="status" class="active">Status</button>
@@ -445,7 +505,7 @@ const $ = id => document.getElementById(id);
 const gbp = n => Number(n || 0).toLocaleString('en-GB', { style:'currency', currency:'GBP' });
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toISOString().slice(0,10);
-const dmy = d => { if (!d) return ''; const [y,m,dd] = String(d).slice(0,10).split('-'); return `${dd}/${m}/${y}`; };
+const dmy = d => { if (!d) return ''; const [y,m,dd] = String(d).slice(0,10).split('-'); return `${dd}-${m}-${y}`; };
 const monthStr = d => d.toISOString().slice(0,7);
 function setMsg(id, text, ok) { const el = $(id); el.textContent = text || ''; el.className = 'msg ' + (ok ? 'ok' : 'err'); }
 function openModal(id) { $(id).classList.add('open'); }
@@ -467,6 +527,7 @@ function can(p) {
 }
 const isAdmin = () => ME?.role === 'ADMIN';
 const isCashRole = () => can('cash');
+const canDash = () => isAdmin() || can('hr') || can('takein');
 
 // ═════════════ AUTH ═════════════
 const APPLE_WEB = false; // Apple sign-in on the web needs an Apple "Services ID" first
@@ -513,16 +574,82 @@ async function finishBoot(data) {
   buildTabs();
 }
 
+// ═════════════ DASHBOARD + BELL ═════════════
+let DASH = null, chDaily = null, chMonthly = null;
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const pctTxt = v => v == null ? '–' : (Number(v) * 100).toFixed(1) + '%';
+function alertDot(k) { return k === 'no_takein' || (k === 'request') ? 'red' : k === 'no_hours' ? 'amber' : k === 'deposit' ? 'blue' : ''; }
+function renderBell() {
+  const list = (DASH && DASH.alerts) || [];
+  $('bellBadge').textContent = list.length > 99 ? '99+' : list.length;
+  $('bellBadge').classList.toggle('hidden', list.length === 0);
+  $('bellList').innerHTML = list.length ? list.map(a => `<div class="dash-list"><div class="it"><span class="dot ${alertDot(a.kind)}"></span><div>${esc(a.text)}</div></div></div>`).join('')
+    : '<div class="muted" style="padding:12px 0">All clear — nothing needs attention.</div>';
+}
+function toggleBell(e) { e.stopPropagation(); $('bellPanel').classList.toggle('hidden'); }
+document.addEventListener('click', e => { if (!$('bellWrap').contains(e.target)) $('bellPanel').classList.add('hidden'); });
+async function refreshAlerts() {
+  if (!canDash()) return;
+  const { data } = await sb.rpc('dashboard_summary');
+  if (data?.ok) { DASH = data; $('bellWrap').classList.remove('hidden'); renderBell(); }
+}
+async function loadDashboard() {
+  const h = new Date().getHours();
+  $('dashHello').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ', ' + (ME?.name || '');
+  $('dashDate').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const { data, error } = await sb.rpc('dashboard_summary');
+  if (error || !data?.ok) { $('dashKpis').innerHTML = `<div class="neg">${esc(error?.message || data?.error || 'Could not load')}</div>`; return; }
+  DASH = data; $('bellWrap').classList.remove('hidden'); renderBell();
+  const m = data.mtd, over = m.staff_cost_pct != null && m.staff_cost_pct > m.target;
+  const ly = Number(m.takein_last_year) || 0, chg = ly > 0 ? (m.takein - ly) / ly : null;
+  const k = [];
+  k.push(`<div class="dk hero"><div class="l">Month to date</div><div class="v">${gbp(m.takein)}</div>
+    <div class="s">${chg == null ? 'No data for last year' : `<span class="${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg * 100).toFixed(1)}%</span> vs same days last year (${gbp(ly)})`}</div></div>`);
+  k.push(`<div class="dk"><div class="l">Last day take-in</div><div class="v">${gbp(data.last_day?.total)}</div><div class="s">${dmy(data.last_day?.date)}</div></div>`);
+  k.push(`<div class="dk"><div class="l">Staff cost % (month)</div><div class="v">${pctTxt(m.staff_cost_pct)} <span class="pill ${over ? 'bad' : 'ok'}">target ${pctTxt(m.target)}</span></div>
+    <div class="s">${gbp(m.staff_cost)} · hours entered up to ${dmy(m.hours_until) || '–'}</div></div>`);
+  if (data.cash_in_hand != null) k.push(`<div class="dk"><div class="l">Cash in hand</div><div class="v">${gbp(data.cash_in_hand)}</div><div class="s">From the cash list</div></div>`);
+  if (data.wages_due != null) k.push(`<div class="dk"><div class="l">Wages due</div><div class="v">${gbp(data.wages_due)}</div><div class="s">Still to pay this period</div></div>`);
+  if (data.advances_month) k.push(`<div class="dk"><div class="l">Advances this month</div><div class="v">${gbp(data.advances_month.total)}</div><div class="s">${data.advances_month.count} given</div></div>`);
+  $('dashKpis').innerHTML = k.join('');
+  // charts
+  if (window.Chart) {
+    const wine = '#6E1A2F', gold = '#C99A55';
+    chDaily?.destroy(); chMonthly?.destroy();
+    chDaily = new Chart($('chDaily'), { data: { labels: data.daily.map(d => dmy(d.date).slice(0,5)), datasets: [
+        { type:'bar', label:'Take-in', data: data.daily.map(d => d.takein), backgroundColor: wine, borderRadius:4 },
+        { type:'line', label:'Staff cost', data: data.daily.map(d => d.cost || null), borderColor: gold, backgroundColor: gold, tension:.3, pointRadius:2, spanGaps:true } ] },
+      options: { maintainAspectRatio:false, plugins:{ tooltip:{ callbacks:{ label: c => c.dataset.label + ': ' + gbp(c.parsed.y) } } }, scales:{ y:{ ticks:{ callback: v => '£' + (v/1000) + 'k' } } } } });
+    $('chMonthlyTitle').textContent = 'Take-in vs staff cost · ' + new Date().getFullYear();
+    chMonthly = new Chart($('chMonthly'), { type:'bar', data: { labels: MONTHS_SHORT, datasets: [
+        { label:'Take-in', data: data.monthly.map(x => x.takein), backgroundColor: wine, borderRadius:4 },
+        { label:'Staff cost', data: data.monthly.map(x => x.cost), backgroundColor: gold, borderRadius:4 } ] },
+      options: { maintainAspectRatio:false, plugins:{ tooltip:{ callbacks:{ label: c => { let t = c.dataset.label + ': ' + gbp(c.parsed.y);
+          if (c.datasetIndex === 1) { const r = data.monthly[c.dataIndex].takein; if (r > 0) t += ' (' + (c.parsed.y / r * 100).toFixed(1) + '%)'; } return t; } } } },
+        scales:{ y:{ ticks:{ callback: v => '£' + (v/1000) + 'k' } } } } });
+  }
+  // lists
+  $('dashAlerts').innerHTML = data.alerts.length ? data.alerts.map(a => `<div class="it"><span class="dot ${alertDot(a.kind)}"></span><div>${esc(a.text)}</div></div>`).join('')
+    : '<div class="muted">All clear — nothing needs attention.</div>';
+  const MARK = { H:'Holiday', OFF:'Day off', S:'Sick' };
+  $('dashOff').innerHTML = data.off_today.length ? data.off_today.map(o => `<div class="it"><span class="dot ${o.mark === 'S' ? 'red' : o.mark === 'H' ? 'blue' : ''}"></span><div><b>${esc(o.name)}</b> · ${MARK[o.mark] || o.mark}</div></div>`).join('')
+    : '<div class="muted">Everyone is in today.</div>';
+  $('dashDepCard').classList.toggle('hidden', !data.upcoming_deposits);
+  if (data.upcoming_deposits) $('dashDeps').innerHTML = data.upcoming_deposits.length ? data.upcoming_deposits.map(d => `<div class="it"><span class="dot blue"></span><div><b>${dmy(d.date)}</b> · ${esc(d.name)}${d.covers ? ' · ' + d.covers + ' covers' : ''} · ${gbp(d.amount)}</div></div>`).join('')
+    : '<div class="muted">No deposits in the next 14 days.</div>';
+}
+
 // ═════════════ TABS ═════════════
 const PAGES = [
-  { key:'wages',    group:'Maaş',    label:'Wages',     show:() => can('wages') },
-  { key:'advances', group:'Maaş',    label:'Advances',  show:() => can('wages_view') || can('advance_add') },
-  { key:'payroll',  group:'Maaş',    label:'New Month', show:() => can('payroll_entry') },
-  { key:'cash',     group:'Para',    label:'Cash List', show:() => isCashRole() },
-  { key:'deposits', group:'Para',    label:'Deposits',  show:() => can('deposits_view') },
-  { key:'users',    group:'Ayarlar', label:'Users',     show:() => isAdmin() },
+  { key:'dashboard',group:'Overview', label:'Dashboard', show:() => canDash() },
+  { key:'wages',    group:'Payroll',  label:'Wages',     show:() => can('wages') },
+  { key:'advances', group:'Payroll',  label:'Advances',  show:() => can('wages_view') || can('advance_add') },
+  { key:'payroll',  group:'Payroll',  label:'New Month', show:() => can('payroll_entry') },
+  { key:'cash',     group:'Money',    label:'Cash List', show:() => isCashRole() },
+  { key:'deposits', group:'Money',    label:'Deposits',  show:() => can('deposits_view') },
+  { key:'users',    group:'Settings', label:'Users',     show:() => isAdmin() },
 ];
-const NAV_ICONS = {"wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
+const NAV_ICONS = {"dashboard": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
 function buildTabs() {
   const tabs = $('tabs'); tabs.innerHTML = '';
   const visible = PAGES.filter(p => p.show());
@@ -545,7 +672,7 @@ function buildTabs() {
   document.querySelectorAll('[data-perm]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.perm)));
   document.querySelectorAll('[data-perm-card]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.permCard)));
   const saved = (() => { try { return localStorage.getItem('lpa_tab'); } catch { return null; } })();
-  showPage(visible.find(p => p.key === saved) ? saved : (visible[0]?.key));
+  showPage(canDash() ? 'dashboard' : (visible.find(p => p.key === saved) ? saved : (visible[0]?.key)));
 }
 function showPage(key) {
   if (!key) return;
@@ -553,7 +680,7 @@ function showPage(key) {
   document.body.classList.remove('sb-open');
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
-  ({ wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: loadUsers })[key]?.();
+  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: loadUsers })[key]?.();
 }
 function wireSeg(segId, prefix) {
   $(segId).querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -870,7 +997,7 @@ async function submitPayroll() {
   if (!confirm(`Start ${month}?\n\n${wages.length} people, total ${gbp(wages.reduce((a,w) => a + w.amount, 0))}.\nThe current month will be closed. This cannot be undone.`)) return;
   const { data, error } = await sb.rpc('start_new_period', { p_label: month, p_wages: wages });
   if (error || !data?.ok) return setMsg('payMsg', error?.message || data?.error);
-  setMsg('payMsg', `✅ ${month} started: ${data.wages_added} wages entered${isAdmin() ? `, ${data.carried_over} unpaid balances carried over as “- Geçen ay”` : ''}.`, true);
+  setMsg('payMsg', `✅ ${month} started: ${data.wages_added} wages entered${isAdmin() ? `, ${data.carried_over} unpaid balances carried over as “- Last month”` : ''}.`, true);
   document.querySelectorAll('.payInput').forEach(i => i.value = ''); payTotal();
 }
 
