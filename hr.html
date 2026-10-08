@@ -71,6 +71,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TeamOS HR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -392,6 +393,52 @@
                   box-shadow:0 16px 40px rgba(46,3,12,.25); border:1px solid #EFE3D3; padding:8px 14px 10px; }
     .bell-title { font-weight:700; color:#6D1B2F; padding:6px 0 8px; border-bottom:1px solid #eef0f2; }
     @media (max-width: 800px) { .bell-wrap { top:10px; right:66px; } .bell { width:38px; height:38px; } .bell-panel { width:min(340px,92vw); right:-50px; } .dash-head { margin-right:0; } }
+
+    /* ===================== TeamOS HR theme (dashboard style) ===================== */
+    body { background:#F7F3EE; color:#2A1F1C; font-family:'Hanken Grotesk',-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    main { padding:24px 28px 40px; max-width:1500px; }
+    @media (min-width:1300px) { main { max-width:1500px; } }
+    .pg-head { display:flex; align-items:flex-end; justify-content:space-between; margin:0 60px 18px 0; gap:12px; }
+    .pg-title { font-size:26px; font-weight:700; color:#6D1B2F; letter-spacing:-.01em; line-height:1.15; }
+    .pg-sub { font-size:13px; color:#8A7D74; margin-top:4px; }
+    .card { background:#fff; border-radius:16px; padding:20px 22px; margin-bottom:18px; border:1px solid #F0E6DA; box-shadow:0 2px 10px rgba(78,15,32,.06); }
+    .card h2 { font-size:16px; font-weight:700; color:#4A0817; margin:0 0 14px; display:flex; align-items:center; gap:10px; }
+    .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,#E7C48A,#C99A55); flex:none; }
+    label { font-size:11px; font-weight:700; color:#8A7D74; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
+    input[type=date], input[type=number], input[type=text], select { border:1px solid #E3D8CB; border-radius:10px; padding:9px 12px; background:#FFFDFa; transition:border-color .15s, box-shadow .15s; }
+    input[type=date]:focus, input[type=number]:focus, input[type=text]:focus, select:focus { outline:none; border-color:#C99A55; box-shadow:0 0 0 3px rgba(201,154,85,.2); background:#fff; }
+    .hours-input { border-radius:8px; border-color:#E3D8CB; }
+    .hint { color:#8A7D74; }
+    /* tables */
+    table { border-collapse:separate; border-spacing:0; }
+    th { background:#FBF5EC; color:#7A5B3A; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:10px 8px; border-bottom:1px solid #EADFCF; }
+    th:first-child { border-top-left-radius:10px; } th:last-child { border-top-right-radius:10px; }
+    td { border-bottom:1px solid #F2ECE4; padding:9px 8px; }
+    tr:nth-child(even) td { background:#FDFBF8; }
+    .track-rows tbody tr:hover td { background:#FFF4E2 !important; }
+    .total-row td { background:#FBF1E0 !important; color:#4A0817; font-weight:700; border-top:1px solid #EADFCF; }
+    .row-total { background:#FBF5EC !important; color:#6D1B2F; }
+    /* buttons */
+    .btn { background:linear-gradient(135deg,#7A1430,#5A0A1F); border-radius:10px; padding:11px 20px; font-size:14px; box-shadow:0 3px 10px rgba(90,10,31,.18); }
+    .btn:hover:not(:disabled) { background:linear-gradient(135deg,#8A1D3B,#6A0F26); }
+    .btn.mode-active { background:linear-gradient(135deg,#E7C48A,#C99A55); color:#4A0817; }
+    .btn-small { border-radius:8px !important; box-shadow:none; }
+    .btn-danger { background:linear-gradient(135deg,#C62828,#9C0006) !important; }
+    /* KPI tiles like the dashboard */
+    .kpi { text-align:left; border-radius:16px; padding:16px 18px; border:1px solid #F0E6DA; box-shadow:0 2px 10px rgba(78,15,32,.06); }
+    .kpi .label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#8A7D74; font-weight:700; margin-bottom:8px; }
+    .kpi .value { font-size:25px; }
+    .kpi-grid .kpi:first-child { background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%); border:0; }
+    .kpi-grid .kpi:first-child .label { color:#E7C48A; }
+    .kpi-grid .kpi:first-child .value { color:#FFF4E0; }
+    .kpi.good .value { color:#2E7D32; } .kpi.bad .value { color:#C62828; }
+    /* banners, toast, totals box */
+    .warn-banner { border-radius:12px; background:#FFF4E2; border-color:#E8C88E; }
+    .excl-banner { border-radius:12px; }
+    .toast { border-radius:12px; background:linear-gradient(135deg,#4A0817,#2E030C); box-shadow:0 10px 30px rgba(46,3,12,.35); }
+    #hoursTotalsBox { background:linear-gradient(135deg,#7A1430,#4A0817); border-radius:14px; border:1px solid rgba(231,196,138,.4); }
+    .hol-cell { border-color:#F0E6DA; }
+    @media (max-width:800px) { main { padding:14px; } .pg-head { margin-right:0; } .pg-title { font-size:22px; } }
   </style>
 </head>
 <body>
@@ -3537,6 +3584,25 @@ async function loadHome() {
     ? data.upcoming_deposits.map(function(d) { return '<div class="it"><span class="dot blue"></span><div><b>' + dmy(d.date) + '</b> · ' + esc(d.name) + (d.covers ? ' · ' + d.covers + ' covers' : '') + ' · ' + money(d.amount) + '</div></div>'; }).join('')
     : '<div class="hint">No deposits in the next 14 days.</div>';
 }
+
+
+// ---- page headers (title + short description) for every HR view ----
+(function () {
+  var SUB = {
+    dashboard: 'Yearly take-in, staff cost and trends', monthly: 'Month by month performance and cost exclusions',
+    hours: 'Enter, check and correct staff hours', staffsummary: 'Monthly hours per person',
+    payperiod: 'Pay period hours (26th → 25th), advances and PDFs', holidays: 'Holidays, days off and sick days',
+    revenue: 'Daily take-in from LPA Banking', tips: 'Daily tip pool and weekly distribution',
+    cashlist: 'Cash ledger and physical count', staff: 'Staff, rates, tip weights and order', requests: 'Staff requests and follow-ups'
+  };
+  Object.keys(SUB).forEach(function (k) {
+    var v = document.getElementById('view-' + k), nav = document.getElementById('nav-' + k);
+    if (!v || !nav) return;
+    var h = document.createElement('div'); h.className = 'pg-head';
+    h.innerHTML = '<div><div class="pg-title">' + esc(nav.textContent.trim()) + '</div><div class="pg-sub">' + esc(SUB[k]) + '</div></div>';
+    v.insertBefore(h, v.firstChild);
+  });
+})();
 
 // ============================================================
 // INIT
