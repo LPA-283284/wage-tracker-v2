@@ -79,6 +79,10 @@
   @media print { .side { display:none !important; } }
 
   .wrap { max-width:1200px; margin:0 auto; padding:20px; }
+  .perm-item { display:flex; gap:12px; align-items:flex-start; padding:10px 2px; border-bottom:1px solid var(--line); cursor:pointer; font-weight:400; color:var(--ink); }
+  .perm-item input { width:20px; height:20px; margin-top:2px; accent-color:var(--wine); flex:none; }
+  .perm-item b { display:block; font-size:14px; } .perm-item small { color:var(--ink-soft); font-size:12px; }
+  .perm-item.off { opacity:.5; cursor:default; }
   /* ---- dashboard ---- */
   .dash-head { display:flex; justify-content:space-between; align-items:flex-end; margin:4px 60px 16px 0; }
   .dash-hello { font-family:'Playfair Display',serif; font-size:28px; color:var(--wine); }
@@ -437,7 +441,6 @@
       <div class="card">
         <h2>Users &amp; Permissions</h2>
         <div class="scroll"><table id="usersTable"></table></div>
-        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay wages (sees only what is due) · <b>wages_view</b> all wage amounts, history &amp; signatures · <b>advance_add</b> give advances only (no list) · <b>deposits</b> add + see deposits · <b>deposits_view</b> see deposits only · <b>cash</b> cash list + cash in hand · <b>takein</b> take-in &amp; staff cost % · <b>signatures_view</b> signatures only · <b>payroll_entry</b> new-month wages (accountant) · <b>hr</b> HR screens. ADMIN can do everything.</div>
       </div>
       <div class="card">
         <h2>Add User</h2>
@@ -451,6 +454,18 @@
       </div>
     </section>
 
+  </div>
+</div>
+
+<!-- Permissions modal -->
+<div class="modal-bg" id="permModal">
+  <div class="modal" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><h2 id="permTitle" style="margin:0"></h2><div class="muted" id="permNote" style="margin-top:4px"></div></div>
+      <button class="btn ghost small" onclick="PERM_I=-1;closeModal('permModal')">✕</button>
+    </div>
+    <div id="permList" style="margin-top:12px"></div>
+    <button class="btn" style="width:100%;margin-top:14px" onclick="PERM_I=-1;closeModal('permModal')">Done</button>
   </div>
 </div>
 
@@ -1017,14 +1032,32 @@ async function loadUsers() {
       <td><b>${esc(u.name)}</b></td>
       <td><input value="${esc(u.email || '')}" placeholder="add email" onchange="setUser(${i},{email:this.value.trim().toLowerCase()||null})" style="min-width:200px"></td>
       <td><select onchange="setUser(${i},{role:this.value})">${['VIEWER','PAYER','EDITOR','ADMIN'].map(r => `<option ${u.role === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td>
-      <td style="min-width:260px">${ALL_PERMS.map(p => `<label style="display:inline-flex;gap:4px;align-items:center;margin:2px 8px 2px 0;font-weight:500;color:var(--ink)"><input type="checkbox" style="width:auto" ${(u.permissions || []).includes(p) ? 'checked' : ''} onchange="togglePerm(${i},'${p}',this.checked)">${p}</label>`).join('')}</td>
+      <td style="min-width:240px"><div class="muted" style="font-size:12.5px;margin-bottom:6px">${u.role === 'ADMIN' ? 'Admin — can do everything' : ((u.permissions || []).length ? (u.permissions || []).map(p => PERM_INFO[p]?.[0] || p).join(' · ') : 'No permissions yet')}</div>
+        <button class="btn small" onclick="openPerms(${i})">Edit permissions</button></td>
       <td><input type="checkbox" style="width:auto" ${u.active ? 'checked' : ''} onchange="setUser(${i},{active:this.checked})"></td>
       <td class="num"><button class="btn danger small" onclick="delUser(${i})">Delete</button></td></tr>`).join('');
 }
 async function setUser(i, patch) {
   const { error } = await sb.from('app_users').update(patch).eq('id', window._users[i].id);
   if (error) alert(error.message.includes('duplicate') ? 'This email is already used by another user' : error.message);
-  loadUsers();
+  await loadUsers();
+  if (PERM_I >= 0 && $('permModal').classList.contains('open')) renderPerms();
+}
+const PERM_INFO = {
+  wages_pay:['Pay wages','Pay wages — sees only what is due'], wages_view:['Wages view','All wage amounts, history and signatures'],
+  advance_add:['Give advance','Give advances only (cannot see the list)'], deposits:['Deposits','Add deposits and see the list'],
+  deposits_view:['Deposits view','See deposits only'], cash:['Cash','Cash list and cash in hand'], takein:['Take-in','Take-in and staff cost %'],
+  signatures_view:['Signatures','See signatures only'], payroll_entry:['New month','Enter new-month wages (accountant)'], hr:['HR','HR screens'],
+};
+let PERM_I = -1;
+function openPerms(i) { PERM_I = i; renderPerms(); openModal('permModal'); }
+function renderPerms() {
+  const u = window._users[PERM_I]; if (!u) return;
+  const admin = u.role === 'ADMIN', cur = u.permissions || [];
+  $('permTitle').textContent = u.name;
+  $('permNote').textContent = admin ? 'Admin can do everything — the boxes are not needed.' : 'Tick what this person can do. Changes save straight away.';
+  $('permList').innerHTML = ALL_PERMS.map(p => `<label class="perm-item${admin ? ' off' : ''}"><input type="checkbox" ${cur.includes(p) ? 'checked' : ''} ${admin ? 'disabled' : ''}
+      onchange="togglePerm(${PERM_I},'${p}',this.checked)"><span><b>${PERM_INFO[p]?.[0] || p}</b><small>${PERM_INFO[p]?.[1] || ''}</small></span></label>`).join('');
 }
 function togglePerm(i, p, on) {
   const cur = new Set(window._users[i].permissions || []); on ? cur.add(p) : cur.delete(p);
