@@ -1,1136 +1,807 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta charset="utf-8" />
-  <title>LPA Management APP</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { max-width: 100%; overflow-x: hidden; }
-    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; margin: 0; background: #f5f5f5; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LPA Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --wine:#6E1A2F; --wine-dark:#4E0F20; --wine-soft:#8B2942; --gold:#CBA66A; --gold-soft:#E8D5B0;
+    --bg:#F7F3EE; --card:#FFFFFF; --ink:#2A1F1C; --ink-soft:#7D716A; --line:#ECE4DA;
+    --pos:#2E7D55; --neg:#B3261E; --bank:#0B3A9A;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:'Hanken Grotesk',system-ui,sans-serif; font-size:14px; }
+  button, input, select, textarea { font-family:inherit; font-size:14px; }
+  a { color:var(--wine); }
 
-    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; background:#fff; padding:12px 16px; border-bottom:1px solid #eee; }
-    .app-title { font-size:17px; font-weight:900; }
-    .app-sub { font-size:12px; color:#666; margin-top:2px; }
+  /* Top bar */
+  .topbar { background:var(--wine); color:#fff; display:flex; align-items:center; gap:16px; padding:12px 20px; flex-wrap:wrap; position:sticky; top:0; z-index:20; }
+  .brand { font-weight:700; font-size:19px; letter-spacing:.2px; margin-right:auto; display:flex; align-items:center; gap:10px; }
+  .brand small { font-weight:500; font-size:12px; opacity:.75; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; }
+  .tab { background:rgba(255,255,255,.12); color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .tab:hover { background:rgba(255,255,255,.2); }
+  .tab.active { background:#fff; color:var(--wine); }
+  .tab.ext { background:transparent; border:1px solid rgba(255,255,255,.35); }
+  .who { font-size:12px; opacity:.85; display:flex; gap:10px; align-items:center; }
+  .who button { background:transparent; border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:8px; padding:5px 10px; cursor:pointer; }
 
-    .main-tabs { display:flex; gap:6px; padding:10px 12px; background:#fff; border-bottom:1px solid #eee; overflow-x:auto; }
-    .main-tab { flex:1; min-width:0; padding:9px 6px; border-radius:10px; border:1px solid #ddd; background:#f9f9f9; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; white-space:nowrap; }
-    .main-tab.active { background:#111; color:#fff; border-color:#111; }
+  .wrap { max-width:1200px; margin:0 auto; padding:20px; }
+  .page { display:none; }
+  .page.active { display:block; }
+  .card { background:var(--card); border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 2px 10px rgba(78,15,32,.06); }
+  h2 { font-family:'Playfair Display',serif; color:var(--wine); margin:0 0 14px; font-size:20px; }
+  h3 { color:var(--wine); margin:0 0 10px; font-size:16px; }
+  .muted { color:var(--ink-soft); }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  .row > * { flex:1; min-width:140px; }
+  label { display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px; font-weight:600; }
+  input, select, textarea { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--ink); }
+  textarea { min-height:60px; }
+  .btn { background:var(--wine); color:#fff; border:0; border-radius:9px; padding:10px 16px; font-weight:700; cursor:pointer; }
+  .btn:hover { background:var(--wine-soft); }
+  .btn.ghost { background:transparent; color:var(--wine); border:1px solid var(--wine); }
+  .btn.small { padding:6px 10px; font-size:12px; }
+  .btn.danger { background:transparent; color:var(--neg); border:1px solid #e6b8b4; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .seg { display:inline-flex; background:#EFE7DC; border-radius:10px; padding:4px; gap:4px; margin-bottom:14px; flex-wrap:wrap; }
+  .seg button { border:0; background:transparent; padding:8px 14px; border-radius:8px; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+  .seg button.active { background:var(--wine); color:#fff; }
+  .msg { margin-top:10px; font-weight:600; }
+  .msg.ok { color:var(--pos); } .msg.err { color:var(--neg); }
 
-    .page { display:none; padding:12px; }
-    .page.active { display:block; }
+  /* KPI tiles */
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:16px; }
+  .kpi { background:var(--card); border-radius:14px; padding:16px; text-align:center; box-shadow:0 2px 10px rgba(78,15,32,.06); }
+  .kpi .l { font-size:12px; color:var(--ink-soft); }
+  .kpi .v { font-size:24px; font-weight:700; color:var(--wine); margin-top:6px; }
+  .kpi.hero { background:linear-gradient(135deg,var(--wine-soft),var(--wine-dark)); }
+  .kpi.hero .l { color:var(--gold-soft); } .kpi.hero .v { color:#fff; }
 
-    .sub-tabs { display:flex; gap:6px; margin-bottom:12px; }
-    .sub-tab { flex:1; padding:9px 6px; border-radius:10px; border:1px solid #ddd; background:#f9f9f9; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; }
-    .sub-tab.active { background:#111; color:#fff; border-color:#111; }
+  /* Tables */
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:12px; color:var(--ink-soft); font-weight:600; padding:8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td { padding:9px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  td.num, th.num { text-align:right; white-space:nowrap; }
+  tr.zero td { color:#B5AAA2; }
+  .neg { color:var(--neg); } .pos { color:var(--pos); } .bank { color:var(--bank); }
+  .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:#F1E9DE; color:var(--ink-soft); font-weight:600; }
+  .tag.auto { background:#E6EEF8; color:var(--bank); }
+  .tag.teamos { background:#F4E4E8; color:var(--wine); }
+  .scroll { overflow-x:auto; }
 
-    .card { background:#fff; border-radius:14px; padding:14px; margin-bottom:12px; }
-    .card-title { font-size:15px; font-weight:800; margin-bottom:10px; }
+  /* Modal */
+  .modal-bg { position:fixed; inset:0; background:rgba(30,10,15,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .modal-bg.open { display:flex; }
+  .modal { background:#fff; border-radius:16px; width:100%; max-width:520px; max-height:92vh; overflow:auto; padding:20px; }
+  .sig-pad { border:1.5px dashed var(--gold); border-radius:12px; width:100%; height:180px; touch-action:none; background:#FFFDF8; display:block; }
 
-    .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
-    .row:last-child { border-bottom:none; }
-    .row-left { flex:1; min-width:0; }
-    .row-name { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .row-sub { font-size:11px; color:#888; margin-top:2px; }
-
-    .person-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; cursor:pointer; }
-    .person-row:last-child { border-bottom:none; }
-    .person-row:hover { background:#fafafa; margin:0 -4px; padding:12px 4px; border-radius:8px; }
-    .chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
-    .chip { font-size:11px; color:#555; background:#f0f0f0; padding:2px 7px; border-radius:20px; }
-
-    .badge { padding:5px 10px; border-radius:999px; font-weight:800; font-size:13px; white-space:nowrap; }
-    .badge.cash { background:#f0f0f0; color:#111; }
-    .badge.bank { background:#e7f0ff; color:#0b3a9a; }
-    .badge.advance { background:#fff0e5; color:#8a3a00; }
-
-    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .total-box { background:#f8f8f8; border-radius:12px; padding:12px; }
-    .total-label { font-size:11px; color:#888; margin-bottom:4px; }
-    .total-val { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
-
-    input, select, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; font-size:14px; background:#fafafa; }
-    label { font-size:12px; color:#666; margin-bottom:4px; display:block; margin-top:10px; }
-    .btn { width:100%; padding:13px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; margin-top:14px; }
-    .btn-black { background:#111; color:#fff; }
-    .btn-green { background:#1a6a1a; color:#fff; }
-    .form-msg { font-size:13px; color:#555; text-align:center; margin-top:8px; }
-
-    .filters { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
-    .filters-actions { grid-column:1/-1; display:flex; gap:8px; }
-    .filters-actions button { flex:1; padding:9px; border-radius:10px; border:1px solid #ddd; font-size:13px; font-weight:600; cursor:pointer; }
-    input[type="date"] { background:#eee; }
-
-    /* App redirect banner */
-    .app-banner { background:#fff3cd; border:1px solid #ffc107; border-radius:12px; padding:14px; margin-bottom:12px; text-align:center; }
-    .app-banner-title { font-size:15px; font-weight:800; margin-bottom:6px; }
-    .app-banner-sub { font-size:13px; color:#555; }
-
-    /* Person Modal */
-    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:100; display:flex; align-items:flex-end; justify-content:center; }
-    .modal-bg.hidden { display:none !important; }
-    .modal-sheet { background:#fff; border-radius:22px 22px 0 0; width:100%; max-width:600px; max-height:92vh; overflow-y:auto; padding:20px; padding-bottom:44px; }
-    .modal-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
-    .modal-close { background:#f0f0f0; border:none; border-radius:20px; width:34px; height:34px; font-size:15px; cursor:pointer; }
-    .modal-stats { display:flex; gap:8px; margin-bottom:16px; }
-    .mstat { flex:1; background:#f8f8f8; border-radius:12px; padding:10px; text-align:center; }
-    .mstat-l { font-size:10px; color:#888; margin-bottom:3px; }
-    .mstat-v { font-size:13px; font-weight:700; }
-    .modal-tabs { display:flex; gap:6px; margin-bottom:14px; }
-    .modal-tab { flex:1; padding:9px; border-radius:10px; border:none; background:#f0f0f0; color:#666; font-weight:600; font-size:13px; cursor:pointer; }
-    .modal-tab.active { background:#111; color:#fff; }
-    .modal-tab.red.active { background:#c00; }
-
-    /* Sig img modal */
-    .sigimg-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
-    .sigimg-bg.hidden { display:none !important; }
-    .sigimg-box { background:#fff; border-radius:16px; padding:18px; max-width:500px; width:100%; }
-
-    /* Deposit card */
-    .dep-card { background:#fff; border-radius:14px; padding:14px; margin-bottom:10px; border-left:4px solid #1a6a1a; }
-    .dep-name { font-size:15px; font-weight:800; }
-    .dep-img { max-width:100%; border-radius:8px; margin-top:8px; cursor:pointer; max-height:100px; object-fit:contain; }
-
-    /* Permission toggles */
-    .user-card { background:#fff; border-radius:12px; padding:12px; margin-bottom:8px; }
-    .perm-row { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
-    .perm-btn { padding:5px 12px; border-radius:20px; border:1px solid #ddd; font-size:12px; font-weight:600; cursor:pointer; background:#f5f5f5; color:#666; }
-    .perm-btn.on { background:#111; color:#fff; border-color:#111; }
-
-    .muted { color:#666; font-size:12px; }
-    .hidden { display:none !important; }
-  </style>
+  /* Login */
+  .login { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#5A0C1E,#3A0511); padding:20px; }
+  .login-card { background:var(--bg); border-radius:20px; padding:30px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.3); }
+  .login-card h1 { font-family:'Playfair Display',serif; color:var(--wine); margin:0 0 4px; }
+  .login-card .btn { width:100%; margin-top:10px; padding:12px; }
+  .gbtn { background:#fff !important; color:#222 !important; border:1px solid #ddd !important; display:flex; align-items:center; justify-content:center; gap:10px; }
+  .divider { margin:16px 0 6px; font-size:12px; color:var(--ink-soft); }
+  .hidden { display:none !important; }
+  .sig-img { max-width:220px; max-height:90px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+  .thumb { max-width:120px; max-height:80px; border-radius:8px; cursor:pointer; border:1px solid var(--line); }
+  @media (max-width:700px) { .wrap { padding:12px; } .kpi .v { font-size:20px; } }
+</style>
 </head>
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div>
-    <div class="app-title">LPA Management</div>
-    <div class="app-sub" id="meLine">Enter token in Settings</div>
+<!-- ───────────── LOGIN ───────────── -->
+<div id="loginView" class="login hidden">
+  <div class="login-card">
+    <h1>LPA Management</h1>
+    <div class="muted">TeamOS · HR</div>
+    <button class="btn gbtn" id="googleBtn">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <div class="divider">or with email</div>
+    <input id="loginEmail" type="email" placeholder="Email" autocomplete="username" />
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" style="margin-top:8px" />
+    <button class="btn" id="emailBtn">Log in</button>
+    <div id="loginMsg" class="msg err"></div>
   </div>
-  <button onclick="doRefresh()" style="background:#111;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;">Refresh</button>
 </div>
 
-<!-- MAIN TABS -->
-<div class="main-tabs">
-  <button class="main-tab active" id="tabWages" onclick="showPage('wages')">💰 Wages</button>
-  <button class="main-tab" id="tabAdvances" onclick="showPage('advances')">💳 Advances</button>
-  <button class="main-tab" id="tabDeposits" onclick="showPage('deposits')">📋 Deposits</button>
-  <button class="main-tab" id="tabSettings" onclick="showPage('settings')">⚙️ Settings</button>
-</div>
-
-<!-- ══ WAGES PAGE ══════════════════════════════════════════ -->
-<div class="page active" id="pageWages">
-  <div class="sub-tabs">
-    <button class="sub-tab active" id="wSubStatus" onclick="showWagesSub('status')">Status</button>
-    <button class="sub-tab" id="wSubHistory" onclick="showWagesSub('history')">History</button>
-    <button class="sub-tab" id="wSubSignatures" onclick="showWagesSub('signatures')">Signatures</button>
+<!-- ───────────── APP ───────────── -->
+<div id="appView" class="hidden">
+  <div class="topbar">
+    <div class="brand">LPA Management <small id="whoSub"></small></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="who"><button id="logoutBtn">Log out</button></div>
   </div>
 
-  <!-- Status -->
-  <div id="wagesStatus">
-    <div class="card" id="totalsCard">
-      <div class="card-title">Totals</div>
-      <div class="grid2">
-        <div class="total-box"><div class="total-label">Total WAGE</div><div class="total-val" id="tWage">—</div></div>
-        <div class="total-box"><div class="total-label">Total Due</div><div class="total-val" id="tDue">—</div></div>
-        <div class="total-box"><div class="total-label">Cash Paid</div><div class="total-val" id="tCash">—</div></div>
-        <div class="total-box"><div class="total-label">Bank Paid</div><div class="total-val" id="tBank">—</div></div>
+  <div class="wrap">
+
+    <!-- WAGES -->
+    <section class="page" id="page-wages">
+      <div class="seg" id="wagesSeg">
+        <button data-sub="status" class="active">Status</button>
+        <button data-sub="history" data-perm="wages_view">History</button>
+        <button data-sub="sigs" data-perm="signatures_view">Signatures</button>
       </div>
-      <div class="muted" id="lastUpdated" style="margin-top:10px;">—</div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">Staff Status</div>
-      <div class="muted" style="margin-bottom:10px;font-style:italic;">Tap to add payment, advance or collect debt</div>
-      <div id="peopleList"></div>
-    </div>
-  </div>
-
-  <!-- History -->
-  <div id="wagesHistory" class="hidden">
-    <div class="card">
-      <div class="filters">
-        <div><label>Person</label><select id="whPerson"><option value="">All</option></select></div>
-        <div><label>From</label><input id="whFrom" type="date" /></div>
-        <div><label>To</label><input id="whTo" type="date" /></div>
-        <div class="filters-actions">
-          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadWageHistory()">Apply</button>
-          <button onclick="clearWageFilters()">Clear</button>
+      <div id="wages-status">
+        <div class="kpis" id="wageKpis"></div>
+        <div class="card">
+          <div class="row" style="align-items:center;margin-bottom:8px">
+            <h2 style="margin:0">Staff Status</h2>
+            <div style="flex:0;min-width:auto"><button class="btn ghost small" onclick="loadWages()">Refresh</button></div>
+          </div>
+          <div class="scroll"><table id="statusTable"></table></div>
         </div>
       </div>
-      <div class="muted" id="whMsg"></div>
-      <div id="wageHistoryList"></div>
-    </div>
-  </div>
 
-  <!-- Signatures -->
-  <div id="wagesSignatures" class="hidden">
-    <div class="card">
-      <div class="filters">
-        <div><label>Person</label><select id="sigPerson"><option value="">All</option></select></div>
-        <div><label>Type</label>
-          <select id="sigType">
-            <option value="">All</option>
-            <option value="payment">Payment</option>
-            <option value="advance">Advance</option>
-            <option value="debt">Collect Debt</option>
-          </select>
-        </div>
-        <div class="filters-actions">
-          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadSignatures()">Load</button>
-          <button style="background:#1a6a1a;color:#fff;border-color:#1a6a1a;" onclick="exportAllPDF()">📄 Export PDF</button>
+      <div id="wages-history" class="hidden">
+        <div class="card">
+          <h2>Payment History</h2>
+          <div class="row">
+            <div><label>From</label><input type="date" id="whFrom"></div>
+            <div><label>To</label><input type="date" id="whTo"></div>
+            <div><label>Person</label><input id="whPerson" placeholder="All"></div>
+            <div style="flex:0;min-width:auto"><button class="btn" onclick="loadWageHistory()">Show</button></div>
+          </div>
+          <div class="muted" id="whSum" style="margin-top:10px"></div>
+          <div class="scroll" style="margin-top:8px"><table id="whTable"></table></div>
         </div>
       </div>
-      <div class="muted" id="sigMsg"></div>
-      <div id="sigList"></div>
-    </div>
+
+      <div id="wages-sigs" class="hidden">
+        <div class="card">
+          <h2>Signatures</h2>
+          <div class="row">
+            <div><label>Type</label><select id="sigType"><option value="">All</option><option value="payment">Payment</option><option value="advance">Advance</option><option value="debt">Collect debt</option></select></div>
+            <div><label>Person</label><input id="sigPerson" placeholder="All"></div>
+            <div style="flex:0;min-width:auto"><button class="btn" onclick="loadSigs()">Show</button></div>
+          </div>
+          <div class="scroll" style="margin-top:8px"><table id="sigTable"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADVANCES -->
+    <section class="page" id="page-advances">
+      <div class="card" data-perm-card="wages_pay">
+        <h2>Give an Advance</h2>
+        <div class="row">
+          <div><label>Person</label><select id="advPerson"></select></div>
+          <div><label>Amount (£)</label><input id="advAmount" type="number" step="0.01" min="0"></div>
+          <div><label>Method</label><select id="advMethod"><option>CASH</option><option>BANK</option></select></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Given by</label><input id="advBy"></div>
+          <div><label>Note</label><input id="advNote"></div>
+          <div style="flex:0;min-width:auto"><button class="btn" onclick="startAdvance()">Sign &amp; save</button></div>
+        </div>
+        <div class="msg" id="advMsg"></div>
+      </div>
+      <div class="card">
+        <h2>Advance History</h2>
+        <div class="scroll"><table id="advTable"></table></div>
+      </div>
+    </section>
+
+    <!-- DEPOSITS -->
+    <section class="page" id="page-deposits">
+      <div class="seg" id="depSeg">
+        <button data-sub="list" class="active">List</button>
+        <button data-sub="add" data-perm="deposits">+ Add</button>
+      </div>
+      <div id="deposits-list" class="card">
+        <h2>Deposits</h2>
+        <div class="row">
+          <div><label>Reservation from</label><input type="date" id="depFrom"></div>
+          <div><label>to</label><input type="date" id="depTo"></div>
+          <div style="flex:0;min-width:auto"><button class="btn" onclick="loadDeposits()">Show</button></div>
+        </div>
+        <div class="muted" id="depSum" style="margin-top:10px"></div>
+        <div class="scroll" style="margin-top:8px"><table id="depTable"></table></div>
+      </div>
+      <div id="deposits-add" class="card hidden">
+        <h2>New Deposit</h2>
+        <div class="row">
+          <div><label>Customer name</label><input id="depName"></div>
+          <div><label>Reservation date</label><input type="date" id="depDate"></div>
+          <div><label>Covers</label><input type="number" id="depCovers" min="0"></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Amount (£)</label><input type="number" id="depAmount" step="0.01" min="0"></div>
+          <div><label>Method</label><select id="depMethod"><option>CASH</option><option>CC</option><option>BANK</option></select></div>
+          <div><label>Photo (optional)</label><input type="file" id="depPhoto" accept="image/*"></div>
+        </div>
+        <div style="margin-top:10px"><label>Note</label><input id="depNote"></div>
+        <button class="btn" style="margin-top:12px" onclick="saveDeposit()">Save deposit</button>
+        <div class="msg" id="depMsg"></div>
+      </div>
+    </section>
+
+    <!-- CASH -->
+    <section class="page" id="page-cash">
+      <div class="kpis" id="cashKpis"></div>
+      <div class="card">
+        <div class="row">
+          <div><label>Month</label><input type="month" id="cashMonth"></div>
+          <div style="flex:0;min-width:auto"><button class="btn" onclick="loadCash()">Show</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 id="cashFormTitle">Add entry</h3>
+        <div class="row">
+          <div><label>Date</label><input type="date" id="cashDate"></div>
+          <div><label>Description</label><input id="cashDesc"></div>
+          <div><label>Type</label><select id="cashType"><option value="out">Expense (out)</option><option value="in">Income (in)</option></select></div>
+          <div><label>Amount (£)</label><input type="number" id="cashAmount" step="0.01" min="0"></div>
+          <div style="flex:0;min-width:auto;display:flex;gap:6px">
+            <button class="btn" onclick="saveCash()">Save</button>
+            <button class="btn ghost hidden" id="cashCancel" onclick="resetCashForm()">Cancel</button>
+          </div>
+        </div>
+        <div class="msg" id="cashMsg"></div>
+      </div>
+      <div class="card">
+        <div class="scroll"><table id="cashTable"></table></div>
+        <div class="muted" style="margin-top:8px;font-size:12px">Only rows entered from TeamOS can be edited here. Automatic (LPA Banking) and HR rows are read-only.</div>
+      </div>
+    </section>
+
+    <!-- PAYROLL (new month) -->
+    <section class="page" id="page-payroll">
+      <div class="card">
+        <h2>New Month Wages</h2>
+        <div class="muted" style="margin-bottom:12px">Enter each person's wage for the new month and press Submit. The current month is closed and archived; any unpaid balance appears as a separate “- Geçen ay” line in Staff Status.</div>
+        <div class="row" style="margin-bottom:12px">
+          <div style="max-width:220px"><label>Month</label><input type="month" id="payMonth"></div>
+        </div>
+        <div class="scroll"><table id="payTable"></table></div>
+        <div class="row" style="margin-top:12px">
+          <div><label>Add staff to the list</label><input id="newStaffName" placeholder="Name"></div>
+          <div style="flex:0;min-width:auto"><button class="btn ghost" onclick="addStaff()">Add</button></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="submitPayroll()">Submit new month</button>
+          <span class="muted" id="payTotal"></span>
+        </div>
+        <div class="msg" id="payMsg"></div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section class="page" id="page-users">
+      <div class="card">
+        <h2>Add User</h2>
+        <div class="row">
+          <div><label>Name</label><input id="nuName"></div>
+          <div><label>Sign-in email</label><input id="nuEmail" type="email" placeholder="name@gmail.com"></div>
+          <div><label>Role</label><select id="nuRole"><option>VIEWER</option><option>PAYER</option><option>EDITOR</option><option>ADMIN</option></select></div>
+          <div style="flex:0;min-width:auto"><button class="btn" onclick="addUser()">Create</button></div>
+        </div>
+        <div class="msg" id="nuMsg"></div>
+      </div>
+      <div class="card">
+        <h2>Users &amp; Permissions</h2>
+        <div class="scroll"><table id="usersTable"></table></div>
+        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay &amp; advances (sees only due) · <b>wages_view</b> all amounts &amp; history · <b>deposits</b> add + view · <b>deposits_view</b> view only · <b>signatures_view</b> signatures · <b>payroll_entry</b> new-month wages page (accountant). ADMIN can do everything.</div>
+      </div>
+    </section>
+
   </div>
 </div>
 
-<!-- ══ ADVANCES PAGE ═══════════════════════════════════════ -->
-<div class="page hidden" id="pageAdvances">
-  <div class="sub-tabs">
-    <button class="sub-tab active" id="aSubList" onclick="showAdvSub('list')">This Month</button>
-    <button class="sub-tab" id="aSubHistory" onclick="showAdvSub('history')">History</button>
-  </div>
-
-  <!-- Add Advance Form -->
-  <div class="card" id="advAddForm">
-    <div class="card-title">Add Advance</div>
-    <div class="grid2">
-      <div><label>Person</label><select id="advPerson2"></select></div>
-      <div><label>Amount</label><input id="advAmount2" inputmode="decimal" placeholder="100" /></div>
+<!-- Pay modal -->
+<div class="modal-bg" id="payModal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><h2 id="pmName" style="margin:0"></h2><div class="muted" id="pmDue"></div></div>
+      <button class="btn ghost small" onclick="closeModal('payModal')">✕</button>
     </div>
-    <div class="grid2">
-      <div><label>Method</label><select id="advMethod2"><option value="CASH">Cash</option><option value="BANK">Bank</option></select></div>
-      <div><label>Given By</label><input id="advBy2" /></div>
+    <div class="seg" id="pmSeg" style="margin-top:12px">
+      <button data-k="payment" class="active">Payment</button>
+      <button data-k="advance">Advance</button>
+      <button data-k="debt">Collect debt</button>
     </div>
-    <label>Note</label>
-    <input id="advNote2" placeholder="Optional" />
-    <button class="btn btn-black" onclick="addAdvanceWeb()" style="margin-top:12px;">Add Advance</button>
-    <div class="form-msg" id="advMsg2"></div>
-    <div class="muted" style="margin-top:8px;text-align:center;">📱 For signature, use mobile app</div>
-  </div>
-
-  <!-- This month -->
-  <div id="advList">
-    <div class="card">
-      <div class="muted" id="advListMsg"></div>
-      <div id="advThisMonthList"></div>
+    <div class="row">
+      <div><label>Amount (£)</label><input id="pmAmount" type="number" step="0.01" min="0"></div>
+      <div id="pmMethodWrap"><label>Method</label><select id="pmMethod"><option>CASH</option><option>BANK</option></select></div>
     </div>
-  </div>
-
-  <!-- History -->
-  <div id="advHistory" class="hidden">
-    <div class="card">
-      <div class="filters">
-        <div><label>Person</label><select id="ahPerson"><option value="">All</option></select></div>
-        <div><label>From</label><input id="ahFrom" type="date" /></div>
-        <div><label>To</label><input id="ahTo" type="date" /></div>
-        <div class="filters-actions">
-          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadAdvHistory()">Apply</button>
-          <button onclick="clearAdvFilters()">Clear</button>
-        </div>
-      </div>
-      <div class="muted" id="ahMsg"></div>
-      <div id="advanceHistoryList"></div>
+    <div class="row" style="margin-top:10px">
+      <div><label>Paid by</label><input id="pmBy"></div>
+      <div><label>Note</label><input id="pmNote"></div>
     </div>
+    <button class="btn" style="margin-top:14px;width:100%" onclick="startPayment()">Continue to signature</button>
+    <div class="msg" id="pmMsg"></div>
   </div>
 </div>
 
-<!-- ══ DEPOSITS PAGE ═══════════════════════════════════════ -->
-<div class="page hidden" id="pageDeposits">
-  <div class="sub-tabs">
-    <button class="sub-tab active" id="dSubAdd" onclick="showDepSub('add')">+ Add</button>
-    <button class="sub-tab" id="dSubList" onclick="showDepSub('list')">List</button>
-  </div>
-
-  <div id="depAdd">
-    <div class="card">
-      <div class="card-title">New Deposit</div>
-      <label>Customer Name</label>
-      <input id="depName" placeholder="John Smith" />
-      <div class="grid2">
-        <div><label>Reservation Date</label><input id="depDate" type="date" /></div>
-        <div><label>Covers</label><input id="depCovers" type="number" placeholder="4" /></div>
-      </div>
-      <div class="grid2">
-        <div><label>Amount</label><input id="depAmount" inputmode="decimal" placeholder="100" /></div>
-        <div><label>Method</label>
-          <select id="depMethod"><option value="CASH">Cash</option><option value="CC">Credit Card</option><option value="BANK">Bank</option></select>
-        </div>
-      </div>
-      <label>Note</label>
-      <input id="depNote" placeholder="Any notes..." />
-      <label>Receipt / Slip Photo (optional)</label>
-      <input type="file" id="depImage" accept="image/*" style="background:#fff;margin-top:4px;" />
-      <div id="depImgPreview" style="margin-top:8px;"></div>
-      <button class="btn btn-green" onclick="addDeposit()">💾 Save Deposit</button>
-      <div class="form-msg" id="depMsg"></div>
+<!-- Signature modal -->
+<div class="modal-bg" id="sigModal">
+  <div class="modal">
+    <h2 style="margin-bottom:4px">Signature</h2>
+    <div class="muted" id="sigWho" style="margin-bottom:10px"></div>
+    <canvas class="sig-pad" id="sigPad"></canvas>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn ghost" onclick="clearSig()">Clear</button>
+      <button class="btn ghost" onclick="closeModal('sigModal')">Cancel</button>
+      <button class="btn" style="flex:1" id="sigOk">Confirm &amp; save</button>
     </div>
-  </div>
-
-  <div id="depList" class="hidden">
-    <div class="card">
-      <div class="filters">
-        <div><label>From</label><input id="depFrom" type="date" /></div>
-        <div><label>To</label><input id="depTo" type="date" /></div>
-        <div class="filters-actions">
-          <button style="background:#111;color:#fff;border-color:#111;" onclick="loadDeposits()">Apply</button>
-          <button onclick="clearDepFilters()">Clear</button>
-        </div>
-      </div>
-      <div class="muted" id="depListMsg"></div>
-      <div id="depositsList"></div>
-    </div>
+    <div class="msg" id="sigMsg"></div>
   </div>
 </div>
 
-<!-- ══ SETTINGS PAGE ══════════════════════════════════════ -->
-<div class="page hidden" id="pageSettings">
-  <div class="card">
-    <div class="card-title">Token</div>
-    <input id="tokenInput" placeholder="Your token..." />
-    <div class="muted" style="margin-top:5px;">Share via link: <b>?token=...</b></div>
-    <button class="btn btn-black" onclick="saveToken()">Save Token</button>
-    <div class="form-msg" id="tokenMsg"></div>
-  </div>
-
-  <div class="hidden" id="adminSection">
-    <div class="card">
-      <div class="card-title">Add User</div>
-      <div class="grid2">
-        <div><label>Name</label><input id="newUserName" placeholder="Ali" /></div>
-        <div><label>Role</label>
-          <select id="newUserRole"><option value="VIEWER">VIEWER</option><option value="EDITOR">EDITOR</option><option value="ADMIN">ADMIN</option></select>
-        </div>
-      </div>
-      <button class="btn btn-black" onclick="addUser()">Create User</button>
-      <div class="form-msg" id="adminMsg"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">User Permissions</div>
-      <div class="muted" style="margin-bottom:10px;">Tap to toggle permissions on/off</div>
-      <div id="userPermList"></div>
-      <button class="btn btn-black" style="margin-top:10px;" onclick="loadUsers()">↻ Refresh</button>
-    </div>
-  </div>
-</div>
-
-<!-- Person Modal -->
-<div class="modal-bg hidden" id="personModal">
-  <div class="modal-sheet">
-    <div class="modal-hdr">
-      <div>
-        <div style="font-size:22px;font-weight:900;" id="mName">—</div>
-        <div class="muted" id="mDue">Due: —</div>
-      </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-stats">
-      <div class="mstat"><div class="mstat-l">WAGE</div><div class="mstat-v" id="mWage">—</div></div>
-      <div class="mstat"><div class="mstat-l">Cash Paid</div><div class="mstat-v" id="mCash">—</div></div>
-      <div class="mstat"><div class="mstat-l">Bank Paid</div><div class="mstat-v" id="mBank">—</div></div>
-    </div>
-
-    <div class="modal-tabs">
-      <button class="modal-tab active" id="mtPay" onclick="switchMTab('payment')">💵 Payment</button>
-      <button class="modal-tab" id="mtAdv" onclick="switchMTab('advance')">💳 Advance</button>
-      <button class="modal-tab red" id="mtDebt" onclick="switchMTab('debt')">🔴 Collect</button>
-    </div>
-
-    <div class="grid2">
-      <div><label>Amount</label><input id="mAmount" inputmode="decimal" placeholder="0.00" /></div>
-      <div id="mMethodDiv"><label>Method</label><select id="mMethod"><option value="CASH">Cash</option><option value="BANK">Bank</option></select></div>
-    </div>
-    <label id="mByLabel">Paid By</label>
-    <input id="mBy" />
-    <label>Note</label>
-    <input id="mNote" placeholder="Optional" />
-    <button class="btn btn-black" id="mAddBtn" onclick="modalSubmit()">Add Payment</button>
-    <div class="form-msg" id="mMsg"></div>
-    <div class="muted" style="margin-top:10px;text-align:center;">📱 For signature capture, use the mobile app</div>
-  </div>
-</div>
-
-<!-- Signature Canvas Modal -->
-<div class="sigimg-bg hidden" id="sigCanvasModal">
-  <div class="sigimg-box" style="max-width:420px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div style="font-weight:700;font-size:15px;" id="sigCanvasTitle">Please sign below</div>
-      <button onclick="cancelSigCanvas()" style="background:#eee;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;">✕ Cancel</button>
-    </div>
-    <div class="muted" style="margin-bottom:10px;">Sign with mouse or finger</div>
-    <canvas id="sigCanvas" width="380" height="180"
-      style="border:2px solid #111;border-radius:10px;background:#fff;cursor:crosshair;touch-action:none;max-width:100%;"></canvas>
-    <div style="display:flex;gap:10px;margin-top:10px;">
-      <button onclick="clearSigCanvas()" style="flex:1;padding:10px;border-radius:10px;border:1px solid #ddd;background:#eee;font-weight:600;cursor:pointer;">Clear</button>
-      <button onclick="confirmSigCanvas()" style="flex:1;padding:10px;border-radius:10px;border:none;background:#111;color:#fff;font-weight:700;cursor:pointer;">Confirm ✓</button>
-    </div>
-  </div>
-</div>
-
-<!-- Sig / Receipt Image Modal -->
-<div class="sigimg-bg hidden" id="sigImgModal">
-  <div class="sigimg-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div>
-        <div style="font-weight:700;" id="sigImgTitle"></div>
-        <div class="muted" id="sigImgMeta"></div>
-      </div>
-      <button onclick="closeSigImg()" style="background:#eee;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;">✕</button>
-    </div>
-    <img id="sigImgEl" style="max-width:100%;border-radius:8px;" />
-  </div>
+<!-- Image modal -->
+<div class="modal-bg" id="imgModal" onclick="closeModal('imgModal')">
+  <div class="modal" style="max-width:720px;text-align:center"><img id="imgBig" style="max-width:100%;border-radius:10px"></div>
 </div>
 
 <script>
-// Firebase loaded dynamically
-let db = null;
-let storage = null;
-async function initFirebase(){
-  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const { getFirestore, collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const { getStorage, ref, uploadString, getDownloadURL } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
-  window._fbFirestore = { getFirestore, collection, query, orderBy, getDocs };
-  window._fbStorage = { getStorage, ref, uploadString, getDownloadURL };
-  const firebaseConfig = {
-    apiKey: "AIzaSyC-zzdN5aBvZ0SNABA2nUvThNOvcC5MGbA",
-    authDomain: "lpamanagement.firebaseapp.com",
-    projectId: "lpamanagement",
-    storageBucket: "lpamanagement.firebasestorage.app",
-    messagingSenderId: "401279993684",
-    appId: "1:401279993684:web:124f9827bff9a41cf22ac1",
-  };
-  const fbApp = initializeApp(firebaseConfig);
-  db = getFirestore(fbApp);
-  storage = getStorage(fbApp);
-}
-initFirebase();
+// ═════════════ CONFIG ═════════════
+const SUPABASE_URL = 'https://gkdptxcyyrcfmndtazic.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sW5w5URiunt6MGcmqfuQrA_tBB6JVu4';
+const HR_OLD_URL   = 'https://script.google.com/macros/s/AKfycbzo3ty9O-mZ-_QZsA6cS9g8UklOmo_Uw-3f57Mu72K_SWDnprcaZ2bmFY3Yylb2w0c/exec';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const API = "https://script.google.com/macros/s/AKfycbyE7Vqczhafvx74GRIkz_8bc2D9ip4SW_QFW-sEK95fo3s7JkOxdR-HDk1F1X4urw8B/exec";
-const qs = new URLSearchParams(location.search);
-
-const fmt = n => Number(n||0).toLocaleString('en-GB',{style:'currency',currency:'GBP'});
+// ═════════════ HELPERS ═════════════
 const $ = id => document.getElementById(id);
+const gbp = n => Number(n || 0).toLocaleString('en-GB', { style:'currency', currency:'GBP' });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+const dmy = d => { if (!d) return ''; const [y,m,dd] = String(d).slice(0,10).split('-'); return `${dd}/${m}/${y}`; };
+const monthStr = d => d.toISOString().slice(0,7);
+function setMsg(id, text, ok) { const el = $(id); el.textContent = text || ''; el.className = 'msg ' + (ok ? 'ok' : 'err'); }
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
 
-function jsonp(action, params={}){
-  return new Promise((res,rej)=>{
-    const cb='__cb_'+Math.random().toString(36).slice(2);
-    const u=new URL(API); u.searchParams.set('action',action); u.searchParams.set('callback',cb);
-    Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
-    const s=document.createElement('script');
-    window[cb]=d=>{delete window[cb];s.remove();res(d);};
-    s.onerror=()=>{delete window[cb];s.remove();rej(new Error('JSONP failed'));};
-    s.src=u.toString(); document.body.appendChild(s);
-  });
+let ME = null;                 // { id, name, role, permissions(csv) }
+let SUMMARY = null;
+function perms() { return String(ME?.permissions || '').split(',').map(s => s.trim()).filter(Boolean); }
+function can(p) {
+  if (!ME) return false;
+  if (ME.role === 'ADMIN') return true;
+  const ps = perms();
+  const map = {
+    wages:['wages_pay','wages_view','wages_full'], wages_pay:['wages_pay','wages_full'], wages_view:['wages_view','wages_full'],
+    deposits:['deposits','deposits_full'], deposits_view:['deposits','deposits_view','deposits_full'],
+  };
+  return (map[p] || [p]).some(x => ps.includes(x));
 }
+const isAdmin = () => ME?.role === 'ADMIN';
+const isCashRole = () => ['ADMIN','EDITOR'].includes(ME?.role);
 
-function shortM(t){const s=String(t||'').toUpperCase();if(s.includes('BANK'))return'Bank';if(s.includes('CASH'))return'Cash';return'';}
-function inRange(d,f,t){if(!d)return false;if(f&&d<f)return false;if(t&&d>t)return false;return true;}
-function prevStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,10);}
-function prevEnd(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),0).toISOString().slice(0,10);}
-function monthStart(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10);}
-function monthEnd(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);}
-function getToken(){return $('tokenInput').value.trim();}
-
-let currentPage='wages', currentMe=null, peopleDueMap={}, modalPerson=null;
-
-function hasPerm(perm){
-  if(!currentMe)return false;
-  if(currentMe.role==='ADMIN')return true;
-  const perms=(currentMe.permissions||'').split(',').map(s=>s.trim());
-  if(perm==='wages') return perms.some(p=>['wages_pay','wages_view','wages_full'].includes(p));
-  if(perm==='wages_pay') return perms.some(p=>['wages_pay','wages_full'].includes(p));
-  if(perm==='wages_view') return perms.some(p=>['wages_view','wages_full'].includes(p));
-  if(perm==='deposits') return perms.some(p=>['deposits','deposits_view','deposits_full'].includes(p));
-  if(perm==='signatures_view') return perms.includes('signatures_view');
-  return perms.includes(perm);
-}
-
-// ── Page Nav ──────────────────────────────────────────────
-window.showPage = function(page){
-  currentPage=page;
-  const pages=['wages','advances','deposits','settings'];
-  pages.forEach(p=>{
-    const el=$(`page${p.charAt(0).toUpperCase()+p.slice(1)}`);
-    el.classList.toggle('active',p===page);
-    el.classList.toggle('hidden',p!==page);
-    $(`tab${p.charAt(0).toUpperCase()+p.slice(1)}`).classList.toggle('active',p===page);
-  });
-  if(page==='wages') refreshSummary();
-  if(page==='advances') loadAdvThisMonth();
-  if(page==='settings') refreshSummary();
+// ═════════════ AUTH ═════════════
+$('googleBtn').onclick = () => sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin + location.pathname } });
+$('emailBtn').onclick = async () => {
+  setMsg('loginMsg', '');
+  const { error } = await sb.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPass').value });
+  if (error) return setMsg('loginMsg', 'Wrong email or password');
+  boot();
 };
+$('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('emailBtn').click(); });
+$('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
-window.showWagesSub = function(sub){
-  ['status','history','signatures'].forEach(s=>{
-    $(`wSub${s.charAt(0).toUpperCase()+s.slice(1)}`).classList.toggle('active',s===sub);
-    $(`wages${s.charAt(0).toUpperCase()+s.slice(1)}`).classList.toggle('hidden',s!==sub);
-  });
-  if(sub==='history'){$('whFrom').value=prevStart();$('whTo').value=prevEnd();loadWageHistory();}
-  if(sub==='signatures') loadSignatures();
-};
-
-window.showAdvSub = function(sub){
-  $('aSubList').classList.toggle('active',sub==='list');
-  $('aSubHistory').classList.toggle('active',sub==='history');
-  $('advList').classList.toggle('hidden',sub!=='list');
-  $('advHistory').classList.toggle('hidden',sub!=='history');
-  if(sub==='list') loadAdvThisMonth();
-  if(sub==='history'){$('ahFrom').value=prevStart();$('ahTo').value=prevEnd();loadAdvHistory();}
-};
-
-window.showDepSub = function(sub){
-  $('dSubAdd').classList.toggle('active',sub==='add');
-  $('dSubList').classList.toggle('active',sub==='list');
-  $('depAdd').classList.toggle('hidden',sub!=='add');
-  $('depList').classList.toggle('hidden',sub!=='list');
-  if(sub==='list') loadDeposits();
-};
-
-// ── Summary ───────────────────────────────────────────────
-async function refreshSummary(){
-  const token=getToken(); if(!token)return;
-  const data=await jsonp('summary',{token});
-  if(!data.ok){$('tokenMsg').textContent='Error: '+(data.error||'');return;}
-  currentMe=data.me;
-  $('meLine').textContent=`${data.me.name} • ${data.me.role}`;
-  $('lastUpdated').textContent='Last updated: '+new Date().toLocaleString('en-GB');
-
-  const hasWages=hasPerm('wages'), hasDeps=hasPerm('deposits');
-  const canPay=data.canPay||currentMe.role==='ADMIN';
-  const canView=data.canViewAmounts||currentMe.role==='ADMIN';
-  const hasSigView=hasPerm('signatures_view')||currentMe.role==='ADMIN';
-  $('tabWages').style.display=hasWages?'':'none';
-  $('tabAdvances').style.display=canPay?'':'none';
-  $('tabDeposits').style.display=hasDeps?'':'none';
-  $('adminSection').classList.toggle('hidden',data.me.role!=='ADMIN');
-  // Show/hide totals based on view permission
-  $('totalsCard')&&$('totalsCard').classList.toggle('hidden',!canView);
-  // Show/hide signatures sub-tab
-  if($('wSubSignatures')) $('wSubSignatures').style.display=hasSigView?'':'none';
-
-  if(data.totals){
-    $('tWage').textContent=fmt(data.totals.total_wage);
-    $('tDue').textContent=fmt(data.totals.total_cash_due);
-    $('tCash').textContent=fmt(data.totals.total_cash_paid);
-    $('tBank').textContent=fmt(data.totals.total_bank_paid);
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden'); return; }
+  const { data, error } = await sb.rpc('my_profile');
+  if (error || !data?.ok) {
+    await sb.auth.signOut();
+    $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden');
+    return setMsg('loginMsg', data?.error || error?.message || 'No access');
   }
+  ME = data.me;
+  $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
+  $('whoSub').textContent = `· ${ME.name} (${ME.role})`;
+  buildTabs();
+}
 
-  peopleDueMap={};
-  const sorted=[...(data.people||[])].sort((a,b)=>{
-    const az=Math.abs(Number(a.cash_due||0))<0.005,bz=Math.abs(Number(b.cash_due||0))<0.005;
-    if(az!==bz)return az?1:-1; return Number(b.cash_due)-Number(a.cash_due);
+// ═════════════ TABS ═════════════
+const PAGES = [
+  { key:'wages',    label:'Wages',     show:() => can('wages') },
+  { key:'advances', label:'Advances',  show:() => can('wages_pay') || can('wages_view') },
+  { key:'deposits', label:'Deposits',  show:() => can('deposits_view') },
+  { key:'cash',     label:'Cash List', show:() => isCashRole() },
+  { key:'payroll',  label:'New Month', show:() => can('payroll_entry') },
+  { key:'users',    label:'Users',     show:() => isAdmin() },
+];
+function buildTabs() {
+  const tabs = $('tabs'); tabs.innerHTML = '';
+  const visible = PAGES.filter(p => p.show());
+  visible.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'tab'; b.textContent = p.label; b.dataset.key = p.key;
+    b.onclick = () => showPage(p.key);
+    tabs.appendChild(b);
   });
-  sorted.forEach(p=>{peopleDueMap[p.person]=p;});
-
-  const list=$('peopleList'); list.innerHTML='';
-  sorted.filter(p=>Math.abs(Number(p.cash_due||0))>=0.005).forEach(p=>{
-    const div=document.createElement('div'); div.className='person-row';
-    const showDetails = p.wage_total !== null;
-    div.innerHTML=`<div style="flex:1;min-width:0;">
-      <div class="row-name">${p.person}</div>
-      ${showDetails?`<div class="chips">
-        <span class="chip">W: ${fmt(p.wage_total)}</span>
-        <span class="chip">💵 ${fmt(p.cash_paid_total)}</span>
-        <span class="chip">🏦 ${fmt(p.bank_paid_total)}</span>
-      </div>`:''}
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span style="font-size:16px;font-weight:800;${p.cash_due<0?'color:#c00':''}">${fmt(p.cash_due)}</span>
-      <span style="color:#ccc;font-size:18px;">›</span>
-    </div>`;
-    div.onclick=()=>openModal(p);
-    list.appendChild(div);
-  });
-
-  ['whPerson','ahPerson','sigPerson'].forEach(id=>{
-    const sel=$(id); const prev=sel.value;
-    sel.innerHTML='<option value="">All</option>';
-    sorted.forEach(p=>{const o=document.createElement('option');o.value=p.person;o.textContent=p.person;sel.appendChild(o);});
-    if([...sel.options].some(o=>o.value===prev))sel.value=prev;
-  });
-
-  // Populate advance person select
-  const advSel2=$('advPerson2');
-  if(advSel2){
-    const prev2=advSel2.value; advSel2.innerHTML='';
-    sorted.forEach(p=>{const o=document.createElement('option');o.value=p.person;o.textContent=p.person;advSel2.appendChild(o);});
-    if([...advSel2.options].some(o=>o.value===prev2))advSel2.value=prev2;
+  if (isAdmin()) {
+    const hr = document.createElement('button');
+    hr.className = 'tab ext'; hr.textContent = 'HR (old screen) ↗';
+    hr.onclick = () => window.open(HR_OLD_URL, '_blank');
+    tabs.appendChild(hr);
   }
-  const advBy2=$('advBy2');
-  if(advBy2&&!advBy2.value&&currentMe)advBy2.value=currentMe.name;
-
-  if(currentMe) $('mBy').value=$('mBy').value||currentMe.name;
+  // sub-tabs that need extra permission
+  document.querySelectorAll('[data-perm]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.perm)));
+  document.querySelectorAll('[data-perm-card]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.permCard)));
+  const saved = (() => { try { return localStorage.getItem('lpa_tab'); } catch { return null; } })();
+  showPage(visible.find(p => p.key === saved) ? saved : (visible[0]?.key));
 }
-
-window.doRefresh = async function(){
-  await refreshSummary();
-  if(currentPage==='advances') loadAdvThisMonth();
-  if(currentPage==='deposits') loadDeposits();
-};
-
-// ── Modal (Debt collect only) ─────────────────────────────
-function openModal(p){
-  modalPerson=p;
-  $('mName').textContent=p.person;
-  $('mDue').textContent='Due: '+fmt(p.cash_due);
-  $('mWage').textContent=fmt(p.wage_total);
-  $('mCash').textContent=fmt(p.cash_paid_total);
-  $('mBank').textContent=fmt(p.bank_paid_total);
-  $('mAmount').value=''; $('mNote').value=''; $('mMsg').textContent='';
-  if(currentMe) $('mBy').value=currentMe.name;
-  switchMTab('payment');
-  $('personModal').classList.remove('hidden');
+function showPage(key) {
+  if (!key) return;
+  try { localStorage.setItem('lpa_tab', key); } catch {}
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
+  ({ wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: loadUsers })[key]?.();
 }
-
-window.closeModal=()=>$('personModal').classList.add('hidden');
-$('personModal').onclick=e=>{if(e.target===$('personModal'))closeModal();};
-
-let modalTab='payment';
-
-window.switchMTab=function(tab){
-  modalTab=tab;
-  $('mtPay').classList.toggle('active',tab==='payment');
-  $('mtAdv').classList.toggle('active',tab==='advance');
-  $('mtDebt').classList.toggle('active',tab==='debt');
-  if(tab==='payment'){$('mByLabel').textContent='Paid By';$('mAddBtn').textContent='Add Payment';$('mAddBtn').style.background='#111';}
-  else if(tab==='advance'){$('mByLabel').textContent='Given By';$('mAddBtn').textContent='Add Advance';$('mAddBtn').style.background='#111';}
-  else{$('mByLabel').textContent='Received By';$('mAddBtn').textContent='💰 Collect Debt';$('mAddBtn').style.background='#c00';}
-};
-
-window.modalSubmit=async function(){
-  const token=getToken(); if(!token||!modalPerson)return;
-  const amount=$('mAmount').value, method=$('mMethod').value;
-  const by=$('mBy').value.trim(), note=$('mNote').value.trim();
-  const msg=$('mMsg');
-  if(!amount||isNaN(parseFloat(amount))||parseFloat(amount)<=0){msg.textContent='Enter a valid amount';return;}
-
-  // Collect Debt requires signature
-  if(modalTab==='debt'){
-    requestSignature(`Collect £${parseFloat(amount).toFixed(2)} from ${modalPerson.person}`, async(base64)=>{
-      msg.textContent='Saving...';
-      $('mAddBtn').disabled=true;
-      try{
-        const res=await jsonp('collect_debt',{token,person:modalPerson.person,amount,paid_by:by,note:note||'Debt collected'});
-        if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-        // Save signature to Firebase
-        await saveSignatureToFirebase({
-          type:'debt', person:modalPerson.person, amount:parseFloat(amount),
-          method:'CASH', paidBy:by, note:note||'Debt collected',
-          signatureBase64:base64
-        });
-        msg.textContent='✅ Debt collected with signature!';
-        $('mAmount').value=''; $('mNote').value='';
-        await refreshSummary();
-        const updated=peopleDueMap[modalPerson.person];
-        if(updated){ modalPerson=updated; $('mDue').textContent='Due: '+fmt(updated.cash_due); $('mWage').textContent=fmt(updated.wage_total); }
-      }catch(e){msg.textContent='Error: '+e.message;}
-      finally{$('mAddBtn').disabled=false;}
-    });
-    return;
-  }
-
-  // Payment and Advance also require signature
-  const actionLabel = modalTab==='payment' ? 'Payment' : 'Advance';
-  requestSignature(`${actionLabel}: £${parseFloat(amount).toFixed(2)} — ${modalPerson.person}`, async(base64)=>{
-    msg.textContent='Saving...';
-    $('mAddBtn').disabled=true;
-    try{
-      let res;
-      if(modalTab==='payment'){
-        res=await jsonp('add_payment',{token,person:modalPerson.person,amount,method,paid_by:by,note});
-      } else {
-        res=await jsonp('add_advance',{token,person:modalPerson.person,amount,method,paid_by:by,note});
-      }
-      if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-      await saveSignatureToFirebase({
-        type:modalTab, person:modalPerson.person, amount:parseFloat(amount),
-        method, paidBy:by, note, signatureBase64:base64
-      });
-      msg.textContent=`✅ ${actionLabel} saved with signature!`;
-      $('mAmount').value=''; $('mNote').value='';
-      await refreshSummary();
-      const updated=peopleDueMap[modalPerson.person];
-      if(updated){
-        modalPerson=updated;
-        $('mDue').textContent='Due: '+fmt(updated.cash_due);
-        $('mWage').textContent=fmt(updated.wage_total);
-        $('mCash').textContent=fmt(updated.cash_paid_total);
-        $('mBank').textContent=fmt(updated.bank_paid_total);
-      }
-    }catch(e){msg.textContent='Error: '+e.message;}
-    finally{$('mAddBtn').disabled=false;}
-  });
-};
-
-// ── Wage History ──────────────────────────────────────────
-window.loadWageHistory=async function(){
-  const token=getToken();if(!token)return;
-  const msg=$('whMsg'); msg.textContent='Loading...';
-  const params={token};
-  const p=$('whPerson').value,f=$('whFrom').value,t=$('whTo').value;
-  if(p)params.person=p; if(f)params.from=f; if(t)params.to=t;
-  const data=await jsonp('wage_history',params);
-  if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
-  msg.textContent='';
-  const box=$('wageHistoryList'); box.innerHTML='';
-  (data.wage_history||[]).forEach(w=>{
-    const div=document.createElement('div');div.className='row';
-    const bc=String(w.type||'').includes('BANK')?'bank':'cash';
-    div.innerHTML=`<div class="row-left"><div class="row-name">${w.person||''}</div><div class="row-sub">${w.paid_by||''} • ${w.date||''}${shortM(w.type)?' • '+shortM(w.type):''}</div>${w.note?`<div class="row-sub">${w.note}</div>`:''}</div><span class="badge ${bc}">${fmt(w.amount)}</span>`;
-    box.appendChild(div);
-  });
-  if(!(data.wage_history||[]).length)msg.textContent='No results.';
-};
-window.clearWageFilters=function(){$('whPerson').value='';$('whFrom').value='';$('whTo').value='';loadWageHistory();};
-
-// ── Advance This Month ────────────────────────────────────
-window.addAdvanceWeb=async function(){
-  const token=getToken();if(!token)return;
-  const person=$('advPerson2').value;
-  const amount=$('advAmount2').value;
-  const method=$('advMethod2').value;
-  const by=$('advBy2').value.trim();
-  const note=$('advNote2').value.trim();
-  const msg=$('advMsg2');
-  if(!person){msg.textContent='Select a person';return;}
-  if(!amount||isNaN(parseFloat(amount))||parseFloat(amount)<=0){msg.textContent='Enter a valid amount';return;}
-  msg.textContent='Saving...';
-  const res=await jsonp('add_advance',{token,person,amount,method,paid_by:by,note});
-  if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-  msg.textContent='✅ Advance added!';
-  $('advAmount2').value='';$('advNote2').value='';
-  loadAdvThisMonth();
-};
-
-async function loadAdvThisMonth(){
-  const token=getToken();if(!token)return;
-  const msg=$('advListMsg'); msg.textContent='Loading...';
-  const data=await jsonp('advance_history',{token});
-  if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
-  const rows=(data.advance_history||[]).filter(r=>inRange(r.date,monthStart(),monthEnd()));
-  msg.textContent='';
-  const box=$('advThisMonthList'); box.innerHTML='';
-  if(!rows.length){msg.textContent='No advances this month.';return;}
-  rows.forEach(a=>{
-    const div=document.createElement('div');div.className='row';
-    div.innerHTML=`<div class="row-left"><div class="row-name">${a.person||''}</div><div class="row-sub">${a.paid_by||''} • ${a.date||''}${shortM(a.method)?' • '+shortM(a.method):''}</div>${a.note?`<div class="row-sub">${a.note}</div>`:''}</div><span class="badge advance">${fmt(a.amount)}</span>`;
-    box.appendChild(div);
+function wireSeg(segId, prefix) {
+  $(segId).querySelectorAll('button').forEach(b => b.onclick = () => {
+    $(segId).querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    $(segId).querySelectorAll('button').forEach(x => $(prefix + x.dataset.sub)?.classList.toggle('hidden', x !== b));
+    if (b.dataset.sub === 'history') loadWageHistory();
+    if (b.dataset.sub === 'sigs') loadSigs();
+    if (b.dataset.sub === 'list') loadDeposits();
   });
 }
+wireSeg('wagesSeg', 'wages-');
+wireSeg('depSeg', 'deposits-');
 
-// ── Advance History ───────────────────────────────────────
-window.loadAdvHistory=async function(){
-  const token=getToken();if(!token)return;
-  const msg=$('ahMsg'); msg.textContent='Loading...';
-  const data=await jsonp('advance_history',{token});
-  if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
-  let rows=data.advance_history||[];
-  const p=$('ahPerson').value,f=$('ahFrom').value,t=$('ahTo').value;
-  if(p)rows=rows.filter(r=>r.person===p);
-  if(f||t)rows=rows.filter(r=>inRange(r.date,f,t));
-  msg.textContent='';
-  const box=$('advanceHistoryList'); box.innerHTML='';
-  rows.forEach(a=>{
-    const div=document.createElement('div');div.className='row';
-    div.innerHTML=`<div class="row-left"><div class="row-name">${a.person||''}</div><div class="row-sub">${a.paid_by||''} • ${a.date||''}${shortM(a.method)?' • '+shortM(a.method):''}</div>${a.note?`<div class="row-sub">${a.note}</div>`:''}</div><span class="badge advance">${fmt(a.amount)}</span>`;
-    box.appendChild(div);
+// ═════════════ WAGES ═════════════
+async function loadWages() {
+  const [{ data, error }, cash] = await Promise.all([sb.rpc('wage_summary'), isCashRole() ? sb.rpc('cash_in_hand') : Promise.resolve({ data:null })]);
+  if (error || !data?.ok) { $('statusTable').innerHTML = `<tr><td class="neg">${esc(error?.message || data?.error)}</td></tr>`; return; }
+  SUMMARY = data;
+  const t = data.totals;
+  const cashVal = cash?.data?.ok ? cash.data.cash_in_hand : null;
+  $('wageKpis').innerHTML = (t ? `
+    <div class="kpi hero"><div class="l">TOTAL DUE</div><div class="v">${gbp(t.total_cash_due)}</div></div>
+    <div class="kpi"><div class="l">Wages</div><div class="v">${gbp(t.total_wage)}</div></div>
+    <div class="kpi"><div class="l">Paid cash</div><div class="v">${gbp(t.total_cash_paid)}</div></div>
+    <div class="kpi"><div class="l">Paid bank</div><div class="v">${gbp(t.total_bank_paid)}</div></div>` : '') +
+    (cashVal !== null ? `<div class="kpi"><div class="l">Cash in hand</div><div class="v">${gbp(cashVal)}</div></div>` : '');
+  const view = data.canViewAmounts;
+  const rows = [...(data.people || [])].sort((a,b) => {
+    const az = Math.abs(a.cash_due) < .005, bz = Math.abs(b.cash_due) < .005;
+    return az !== bz ? (az ? 1 : -1) : b.cash_due - a.cash_due;
   });
-  if(!rows.length)msg.textContent='No results.';
-};
-window.clearAdvFilters=function(){$('ahPerson').value='';$('ahFrom').value='';$('ahTo').value='';loadAdvHistory();};
-
-// ── Signatures ────────────────────────────────────────────
-async function uploadDepositImage(base64DataUrl, fileName){
-  if(!storage||!window._fbStorage) throw new Error('Storage not ready');
-  const {ref, uploadString, getDownloadURL} = window._fbStorage;
-  const storageRef = ref(storage, `deposits/${Date.now()}_${fileName}`);
-  await uploadString(storageRef, base64DataUrl, 'data_url');
-  const url = await getDownloadURL(storageRef);
-  return url;
+  $('statusTable').innerHTML = `<tr><th>Person</th>${view ? '<th class="num">Wage</th><th class="num">Cash</th><th class="num">Bank</th><th class="num">Debt coll.</th>' : ''}<th class="num">Due</th><th></th></tr>` +
+    rows.map((p, i) => `<tr class="${Math.abs(p.cash_due) < .005 ? 'zero' : ''}">
+      <td><b>${esc(p.person)}</b></td>
+      ${view ? `<td class="num">${gbp(p.wage_total)}</td><td class="num">${gbp(p.cash_paid_total)}</td><td class="num bank">${gbp(p.bank_paid_total)}</td><td class="num">${gbp(p.debt_collected)}</td>` : ''}
+      <td class="num ${p.cash_due < 0 ? 'neg' : ''}"><b>${gbp(p.cash_due)}</b></td>
+      <td class="num">${data.canPay ? `<button class="btn small" onclick="openPay(${i})">Pay</button>` : ''}</td>
+    </tr>`).join('');
+  $('statusTable').dataset.rows = JSON.stringify(rows);
+  fillPeople();
+}
+function fillPeople() {
+  const names = (SUMMARY?.people || []).map(p => p.person).sort();
+  $('advPerson').innerHTML = names.map(n => `<option>${esc(n)}</option>`).join('');
 }
 
-async function saveSignatureToFirebase({type, person, amount, method, paidBy, note, signatureBase64}){
-  try{
-    const { addDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const {collection: col} = window._fbFirestore;
-    await addDoc(col(db,'signatures'),{
-      transactionId: Date.now().toString(),
-      type, person, amount, method, signedBy:person, paidBy, note,
-      date: new Date().toISOString().slice(0,10),
-      signatureBase64,
-      createdAt: {seconds: Math.floor(Date.now()/1000), nanoseconds:0}
-    });
-  }catch(e){ console.error('Sig save error:',e); }
+async function loadWageHistory() {
+  if (!$('whFrom').value) { const d = new Date(); $('whFrom').value = monthStr(d) + '-01'; $('whTo').value = today(); }
+  let q = sb.from('payments').select('id,date,person,method,amount,paid_by,note,archived,created_at').eq('is_deleted', false).order('date', { ascending:false }).order('created_at', { ascending:false }).limit(1000);
+  if ($('whFrom').value) q = q.gte('date', $('whFrom').value);
+  if ($('whTo').value) q = q.lte('date', $('whTo').value);
+  if ($('whPerson').value.trim()) q = q.ilike('person', '%' + $('whPerson').value.trim() + '%');
+  const { data, error } = await q;
+  if (error) { $('whTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  const cash = data.filter(r => r.method === 'CASH').reduce((a,r) => a + Number(r.amount), 0);
+  const bank = data.filter(r => r.method === 'BANK').reduce((a,r) => a + Number(r.amount), 0);
+  $('whSum').textContent = `${data.length} payments · Cash ${gbp(cash)} · Bank ${gbp(bank)} · Total ${gbp(cash + bank)}`;
+  $('whTable').innerHTML = `<tr><th>Date</th><th>Person</th><th>Method</th><th class="num">Amount</th><th>Paid by</th><th>Note</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
+    data.map(r => `<tr><td>${dmy(r.date)}</td><td>${esc(r.person)}</td><td>${r.method === 'BANK' ? '<span class="bank">BANK</span>' : 'CASH'}</td>
+      <td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
+      ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="softDelete('${r.id}','payment')">Delete</button></td>` : ''}</tr>`).join('');
+}
+async function softDelete(id, what) {
+  if (!confirm('Delete this ' + what + '? (cash list is corrected automatically for cash payments)')) return;
+  const { data, error } = await sb.rpc('soft_delete_any', { p_id: id });
+  if (error || !data?.ok) return alert(error?.message || data?.error);
+  if (what === 'payment') { loadWageHistory(); loadWages(); } else loadAdvances();
 }
 
-let loadedSignatures = [];
-
-window.loadSignatures=async function(){
-  const msg=$('sigMsg'),box=$('sigList');
-  msg.textContent='Loading...'; box.innerHTML='';
-  try{
-    if(!db){msg.textContent='Firebase not ready, try again';return;}
-    const {getDocs,query,collection,orderBy}=window._fbFirestore;
-    const pf=$('sigPerson').value, tf=$('sigType').value;
-    const snap=await getDocs(query(collection(db,'signatures'),orderBy('createdAt','desc')));
-    let docs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(pf)docs=docs.filter(d=>d.person===pf);
-    if(tf)docs=docs.filter(d=>d.type===tf);
-    loadedSignatures=docs;
-    msg.textContent=docs.length?`${docs.length} signature(s) found`:'No signatures found.';
-
-    docs.forEach((sig,idx)=>{
-      const div=document.createElement('div');
-      div.style.cssText='background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid '+(sig.type==='payment'?'#007AFF':sig.type==='advance'?'#ff8c00':'#c00')+';';
-      const typeLabel={payment:'💵 Payment',advance:'💳 Advance',debt:'🔴 Collect Debt'}[sig.type]||sig.type;
-      const badgeColor={payment:'#e7f0ff',advance:'#fff0e5',debt:'#fff0f0'}[sig.type]||'#f0f0f0';
-      const badgeText={payment:'#0b3a9a',advance:'#8a3a00',debt:'#c00'}[sig.type]||'#111';
-      div.innerHTML=`
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-          <div>
-            <div style="font-size:15px;font-weight:800;">${sig.person}</div>
-            <div style="font-size:12px;color:#666;">${sig.paidBy||''} · ${sig.date||''} · ${sig.method||''}</div>
-            ${sig.note?`<div style="font-size:12px;color:#888;">📝 ${sig.note}</div>`:''}
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-            <span style="padding:4px 10px;border-radius:20px;font-weight:800;font-size:13px;background:${badgeColor};color:${badgeText};">${fmt(sig.amount)}</span>
-            <span style="font-size:11px;color:#888;">${typeLabel}</span>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <img src="${sig.signatureBase64}"
-            style="max-height:70px;border-radius:6px;border:1px solid #eee;cursor:pointer;background:#fff;"
-            onclick="openSigImg('${sig.signatureBase64}','${typeLabel}: ${fmt(sig.amount)} – ${sig.person}','${sig.paidBy||''} · ${sig.date||''}')"
-            title="Click to enlarge" />
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <button onclick="exportSinglePDF(${idx})" style="padding:6px 12px;border-radius:8px;border:none;background:#1a6a1a;color:#fff;font-weight:600;font-size:12px;cursor:pointer;">📄 PDF</button>
-            <button onclick="shareSig(${idx})" style="padding:6px 12px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;font-size:12px;cursor:pointer;">🔗 Share</button>
-          </div>
-        </div>`;
-      box.appendChild(div);
-    });
-  }catch(e){msg.textContent='Error: '+e.message;}
-};
-
-window.exportSinglePDF=function(idx){
-  const sig=loadedSignatures[idx]; if(!sig)return;
-  const typeLabel={payment:'Payment',advance:'Advance',debt:'Collect Debt'}[sig.type]||sig.type;
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signature Receipt</title>
-  <style>
-    body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px;}
-    .header{text-align:center;border-bottom:2px solid #111;padding-bottom:16px;margin-bottom:20px;}
-    .title{font-size:22px;font-weight:900;}
-    .sub{color:#666;font-size:14px;margin-top:4px;}
-    .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;}
-    .detail-label{color:#666;font-size:14px;}
-    .detail-value{font-weight:700;font-size:14px;}
-    .amount{font-size:28px;font-weight:900;text-align:center;margin:20px 0;}
-    .sig-section{margin-top:20px;text-align:center;}
-    .sig-section img{max-width:100%;border:1px solid #ddd;border-radius:8px;padding:10px;background:#fff;}
-    .footer{text-align:center;color:#999;font-size:12px;margin-top:20px;}
-    @media print{button{display:none;}}
-  </style></head><body>
-  <div class="header">
-    <div class="title">LPA Management</div>
-    <div class="sub">${typeLabel} Receipt</div>
-  </div>
-  <div class="amount">${fmt(sig.amount)}</div>
-  <div class="detail-row"><span class="detail-label">Person</span><span class="detail-value">${sig.person}</span></div>
-  <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${typeLabel}</span></div>
-  <div class="detail-row"><span class="detail-label">Method</span><span class="detail-value">${sig.method||'—'}</span></div>
-  <div class="detail-row"><span class="detail-label">Paid By</span><span class="detail-value">${sig.paidBy||'—'}</span></div>
-  <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${sig.date||'—'}</span></div>
-  ${sig.note?`<div class="detail-row"><span class="detail-label">Note</span><span class="detail-value">${sig.note}</span></div>`:''}
-  <div class="sig-section">
-    <div style="font-weight:700;margin-bottom:10px;">Signature</div>
-    <img src="${sig.signatureBase64}" />
-  </div>
-  <div class="footer">Generated by LPA Management App · ${new Date().toLocaleString('en-GB')}</div>
-  <br><button onclick="window.print()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Print / Save as PDF</button>
-  </body></html>`);
+async function loadSigs() {
+  let q = sb.from('signatures').select('id,kind,person,amount,method,paid_by,note,date,signature_base64,created_at').order('created_at', { ascending:false }).limit(300);
+  if ($('sigType').value) q = q.eq('kind', $('sigType').value);
+  if ($('sigPerson').value.trim()) q = q.ilike('person', '%' + $('sigPerson').value.trim() + '%');
+  const { data, error } = await q;
+  if (error) { $('sigTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  window._sigs = data;
+  $('sigTable').innerHTML = `<tr><th>Date</th><th>Type</th><th>Person</th><th class="num">Amount</th><th>Method</th><th>By</th><th>Signature</th><th></th></tr>` +
+    data.map((s, i) => `<tr><td>${dmy(s.date)}</td><td><span class="tag">${esc(s.kind)}</span></td><td>${esc(s.person)}</td><td class="num">${gbp(s.amount)}</td>
+      <td>${esc(s.method)}</td><td>${esc(s.paid_by)}</td><td>${s.signature_base64 ? `<img class="sig-img" src="${s.signature_base64}">` : ''}</td>
+      <td><button class="btn ghost small" onclick="printReceipt(${i})">Receipt</button></td></tr>`).join('');
+}
+function printReceipt(i) {
+  const s = window._sigs[i];
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>Receipt</title><style>body{font-family:Arial;max-width:520px;margin:30px auto}h1{font-size:20px;text-align:center}.a{font-size:30px;font-weight:900;text-align:center;margin:14px 0}.r{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:8px 0}img{max-width:100%;border:1px solid #ddd;border-radius:8px;margin-top:16px}</style></head><body>
+    <h1>LPA Management — ${esc(s.kind)}</h1><div class="a">${gbp(s.amount)}</div>
+    <div class="r"><span>Person</span><b>${esc(s.person)}</b></div><div class="r"><span>Method</span><b>${esc(s.method || '—')}</b></div>
+    <div class="r"><span>Paid by</span><b>${esc(s.paid_by || '—')}</b></div><div class="r"><span>Date</span><b>${dmy(s.date)}</b></div>
+    ${s.note ? `<div class="r"><span>Note</span><b>${esc(s.note)}</b></div>` : ''}
+    ${s.signature_base64 ? `<img src="${s.signature_base64}">` : ''}<script>setTimeout(()=>print(),300)<\/script></body></html>`);
   w.document.close();
-};
+}
 
-window.exportAllPDF=function(){
-  if(!loadedSignatures.length){alert('Load signatures first');return;}
-  const w=window.open('','_blank');
-  const rows=loadedSignatures.map(sig=>{
-    const typeLabel={payment:'Payment',advance:'Advance',debt:'Collect Debt'}[sig.type]||sig.type;
-    return `<div style="page-break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <div><strong>${sig.person}</strong><div style="color:#666;font-size:12px;">${sig.paidBy||''} · ${sig.date||''} · ${typeLabel}</div>${sig.note?`<div style="color:#888;font-size:12px;">${sig.note}</div>`:''}</div>
-        <div style="font-size:20px;font-weight:900;">${fmt(sig.amount)}</div>
-      </div>
-      <img src="${sig.signatureBase64}" style="max-width:200px;border:1px solid #eee;border-radius:6px;background:#fff;" />
-    </div>`;
-  }).join('');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signatures Export</title>
-  <style>body{font-family:Arial,sans-serif;max-width:700px;margin:30px auto;padding:20px;}h1{text-align:center;}@media print{button{display:none;}}</style>
-  </head><body>
-  <h1>LPA Management — Signatures</h1>
-  <p style="color:#666;text-align:center;">Exported: ${new Date().toLocaleString('en-GB')} · ${loadedSignatures.length} records</p>
-  ${rows}
-  <button onclick="window.print()" style="width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:20px;">🖨️ Print / Save as PDF</button>
-  </body></html>`);
-  w.document.close();
-};
+// ═════════════ PAY / ADVANCE / DEBT with signature ═════════════
+let PAY = null; // { person, kind }
+function openPay(i) {
+  const rows = JSON.parse($('statusTable').dataset.rows || '[]');
+  const p = rows[i];
+  PAY = { person: p.person, kind: 'payment' };
+  $('pmName').textContent = p.person;
+  $('pmDue').textContent = 'Due: ' + gbp(p.cash_due);
+  $('pmAmount').value = p.cash_due > 0 ? Number(p.cash_due).toFixed(2) : '';
+  $('pmBy').value = ME.name; $('pmNote').value = ''; $('pmMethod').value = 'CASH';
+  setMsg('pmMsg', '');
+  $('pmSeg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.k === 'payment'));
+  $('pmMethodWrap').classList.remove('hidden');
+  openModal('payModal');
+}
+$('pmSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
+  PAY.kind = b.dataset.k;
+  $('pmSeg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+  $('pmMethodWrap').classList.toggle('hidden', PAY.kind === 'debt');
+});
+function startPayment() {
+  const amount = Number($('pmAmount').value);
+  if (!(amount > 0)) return setMsg('pmMsg', 'Enter a valid amount');
+  const rec = { kind: PAY.kind, person: PAY.person, amount, method: PAY.kind === 'debt' ? 'CASH' : $('pmMethod').value, paid_by: $('pmBy').value.trim() || ME.name, note: $('pmNote').value.trim() };
+  closeModal('payModal');
+  askSignature(rec, () => { loadWages(); });
+}
+function startAdvance() {
+  const amount = Number($('advAmount').value);
+  if (!$('advPerson').value) return setMsg('advMsg', 'Choose a person');
+  if (!(amount > 0)) return setMsg('advMsg', 'Enter a valid amount');
+  const rec = { kind: 'advance', person: $('advPerson').value, amount, method: $('advMethod').value, paid_by: $('advBy').value.trim() || ME.name, note: $('advNote').value.trim() };
+  askSignature(rec, () => { $('advAmount').value = ''; $('advNote').value = ''; setMsg('advMsg', '✅ Advance saved with signature', true); loadAdvances(); });
+}
 
-window.shareSig=function(idx){
-  const sig=loadedSignatures[idx]; if(!sig)return;
-  const typeLabel={payment:'Payment',advance:'Advance',debt:'Collect Debt'}[sig.type]||sig.type;
-  const text=`${typeLabel}: ${fmt(sig.amount)} — ${sig.person}\nDate: ${sig.date}\nBy: ${sig.paidBy||''}`;
-  if(navigator.share){
-    navigator.share({title:'LPA Signature Receipt',text}).catch(()=>{});
-  } else {
-    navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard!'));
-  }
-};
+// Signature pad
+const pad = $('sigPad'); const ctx = pad.getContext('2d'); let drawing = false, inked = false;
+function sizePad() { const r = pad.getBoundingClientRect(); pad.width = r.width * 2; pad.height = r.height * 2; ctx.scale(2,2); ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.strokeStyle = '#1F1A17'; }
+function pos(e) { const r = pad.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+pad.addEventListener('pointerdown', e => { drawing = true; inked = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); pad.setPointerCapture(e.pointerId); });
+pad.addEventListener('pointermove', e => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+['pointerup','pointercancel','pointerleave'].forEach(ev => pad.addEventListener(ev, () => drawing = false));
+function clearSig() { ctx.clearRect(0, 0, pad.width, pad.height); inked = false; }
 
-window.openSigImg=function(src,title,meta){
-  $('sigImgTitle').textContent=title;$('sigImgMeta').textContent=meta;$('sigImgEl').src=src;
-  $('sigImgModal').classList.remove('hidden');
-};
-window.closeSigImg=()=>$('sigImgModal').classList.add('hidden');
-
-// ── Deposits ──────────────────────────────────────────────
-$('depImage').onchange=function(){
-  const file=this.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>$('depImgPreview').innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:150px;border-radius:8px;margin-top:4px;" />`;
-  reader.readAsDataURL(file);
-};
-
-window.addDeposit=async function(){
-  const token=getToken(); if(!token)return;
-  const name=$('depName').value.trim(), resDate=$('depDate').value;
-  const covers=$('depCovers').value||'0', amount=$('depAmount').value;
-  const method=$('depMethod').value, note=$('depNote').value.trim();
-  const msg=$('depMsg');
-  if(!name){msg.textContent='Customer name required';return;}
-  if(!resDate){msg.textContent='Reservation date required';return;}
-  if(!amount||isNaN(parseFloat(amount))){msg.textContent='Enter a valid amount';return;}
-  let imageBase64='';
-  if($('depImage').files[0]){
-    imageBase64=await new Promise(res=>{
-      const reader=new FileReader();
-      reader.onload=e=>res(e.target.result);
-      reader.readAsDataURL($('depImage').files[0]);
+function askSignature(rec, done) {
+  $('sigWho').textContent = `${rec.person} · ${rec.kind} · ${gbp(rec.amount)}${rec.kind !== 'debt' ? ' · ' + rec.method : ''}`;
+  setMsg('sigMsg', '');
+  openModal('sigModal'); sizePad(); clearSig();
+  $('sigOk').disabled = false;
+  $('sigOk').onclick = async () => {
+    if (!inked) return setMsg('sigMsg', 'Please sign first');
+    $('sigOk').disabled = true; setMsg('sigMsg', 'Saving…', true);
+    const id = crypto.randomUUID();
+    const base = { id, date: today(), person: rec.person, amount: rec.amount, paid_by: rec.paid_by, note: rec.note || (rec.kind === 'debt' ? 'Debt collected' : '') };
+    let res;
+    if (rec.kind === 'payment') res = await sb.from('payments').insert({ ...base, method: rec.method });
+    else if (rec.kind === 'advance') res = await sb.from('advances').insert({ ...base, method: rec.method });
+    else res = await sb.from('debt_collections').insert(base);
+    if (res.error) { $('sigOk').disabled = false; return setMsg('sigMsg', res.error.message); }
+    const sig = await sb.from('signatures').insert({
+      id: crypto.randomUUID(), transaction_id: id, kind: rec.kind, person: rec.person, amount: rec.amount, method: rec.method,
+      signed_by: rec.person, paid_by: rec.paid_by, note: base.note, date: base.date, signature_base64: pad.toDataURL('image/png'),
     });
-  }
-  msg.textContent='Saving...';
-  let imageUrl='';
-  if($('depImage').files[0]){
-    try{
-      msg.textContent='Uploading image...';
-      imageUrl = await uploadDepositImage(imageBase64, $('depImage').files[0].name);
-    }catch(e){
-      msg.textContent='Image upload failed: '+e.message;
-      return;
-    }
-  }
-  const res=await jsonp('add_deposit',{token,customer_name:name,res_date:resDate,covers,amount,method,note,image_url:imageUrl});
-  if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-  msg.textContent='✅ Deposit saved!';
-  $('depName').value='';$('depDate').value='';$('depCovers').value='';$('depAmount').value='';$('depNote').value='';$('depImgPreview').innerHTML='';$('depImage').value='';
-};
-
-window.loadDeposits=async function(){
-  const token=getToken();if(!token)return;
-  const msg=$('depListMsg'),box=$('depositsList');
-  msg.textContent='Loading...'; box.innerHTML='';
-  const params={token};
-  const f=$('depFrom').value,t=$('depTo').value;
-  if(f)params.from=f; if(t)params.to=t;
-  const data=await jsonp('get_deposits',params);
-  if(!data.ok){msg.textContent='Error: '+(data.error||'');return;}
-  const deps=data.deposits||[];
-  msg.textContent=deps.length?'':'No deposits found.';
-  deps.forEach(d=>{
-    const div=document.createElement('div'); div.className='dep-card';
-    const mIcon=d.method==='CC'?'💳':d.method==='BANK'?'🏦':'💵';
-    div.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div><div class="dep-name">${d.customer_name}</div><div class="muted">📅 ${d.res_date} · 👥 ${d.covers} covers</div></div>
-        <div style="text-align:right;"><div style="font-size:18px;font-weight:900;">${fmt(d.amount)}</div><div class="muted">${mIcon} ${d.method}</div></div>
-      </div>
-      ${d.note?`<div class="muted" style="margin-top:5px;">📝 ${d.note}</div>`:''}
-      ${d.added_by?`<div class="muted">Added by: ${d.added_by}</div>`:''}
-      ${d.image_url?`<img src="${d.image_url}" class="dep-img" onclick="openDepImg('${d.image_url}')" />`:''}`;
-    box.appendChild(div);
-  });
-};
-
-window.openDepImg=function(src){$('sigImgEl').src=src;$('sigImgTitle').textContent='Receipt';$('sigImgMeta').textContent='';$('sigImgModal').classList.remove('hidden');};
-window.clearDepFilters=function(){$('depFrom').value='';$('depTo').value='';loadDeposits();};
-
-// ── Settings ──────────────────────────────────────────────
-window.saveToken=async function(){
-  const t=$('tokenInput').value.trim();
-  if(!t){$('tokenMsg').textContent='Token cannot be empty';return;}
-  localStorage.setItem('lpa_token',t);
-  $('tokenMsg').textContent='Saved. Refreshing...';
-  await refreshSummary();
-};
-
-window.addUser=async function(){
-  const token=getToken();
-  const name=$('newUserName').value.trim(), role=$('newUserRole').value;
-  const msg=$('adminMsg'); msg.textContent='Creating...';
-  const res=await jsonp('add_user',{token,name,role});
-  if(!res.ok){msg.textContent='Error: '+(res.error||'');return;}
-  msg.textContent=`✅ ${res.user.name} — Token: ${res.user.token}`;
-  $('newUserName').value='';
-  loadUsers();
-};
-
-window.loadUsers=async function(){
-  const token=getToken();if(!token)return;
-  const data=await jsonp('get_users',{token});
-  if(!data.ok)return;
-  const box=$('userPermList'); box.innerHTML='';
-  (data.users||[]).forEach(u=>{
-    const div=document.createElement('div'); div.className='user-card';
-    const perms=(u.permissions||'').split(',').map(s=>s.trim()).filter(Boolean);
-    div.innerHTML=`
-      <div style="font-size:14px;font-weight:700;">${u.name} <span style="font-size:11px;color:#aaa;">(${u.role})</span></div>
-      <div style="font-size:11px;color:#aaa;font-family:monospace;">${u.token}</div>
-      <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">WAGES</div>
-      <div class="perm-row">
-        ${['wages_pay','wages_view'].map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" data-perm="${p}" onclick="togglePerm('${u.token}','${p}',this)">${p==='wages_pay'?'💵 Pay':'👁 View'}</button>`).join('')}
-      </div>
-      <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">DEPOSITS</div>
-      <div class="perm-row">
-        ${['deposits','deposits_view'].map(p=>`<button class="perm-btn ${perms.includes(p)?'on':''}" data-perm="${p}" onclick="togglePerm('${u.token}','${p}',this)">${p==='deposits'?'📋 Full':'👁 View'}</button>`).join('')}
-      </div>
-      <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:4px;">OTHER</div>
-      <div class="perm-row">
-        <button class="perm-btn ${perms.includes('signatures_view')?'on':''}" data-perm="signatures_view" onclick="togglePerm('${u.token}','signatures_view',this)">✍️ Signatures</button>
-        <button class="perm-btn" style="${u.active?'background:#1a6a1a;color:#fff;border-color:#1a6a1a':'background:#c00;color:#fff;border-color:#c00'}" onclick="toggleActive('${u.token}',${u.active},this)">${u.active?'✅ Active':'❌ Inactive'}</button>
-        <button class="perm-btn" style="background:#007AFF;color:#fff;border-color:#007AFF;" onclick="changeRole('${u.token}','${u.name}','${u.role}')">👤 ${u.role}</button>
-        <button class="perm-btn" style="background:#fff0f0;color:#c00;border-color:#ffcccc;" onclick="deleteUser('${u.token}','${u.name}')">🗑 Delete</button>
-      </div>`;
-    box.appendChild(div);
-  });
-};
-
-window.changeRole=function(userToken, userName, currentRole){
-  const roles=['VIEWER','PAYER','EDITOR','ADMIN'].filter(r=>r!==currentRole);
-  const choice=prompt(`Change role for ${userName}\nCurrent: ${currentRole}\n\nNew role:\n${roles.map((r,i)=>`${i+1}. ${r}`).join('\n')}\n\nEnter number:`);
-  if(!choice)return;
-  const idx=parseInt(choice)-1;
-  if(idx<0||idx>=roles.length){alert('Invalid choice');return;}
-  const newRole=roles[idx];
-  const token=getToken();
-  jsonp('set_role',{token,user_token:userToken,role:newRole}).then(res=>{
-    if(!res.ok){alert('Error: '+(res.error||''));return;}
-    loadUsers();
-  });
-};
-
-window.deleteUser=async function(userToken, userName){
-  if(!confirm(`Delete user "${userName}"? This cannot be undone.`))return;
-  const token=getToken();
-  const res=await jsonp('delete_user',{token,user_token:userToken});
-  if(!res.ok){alert('Error: '+(res.error||''));return;}
-  loadUsers();
-};
-
-window.togglePerm=async function(userToken, perm, btn){
-  const token=getToken();
-  const row=btn.parentElement;
-  const currentPerms=[];
-  row.querySelectorAll('[data-perm]').forEach(b=>{if(b.classList.contains('on'))currentPerms.push(b.dataset.perm);});
-  const idx=currentPerms.indexOf(perm);
-  if(idx>=0)currentPerms.splice(idx,1); else currentPerms.push(perm);
-  const res=await jsonp('set_permissions',{token,user_token:userToken,permissions:currentPerms.join(',')});
-  if(!res.ok){alert('Error: '+(res.error||''));return;}
-  btn.classList.toggle('on',currentPerms.includes(perm));
-};
-
-window.toggleActive=async function(userToken, currentActive, btn){
-  const token=getToken();
-  const newActive=!currentActive;
-  const res=await jsonp('set_user_active',{token,user_token:userToken,active:String(newActive).toUpperCase()});
-  if(!res.ok){alert('Error: '+(res.error||''));return;}
-  btn.textContent=newActive?'✅ Active':'❌ Inactive';
-  btn.style.background=newActive?'#1a6a1a':'#c00';
-  btn.style.borderColor=newActive?'#1a6a1a':'#c00';
-};
-
-// ── Signature Canvas ─────────────────────────────────────
-let sigCanvasCallback = null;
-let sigDrawing = false;
-let sigHasDrawn = false;
-
-function initSigCanvas(){
-  const canvas = document.getElementById('sigCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  function getPos(e){
-    const r = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / r.width;
-    const scaleY = canvas.height / r.height;
-    const src = e.touches ? e.touches[0] : e;
-    return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
-  }
-
-  canvas.onmousedown = e => { sigDrawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); };
-  canvas.onmousemove = e => { if(!sigDrawing)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); sigHasDrawn=true; };
-  canvas.onmouseup = () => sigDrawing=false;
-  canvas.onmouseleave = () => sigDrawing=false;
-
-  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); sigDrawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); },{passive:false});
-  canvas.addEventListener('touchmove', e=>{ e.preventDefault(); if(!sigDrawing)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); sigHasDrawn=true; },{passive:false});
-  canvas.addEventListener('touchend', ()=>sigDrawing=false);
+    if (sig.error) console.warn('signature save failed', sig.error);
+    closeModal('sigModal'); done();
+  };
 }
 
-window.clearSigCanvas = function(){
-  const canvas = document.getElementById('sigCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  sigHasDrawn = false;
-};
-
-window.cancelSigCanvas = function(){
-  $('sigCanvasModal').classList.add('hidden');
-  sigCanvasCallback = null;
-};
-
-window.confirmSigCanvas = function(){
-  if(!sigHasDrawn){ alert('Please sign first'); return; }
-  const canvas = document.getElementById('sigCanvas');
-  const base64 = canvas.toDataURL('image/png');
-  $('sigCanvasModal').classList.add('hidden');
-  if(sigCanvasCallback) sigCanvasCallback(base64);
-  sigCanvasCallback = null;
-};
-
-function requestSignature(title, callback){
-  $('sigCanvasTitle').textContent = title;
-  clearSigCanvas();
-  $('sigCanvasModal').classList.remove('hidden');
-  sigCanvasCallback = callback;
+// ═════════════ ADVANCES ═════════════
+async function loadAdvances() {
+  if (!SUMMARY) { const { data } = await sb.rpc('wage_summary'); if (data?.ok) { SUMMARY = data; fillPeople(); } }
+  $('advBy').value = $('advBy').value || ME.name;
+  if (!can('wages_view')) { $('advTable').innerHTML = '<tr><td class="muted">You can give advances; history needs “wages_view”.</td></tr>'; return; }
+  const { data, error } = await sb.from('advances').select('id,date,person,method,amount,paid_by,note').eq('is_deleted', false).order('date', { ascending:false }).limit(500);
+  if (error) { $('advTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  $('advTable').innerHTML = `<tr><th>Date</th><th>Person</th><th>Method</th><th class="num">Amount</th><th>Given by</th><th>Note</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
+    data.map(r => `<tr><td>${dmy(r.date)}</td><td>${esc(r.person)}</td><td>${esc(r.method)}</td><td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
+      ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="softDelete('${r.id}','advance')">Delete</button></td>` : ''}</tr>`).join('');
 }
 
-// ── Init ──────────────────────────────────────────────────
-const saved=localStorage.getItem('lpa_token'), fromUrl=qs.get('token');
-if(fromUrl)$('tokenInput').value=fromUrl;
-else if(saved)$('tokenInput').value=saved;
+// ═════════════ DEPOSITS ═════════════
+async function loadDeposits() {
+  let q = sb.from('deposits').select('id,created_at,added_by,customer_name,res_date,covers,amount,method,note,image_url,image_path').eq('is_deleted', false).order('res_date', { ascending:true });
+  if ($('depFrom').value) q = q.gte('res_date', $('depFrom').value);
+  if ($('depTo').value) q = q.lte('res_date', $('depTo').value);
+  const { data, error } = await q;
+  if (error) { $('depTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  const paths = data.filter(d => d.image_path).map(d => d.image_path);
+  const signed = {};
+  if (paths.length) { const { data: u } = await sb.storage.from('deposit-photos').createSignedUrls(paths, 3600); (u || []).forEach(x => signed[x.path] = x.signedUrl); }
+  $('depSum').textContent = `${data.length} deposits · ${gbp(data.reduce((a,d) => a + Number(d.amount), 0))} · ${data.reduce((a,d) => a + Number(d.covers), 0)} covers`;
+  $('depTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Note</th><th>Photo</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
+    data.map(d => { const img = d.image_path ? signed[d.image_path] : d.image_url;
+      return `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${esc(d.method)}</td>
+      <td>${esc(d.added_by)}</td><td class="muted">${esc(d.note)}</td><td>${img ? `<img class="thumb" src="${img}" onclick="showImg('${img}')">` : ''}</td>
+      ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="delDeposit('${d.id}')">Delete</button></td>` : ''}</tr>`; }).join('');
+}
+function showImg(u) { $('imgBig').src = u; openModal('imgModal'); }
+async function delDeposit(id) {
+  if (!confirm('Delete this deposit?')) return;
+  const { data, error } = await sb.rpc('soft_delete_any', { p_id: id });
+  if (error || !data?.ok) return alert(error?.message || data?.error);
+  loadDeposits();
+}
+async function saveDeposit() {
+  const name = $('depName').value.trim(), date = $('depDate').value, amount = Number($('depAmount').value);
+  if (!name) return setMsg('depMsg', 'Customer name required');
+  if (!date) return setMsg('depMsg', 'Reservation date required');
+  if (!(amount >= 0) || $('depAmount').value === '') return setMsg('depMsg', 'Enter a valid amount');
+  setMsg('depMsg', 'Saving…', true);
+  let image_path = null;
+  const f = $('depPhoto').files[0];
+  if (f) {
+    image_path = `${new Date().getFullYear()}/${Date.now()}.${(f.name.split('.').pop() || 'jpg').toLowerCase()}`;
+    const up = await sb.storage.from('deposit-photos').upload(image_path, f, { contentType: f.type || 'image/jpeg' });
+    if (up.error) return setMsg('depMsg', 'Photo upload failed: ' + up.error.message);
+  }
+  const { error } = await sb.from('deposits').insert({ id: crypto.randomUUID(), customer_name: name, res_date: date, covers: Math.round(Number($('depCovers').value || 0)),
+    amount, method: $('depMethod').value, note: $('depNote').value.trim(), image_url: '', image_path, added_by: ME.name });
+  if (error) return setMsg('depMsg', error.message);
+  ['depName','depDate','depCovers','depAmount','depNote','depPhoto'].forEach(i => $(i).value = '');
+  setMsg('depMsg', '✅ Deposit saved', true);
+}
 
-refreshSummary();
-setInterval(()=>{if(currentPage==='wages')refreshSummary();},15000);
-initSigCanvas();
+// ═════════════ CASH LIST ═════════════
+let CASH_EDIT = null;
+async function loadCash() {
+  if (!$('cashMonth').value) $('cashMonth').value = monthStr(new Date());
+  if (!$('cashDate').value) $('cashDate').value = today();
+  const { data, error } = await sb.from('cash_list_log').select('id,entry_date,description,income_pence,expense_pence,source,notes').order('entry_date').order('id');
+  if (error) { $('cashTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  const m = $('cashMonth').value;
+  let carry = 0, total = 0, inM = 0, outM = 0; const rows = [];
+  data.forEach(r => {
+    const d = (r.income_pence - r.expense_pence) / 100; total += d;
+    const rm = String(r.entry_date).slice(0,7);
+    if (rm < m) carry += d; else if (rm === m) { rows.push(r); inM += r.income_pence / 100; outM += r.expense_pence / 100; }
+  });
+  $('cashKpis').innerHTML = `
+    <div class="kpi hero"><div class="l">CASH IN HAND (now)</div><div class="v">${gbp(total)}</div></div>
+    <div class="kpi"><div class="l">Brought forward</div><div class="v">${gbp(carry)}</div></div>
+    <div class="kpi"><div class="l">In this month</div><div class="v pos">${gbp(inM)}</div></div>
+    <div class="kpi"><div class="l">Out this month</div><div class="v neg">${gbp(outM)}</div></div>
+    <div class="kpi"><div class="l">Month end</div><div class="v">${gbp(carry + inM - outM)}</div></div>`;
+  let bal = carry;
+  $('cashTable').innerHTML = `<tr><th>Date</th><th>Description</th><th class="num">In</th><th class="num">Out</th><th class="num">Balance</th><th>Source</th><th></th></tr>` +
+    rows.map(r => { bal += (r.income_pence - r.expense_pence) / 100;
+      const editable = r.source === 'MANUAL' && r.notes === 'TeamOS';
+      const tag = r.source === 'AUTOMATIC' ? '<span class="tag auto">Automatic</span>' : editable ? '<span class="tag teamos">TeamOS</span>' : `<span class="tag">${esc(r.source === 'MANUAL' ? 'HR' : r.source)}</span>`;
+      return `<tr><td>${dmy(r.entry_date)}</td><td>${esc(r.description)}</td><td class="num pos">${r.income_pence ? gbp(r.income_pence / 100) : ''}</td>
+        <td class="num neg">${r.expense_pence ? gbp(r.expense_pence / 100) : ''}</td><td class="num"><b>${gbp(bal)}</b></td><td>${tag}</td>
+        <td class="num">${editable ? `<button class="btn ghost small" onclick='editCash(${JSON.stringify(r)})'>Edit</button> <button class="btn danger small" onclick="delCash(${r.id})">Delete</button>` : ''}</td></tr>`; }).join('')
+    || '<tr><td class="muted">No entries this month</td></tr>';
+}
+function editCash(r) {
+  CASH_EDIT = r.id;
+  $('cashDate').value = r.entry_date; $('cashDesc').value = r.description;
+  $('cashType').value = r.income_pence > 0 ? 'in' : 'out';
+  $('cashAmount').value = ((r.income_pence || r.expense_pence) / 100).toFixed(2);
+  $('cashFormTitle').textContent = 'Edit entry'; $('cashCancel').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function resetCashForm() {
+  CASH_EDIT = null; $('cashDesc').value = ''; $('cashAmount').value = ''; $('cashDate').value = today();
+  $('cashFormTitle').textContent = 'Add entry'; $('cashCancel').classList.add('hidden');
+}
+async function saveCash() {
+  const amount = Number($('cashAmount').value), desc = $('cashDesc').value.trim(), date = $('cashDate').value;
+  if (!(amount > 0)) return setMsg('cashMsg', 'Enter a valid amount');
+  if (!desc) return setMsg('cashMsg', 'Description required');
+  if (!date) return setMsg('cashMsg', 'Date required');
+  const p = Math.round(amount * 100), isIn = $('cashType').value === 'in';
+  const row = { entry_date: date, description: desc, income_pence: isIn ? p : 0, expense_pence: isIn ? 0 : p };
+  const res = CASH_EDIT
+    ? await sb.from('cash_list_log').update(row).eq('id', CASH_EDIT).eq('notes', 'TeamOS').select('id')
+    : await sb.from('cash_list_log').insert({ ...row, source: 'MANUAL', notes: 'TeamOS' }).select('id');
+  if (res.error) return setMsg('cashMsg', res.error.message);
+  if (CASH_EDIT && !res.data?.length) return setMsg('cashMsg', 'This entry cannot be edited from here');
+  setMsg('cashMsg', CASH_EDIT ? '✅ Updated' : '✅ Saved', true);
+  resetCashForm(); loadCash();
+}
+async function delCash(id) {
+  if (!confirm('Delete this cash entry?')) return;
+  const { data, error } = await sb.from('cash_list_log').delete().eq('id', id).eq('notes', 'TeamOS').select('id');
+  if (error || !data?.length) return alert(error?.message || 'This entry cannot be deleted from here');
+  loadCash();
+}
+
+// ═════════════ PAYROLL (new month) ═════════════
+async function loadPayroll() {
+  if (!$('payMonth').value) { const d = new Date(); d.setMonth(d.getMonth() + 1); $('payMonth').value = monthStr(d); }
+  const { data, error } = await sb.from('staff_roster').select('id,name,active,sort_order').eq('active', true).order('sort_order').order('name');
+  if (error) { $('payTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  $('payTable').innerHTML = `<tr><th>Name</th><th class="num">Wage (£)</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
+    data.map(s => `<tr><td>${esc(s.name)}</td><td class="num" style="width:180px"><input type="number" step="0.01" min="0" data-name="${esc(s.name)}" data-so="${s.sort_order}" class="payInput" oninput="payTotal()"></td>
+      ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="hideStaff(${s.id})">Remove</button></td>` : ''}</tr>`).join('');
+  payTotal();
+}
+function payTotal() {
+  let t = 0, n = 0; document.querySelectorAll('.payInput').forEach(i => { const v = Number(i.value); if (v > 0) { t += v; n++; } });
+  $('payTotal').textContent = `${n} people · ${gbp(t)}`;
+}
+async function addStaff() {
+  const name = $('newStaffName').value.trim(); if (!name) return;
+  const { error } = await sb.from('staff_roster').insert({ name, sort_order: 999 });
+  if (error) return setMsg('payMsg', error.message.includes('duplicate') ? 'This name is already on the list' : error.message);
+  $('newStaffName').value = ''; loadPayroll();
+}
+async function hideStaff(id) {
+  if (!confirm('Remove this person from the wage list? (history is kept)')) return;
+  const { error } = await sb.from('staff_roster').update({ active: false }).eq('id', id);
+  if (error) return alert(error.message);
+  loadPayroll();
+}
+async function submitPayroll() {
+  const month = $('payMonth').value;
+  if (!month) return setMsg('payMsg', 'Choose the month');
+  const wages = [...document.querySelectorAll('.payInput')].filter(i => Number(i.value) > 0)
+    .map(i => ({ person: i.dataset.name, amount: Number(i.value), sort_order: Number(i.dataset.so) }));
+  if (!wages.length) return setMsg('payMsg', 'Enter at least one wage');
+  if (!confirm(`Start ${month}?\n\n${wages.length} people, total ${gbp(wages.reduce((a,w) => a + w.amount, 0))}.\nThe current month will be closed. This cannot be undone.`)) return;
+  const { data, error } = await sb.rpc('start_new_period', { p_label: month, p_wages: wages });
+  if (error || !data?.ok) return setMsg('payMsg', error?.message || data?.error);
+  setMsg('payMsg', `✅ ${month} started: ${data.wages_added} wages entered${isAdmin() ? `, ${data.carried_over} unpaid balances carried over as “- Geçen ay”` : ''}.`, true);
+  document.querySelectorAll('.payInput').forEach(i => i.value = ''); payTotal();
+}
+
+// ═════════════ USERS ═════════════
+const ALL_PERMS = ['wages_pay','wages_view','deposits','deposits_view','signatures_view','payroll_entry'];
+async function loadUsers() {
+  const { data, error } = await sb.from('app_users').select('id,name,email,role,active,permissions').order('legacy_user_id', { nullsFirst:false }).order('created_at');
+  if (error) { $('usersTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
+  window._users = data;
+  $('usersTable').innerHTML = `<tr><th>Name</th><th>Sign-in email</th><th>Role</th><th>Permissions</th><th>Active</th><th></th></tr>` +
+    data.map((u, i) => `<tr>
+      <td><b>${esc(u.name)}</b></td>
+      <td><input value="${esc(u.email || '')}" placeholder="add email" onchange="setUser(${i},{email:this.value.trim().toLowerCase()||null})" style="min-width:200px"></td>
+      <td><select onchange="setUser(${i},{role:this.value})">${['VIEWER','PAYER','EDITOR','ADMIN'].map(r => `<option ${u.role === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td>
+      <td style="min-width:260px">${ALL_PERMS.map(p => `<label style="display:inline-flex;gap:4px;align-items:center;margin:2px 8px 2px 0;font-weight:500;color:var(--ink)"><input type="checkbox" style="width:auto" ${(u.permissions || []).includes(p) ? 'checked' : ''} onchange="togglePerm(${i},'${p}',this.checked)">${p}</label>`).join('')}</td>
+      <td><input type="checkbox" style="width:auto" ${u.active ? 'checked' : ''} onchange="setUser(${i},{active:this.checked})"></td>
+      <td class="num"><button class="btn danger small" onclick="delUser(${i})">Delete</button></td></tr>`).join('');
+}
+async function setUser(i, patch) {
+  const { error } = await sb.from('app_users').update(patch).eq('id', window._users[i].id);
+  if (error) alert(error.message.includes('duplicate') ? 'This email is already used by another user' : error.message);
+  loadUsers();
+}
+function togglePerm(i, p, on) {
+  const cur = new Set(window._users[i].permissions || []); on ? cur.add(p) : cur.delete(p);
+  setUser(i, { permissions: [...cur] });
+}
+async function delUser(i) {
+  const u = window._users[i];
+  if (u.id === ME.id) return alert('You cannot delete yourself');
+  if (!confirm('Delete user ' + u.name + '?')) return;
+  const { error } = await sb.from('app_users').delete().eq('id', u.id);
+  if (error) return alert(error.message);
+  loadUsers();
+}
+async function addUser() {
+  const name = $('nuName').value.trim(); if (!name) return setMsg('nuMsg', 'Name required');
+  const email = $('nuEmail').value.trim().toLowerCase() || null;
+  const { error } = await sb.from('app_users').insert({ name, email, role: $('nuRole').value });
+  if (error) return setMsg('nuMsg', error.message.includes('duplicate') ? 'This email is already used' : error.message);
+  $('nuName').value = ''; $('nuEmail').value = '';
+  setMsg('nuMsg', '✅ User created' + (email ? ' — they can sign in with ' + email : ''), true);
+  loadUsers();
+}
+
+// ═════════════ START ═════════════
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' && !ME) boot(); });
+boot();
 </script>
 </body>
 </html>
