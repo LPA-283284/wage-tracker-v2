@@ -452,7 +452,6 @@
   <nav class="side-nav" id="sbnav">
     <div class="sb-group">Overview</div>
     <button id="nav-home" class="active" onclick="showView('home')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></button>
-    <button id="nav-dashboard" onclick="showView('dashboard')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Year Overview</span></button>
     <button id="nav-monthly" onclick="showView('monthly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Monthly Summary</span></button>
     <div class="sb-group">Hours</div>
     <button id="nav-hours" onclick="showView('hours')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Hours</span></button>
@@ -493,18 +492,16 @@
     <div class="dash-kpis" id="dashKpis"><div class="loading">Loading…</div></div>
     <div class="dash-grid">
       <div class="card"><h2>Last 30 days</h2><div class="chart-box"><canvas id="chDaily"></canvas></div></div>
-      <div class="card"><h2 id="chMonthlyTitle">This year</h2><div class="chart-box"><canvas id="chMonthly2"></canvas></div></div>
-    </div>
-    <div class="dash-grid3">
       <div class="card"><h2>Alerts</h2><div id="dashAlerts" class="dash-list"></div></div>
+    </div>
+    <div class="dash-grid">
       <div class="card"><h2>Off today</h2><div id="dashOff" class="dash-list"></div></div>
       <div class="card" id="dashDepCard"><h2>Upcoming deposits <span class="hint" style="font-weight:400">next 14 days</span></h2><div id="dashDeps" class="dash-list"></div></div>
     </div>
-  </div>
 
-  <div id="view-dashboard" class="view">
-    <div class="card">
-      <div class="row">
+    <div class="pg-head" style="margin-top:14px">
+      <div><div class="pg-title" style="font-size:22px">Year in detail</div><div class="pg-sub">Totals, departments and day-of-week averages for any year</div></div>
+      <div class="row" style="margin:0">
         <div><label>Year</label><input type="number" id="dashYear" style="width:100px"></div>
         <div><label>Staff Cost Target (%)</label><input type="number" id="dashTarget" step="0.1" style="width:100px"></div>
       </div>
@@ -512,19 +509,11 @@
     <div id="dashWarn"></div>
     <div class="kpi-grid" id="kpiGrid"></div>
     <div class="two-col">
-      <div class="card">
-        <h2>Monthly Take-in and Staff Cost</h2>
-        <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
-      </div>
-      <div class="card">
-        <h2>Department Cost Breakdown</h2>
-        <div class="chart-wrap"><canvas id="chartDept"></canvas></div>
-      </div>
+      <div class="card"><h2>Monthly Take-in and Staff Cost</h2><div class="chart-wrap"><canvas id="chartMonthly"></canvas></div></div>
+      <div class="card"><h2>Department Cost Breakdown</h2><div class="chart-wrap"><canvas id="chartDept"></canvas></div></div>
     </div>
-    <div class="card">
-      <h2>Average Take-in by Day of Week</h2>
-      <div class="chart-wrap"><canvas id="chartDow"></canvas></div>
-    </div>
+    <div class="card"><h2>Average Take-in by Day of Week</h2><div class="chart-wrap"><canvas id="chartDow"></canvas></div></div>
+  </div>
   </div>
 
   <!-- ================= MONTHLY SUMMARY ================= -->
@@ -948,7 +937,7 @@ function esc(s) {
 
 function showView(name) {
   document.body.classList.remove('sb-open');
-  ['home','dashboard','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
+  ['home','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
     document.getElementById('view-' + v).classList.toggle('active', v === name);
     document.getElementById('nav-' + v).classList.toggle('active', v === name);
   });
@@ -957,8 +946,7 @@ function showView(name) {
   if (name === 'staffsummary') loadSummary();
   if (name === 'revenue') loadRecentRevenue();
   if (name === 'monthly') loadMonthlySummary();
-  if (name === 'dashboard') loadDashboard();
-  if (name === 'home') loadHome();
+  if (name === 'home') { loadHome(); loadDashboard(); }
   if (name === 'tips') loadWeeklyTips();
   if (name === 'cashlist') loadCashList();
   if (name === 'holidays') loadHolidaysView();
@@ -2255,7 +2243,7 @@ function renderMonthlyChart(data) {
       labels: data.monthly.map(function(m) { return m.month; }),
       datasets: [
         { label: 'Take-in', data: data.monthly.map(function(m){return m.revenue;}), backgroundColor: '#6D1B2F' },
-        { label: 'Staff Cost', data: data.monthly.map(function(m){return m.cost;}), backgroundColor: '#C9A227' }
+        { label: 'Staff Cost', data: data.monthly.map(function(m){return m.cost;}), backgroundColor: '#C99A55' }
       ]
     },
     options: {
@@ -2302,7 +2290,7 @@ function renderDowChart(data) {
       labels: data.dayOfWeek.map(function(d){return d.day;}),
       datasets: [
         { label: 'Average Take-in', data: data.dayOfWeek.map(function(d){return d.avgRevenue;}), backgroundColor: '#6D1B2F' },
-        { label: 'Average Staff Cost', data: data.dayOfWeek.map(function(d){return d.avgCost;}), backgroundColor: '#C9A227' }
+        { label: 'Average Staff Cost', data: data.dayOfWeek.map(function(d){return d.avgCost;}), backgroundColor: '#C99A55' }
       ]
     },
     options: {
@@ -3559,18 +3547,11 @@ async function loadHome() {
   if (window.Chart) {
     var wine = '#6D1B2F', gold = '#C99A55';
     var kTick = function(v) { return '£' + (v / 1000) + 'k'; };
-    if (chD) chD.destroy(); if (chM) chM.destroy();
+    if (chD) chD.destroy();
     chD = new Chart(document.getElementById('chDaily'), { data: { labels: data.daily.map(function(d) { return dmy(d.date).slice(0, 5); }), datasets: [
         { type:'bar', label:'Take-in', data: data.daily.map(function(d) { return d.takein; }), backgroundColor: wine, borderRadius:4 },
         { type:'line', label:'Staff cost', data: data.daily.map(function(d) { return d.cost || null; }), borderColor: gold, backgroundColor: gold, tension:.3, pointRadius:2, spanGaps:true } ] },
       options: { maintainAspectRatio:false, plugins:{ tooltip:{ callbacks:{ label: function(c) { return c.dataset.label + ': ' + money(c.parsed.y); } } } }, scales:{ y:{ ticks:{ callback: kTick } } } } });
-    document.getElementById('chMonthlyTitle').textContent = 'Take-in vs staff cost · ' + new Date().getFullYear();
-    chM = new Chart(document.getElementById('chMonthly2'), { type:'bar', data: { labels: MONTHS_SHORT, datasets: [
-        { label:'Take-in', data: data.monthly.map(function(x) { return x.takein; }), backgroundColor: wine, borderRadius:4 },
-        { label:'Staff cost', data: data.monthly.map(function(x) { return x.cost; }), backgroundColor: gold, borderRadius:4 } ] },
-      options: { maintainAspectRatio:false, plugins:{ tooltip:{ callbacks:{ label: function(c) { var t = c.dataset.label + ': ' + money(c.parsed.y);
-          if (c.datasetIndex === 1) { var rv = data.monthly[c.dataIndex].takein; if (rv > 0) t += ' (' + (c.parsed.y / rv * 100).toFixed(1) + '%)'; } return t; } } } },
-        scales:{ y:{ ticks:{ callback: kTick } } } } });
   }
   document.getElementById('dashAlerts').innerHTML = data.alerts.length
     ? data.alerts.map(function(a) { return '<div class="it"><span class="dot ' + alertDot(a.kind) + '"></span><div>' + esc(a.text) + '</div></div>'; }).join('')
@@ -3589,7 +3570,7 @@ async function loadHome() {
 // ---- page headers (title + short description) for every HR view ----
 (function () {
   var SUB = {
-    dashboard: 'Yearly take-in, staff cost and trends', monthly: 'Month by month performance and cost exclusions',
+monthly: 'Month by month performance and cost exclusions',
     hours: 'Enter, check and correct staff hours', staffsummary: 'Monthly hours per person',
     payperiod: 'Pay period hours (26th → 25th), advances and PDFs', holidays: 'Holidays, days off and sick days',
     revenue: 'Daily take-in from LPA Banking', tips: 'Daily tip pool and weekly distribution',
