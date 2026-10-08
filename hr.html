@@ -354,6 +354,40 @@
     body.sb-open .side-nav { max-height:70vh; }
   }
   @media print { .side { display:none !important; } }
+
+    /* ---- new Dashboard (home) + alerts bell ---- */
+    .dash-head { display:flex; justify-content:space-between; align-items:flex-end; margin:0 60px 14px 0; gap:10px; }
+    .dash-hello { font-size:26px; font-weight:700; color:#6D1B2F; }
+    .dash-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:16px; }
+    .dk { background:#fff; border-radius:14px; padding:16px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #F0E6DA; }
+    .dk .l { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#777; font-weight:700; }
+    .dk .v { font-size:25px; font-weight:700; color:#6D1B2F; margin-top:8px; line-height:1.15; }
+    .dk .s { font-size:12px; color:#777; margin-top:6px; }
+    .dk.hero { background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%); border:0; }
+    .dk.hero .l { color:#E7C48A; } .dk.hero .v { color:#FFF4E0; } .dk.hero .s { color:#EAD7B5; }
+    .dk .up { color:#2E7D32; font-weight:700; } .dk .down { color:#C62828; font-weight:700; }
+    .dk.hero .up { color:#9BE3A6; } .dk.hero .down { color:#FFB4B4; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; vertical-align:middle; }
+    .pill.ok { background:#E3F4E5; color:#2E7D32; } .pill.bad { background:#FDE3E3; color:#C62828; }
+    .dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .dash-grid3 { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:16px; }
+    .chart-box { position:relative; height:260px; }
+    .dash-list .it { display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid #eef0f2; font-size:13.5px; }
+    .dash-list .it:last-child { border-bottom:0; }
+    .dot { width:8px; height:8px; border-radius:50%; margin-top:6px; flex:none; background:#C99A55; }
+    .dot.red { background:#C62828; } .dot.amber { background:#E09B2D; } .dot.blue { background:#1F6FEB; }
+    @media (max-width: 900px) { .dash-grid, .dash-grid3 { grid-template-columns:1fr; } }
+    .bell-wrap { position:fixed; top:16px; right:22px; z-index:60; }
+    .bell { position:relative; width:44px; height:44px; border-radius:50%; border:1px solid #E6D6C2; background:#fff; color:#6D1B2F; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(78,15,32,.12); padding:0; }
+    .bell svg { width:21px; height:21px; }
+    .bell:hover { background:#FFF8EE; }
+    .bell-badge { position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px; border-radius:10px; background:#C62828; color:#fff;
+                  font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff; }
+    .bell-panel { position:absolute; right:0; top:54px; width:340px; max-height:60vh; overflow-y:auto; background:#fff; border-radius:14px;
+                  box-shadow:0 16px 40px rgba(46,3,12,.25); border:1px solid #EFE3D3; padding:8px 14px 10px; }
+    .bell-title { font-weight:700; color:#6D1B2F; padding:6px 0 8px; border-bottom:1px solid #eef0f2; }
+    @media (max-width: 800px) { .bell-wrap { top:10px; right:66px; } .bell { width:38px; height:38px; } .bell-panel { width:min(340px,92vw); right:-50px; } .dash-head { margin-right:0; } }
   </style>
 </head>
 <body>
@@ -366,7 +400,8 @@
     </div>
   <nav class="side-nav" id="sbnav">
     <div class="sb-group">Overview</div>
-    <button id="nav-dashboard" class="active" onclick="showView('dashboard')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></button>
+    <button id="nav-home" class="active" onclick="showView('home')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></button>
+    <button id="nav-dashboard" onclick="showView('dashboard')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Year Overview</span></button>
     <button id="nav-monthly" onclick="showView('monthly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Monthly Summary</span></button>
     <div class="sb-group">Hours</div>
     <button id="nav-hours" onclick="showView('hours')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Hours</span></button>
@@ -388,10 +423,35 @@
   </div>
 </header>
 
+<div class="bell-wrap no-print" id="bellBox">
+  <button class="bell" id="bellBtn" aria-label="Alerts" onclick="toggleBell(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    <span class="bell-badge" id="bellBadge" style="display:none">0</span>
+  </button>
+  <div class="bell-panel" id="bellPanel" style="display:none"><div class="bell-title">Alerts</div><div id="bellList"></div></div>
+</div>
+
 <main>
 
   <!-- ================= DASHBOARD ================= -->
-  <div id="view-dashboard" class="view active">
+  <div id="view-home" class="view active">
+    <div class="dash-head">
+      <div><div class="dash-hello" id="dashHello">Good day</div><div class="hint" id="dashDate"></div></div>
+      <button class="btn btn-small" onclick="loadHome()">Refresh</button>
+    </div>
+    <div class="dash-kpis" id="dashKpis"><div class="loading">Loading…</div></div>
+    <div class="dash-grid">
+      <div class="card"><h2>Last 30 days</h2><div class="chart-box"><canvas id="chDaily"></canvas></div></div>
+      <div class="card"><h2 id="chMonthlyTitle">This year</h2><div class="chart-box"><canvas id="chMonthly2"></canvas></div></div>
+    </div>
+    <div class="dash-grid3">
+      <div class="card"><h2>Alerts</h2><div id="dashAlerts" class="dash-list"></div></div>
+      <div class="card"><h2>Off today</h2><div id="dashOff" class="dash-list"></div></div>
+      <div class="card" id="dashDepCard"><h2>Upcoming deposits <span class="hint" style="font-weight:400">next 14 days</span></h2><div id="dashDeps" class="dash-list"></div></div>
+    </div>
+  </div>
+
+  <div id="view-dashboard" class="view">
     <div class="card">
       <div class="row">
         <div><label>Year</label><input type="number" id="dashYear" style="width:100px"></div>
@@ -837,7 +897,7 @@ function esc(s) {
 
 function showView(name) {
   document.body.classList.remove('sb-open');
-  ['dashboard','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
+  ['home','dashboard','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
     document.getElementById('view-' + v).classList.toggle('active', v === name);
     document.getElementById('nav-' + v).classList.toggle('active', v === name);
   });
@@ -847,6 +907,7 @@ function showView(name) {
   if (name === 'revenue') loadRecentRevenue();
   if (name === 'monthly') loadMonthlySummary();
   if (name === 'dashboard') loadDashboard();
+  if (name === 'home') loadHome();
   if (name === 'tips') loadWeeklyTips();
   if (name === 'cashlist') loadCashList();
   if (name === 'holidays') loadHolidaysView();
@@ -3398,6 +3459,81 @@ function toggleActive(i) {
     .setStaffActive(s.id, newActive);
 }
 
+
+// ============================================================
+// NEW DASHBOARD (home) + ALERTS BELL — reads Supabase directly
+// ============================================================
+var HOME = null, chD = null, chM = null;
+var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function pctT(v) { return v == null ? '–' : (Number(v) * 100).toFixed(1) + '%'; }
+function alertDot(k) { return (k === 'no_takein' || k === 'request') ? 'red' : k === 'no_hours' ? 'amber' : k === 'deposit' ? 'blue' : ''; }
+function renderBell() {
+  var list = (HOME && HOME.alerts) || [];
+  var b = document.getElementById('bellBadge');
+  b.textContent = list.length > 99 ? '99+' : list.length;
+  b.style.display = list.length ? 'flex' : 'none';
+  document.getElementById('bellList').innerHTML = list.length
+    ? list.map(function(a) { return '<div class="dash-list"><div class="it"><span class="dot ' + alertDot(a.kind) + '"></span><div>' + esc(a.text) + '</div></div></div>'; }).join('')
+    : '<div class="hint" style="padding:12px 0">All clear — nothing needs attention.</div>';
+}
+function toggleBell(e) {
+  e.stopPropagation();
+  var p = document.getElementById('bellPanel'); p.style.display = (p.style.display === 'none') ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  var w = document.getElementById('bellBox');
+  if (w && !w.contains(e.target)) document.getElementById('bellPanel').style.display = 'none';
+});
+async function loadHome() {
+  var h = new Date().getHours();
+  var who = (document.getElementById('hrWho').textContent || '').trim();
+  document.getElementById('dashHello').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + (who ? ', ' + who : '');
+  document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  var r = await window.HR_SB.rpc('dashboard_summary');
+  var data = r.data;
+  if (r.error || !data || !data.ok) { document.getElementById('dashKpis').innerHTML = '<p style="color:#9C0006">' + esc((r.error && r.error.message) || (data && data.error) || 'Could not load') + '</p>'; return; }
+  HOME = data; renderBell();
+  var m = data.mtd, over = m.staff_cost_pct != null && m.staff_cost_pct > m.target;
+  var ly = Number(m.takein_last_year) || 0, chg = ly > 0 ? (m.takein - ly) / ly : null;
+  var k = [];
+  k.push('<div class="dk hero"><div class="l">Month to date</div><div class="v">' + money(m.takein) + '</div><div class="s">' +
+    (chg == null ? 'No data for last year' : '<span class="' + (chg >= 0 ? 'up' : 'down') + '">' + (chg >= 0 ? '▲' : '▼') + ' ' + Math.abs(chg * 100).toFixed(1) + '%</span> vs same days last year (' + money(ly) + ')') + '</div></div>');
+  k.push('<div class="dk"><div class="l">Last day take-in</div><div class="v">' + money(data.last_day && data.last_day.total) + '</div><div class="s">' + dmy(data.last_day && data.last_day.date) + '</div></div>');
+  k.push('<div class="dk"><div class="l">Staff cost % (month)</div><div class="v">' + pctT(m.staff_cost_pct) + ' <span class="pill ' + (over ? 'bad' : 'ok') + '">target ' + pctT(m.target) + '</span></div><div class="s">' +
+    money(m.staff_cost) + ' · hours entered up to ' + (dmy(m.hours_until) || '–') + '</div></div>');
+  if (data.cash_in_hand != null) k.push('<div class="dk"><div class="l">Cash in hand</div><div class="v">' + money(data.cash_in_hand) + '</div><div class="s">From the cash list</div></div>');
+  if (data.wages_due != null) k.push('<div class="dk"><div class="l">Wages due</div><div class="v">' + money(data.wages_due) + '</div><div class="s">Still to pay this period</div></div>');
+  if (data.advances_month) k.push('<div class="dk"><div class="l">Advances this month</div><div class="v">' + money(data.advances_month.total) + '</div><div class="s">' + data.advances_month.count + ' given</div></div>');
+  document.getElementById('dashKpis').innerHTML = k.join('');
+  if (window.Chart) {
+    var wine = '#6D1B2F', gold = '#C99A55';
+    var kTick = function(v) { return '£' + (v / 1000) + 'k'; };
+    if (chD) chD.destroy(); if (chM) chM.destroy();
+    chD = new Chart(document.getElementById('chDaily'), { data: { labels: data.daily.map(function(d) { return dmy(d.date).slice(0, 5); }), datasets: [
+        { type:'bar', label:'Take-in', data: data.daily.map(function(d) { return d.takein; }), backgroundColor: wine, borderRadius:4 },
+        { type:'line', label:'Staff cost', data: data.daily.map(function(d) { return d.cost || null; }), borderColor: gold, backgroundColor: gold, tension:.3, pointRadius:2, spanGaps:true } ] },
+      options: { maintainAspectRatio:false, plugins:{ tooltip:{ callbacks:{ label: function(c) { return c.dataset.label + ': ' + money(c.parsed.y); } } } }, scales:{ y:{ ticks:{ callback: kTick } } } } });
+    document.getElementById('chMonthlyTitle').textContent = 'Take-in vs staff cost · ' + new Date().getFullYear();
+    chM = new Chart(document.getElementById('chMonthly2'), { type:'bar', data: { labels: MONTHS_SHORT, datasets: [
+        { label:'Take-in', data: data.monthly.map(function(x) { return x.takein; }), backgroundColor: wine, borderRadius:4 },
+        { label:'Staff cost', data: data.monthly.map(function(x) { return x.cost; }), backgroundColor: gold, borderRadius:4 } ] },
+      options: { maintainAspectRatio:false, plugins:{ tooltip:{ callbacks:{ label: function(c) { var t = c.dataset.label + ': ' + money(c.parsed.y);
+          if (c.datasetIndex === 1) { var rv = data.monthly[c.dataIndex].takein; if (rv > 0) t += ' (' + (c.parsed.y / rv * 100).toFixed(1) + '%)'; } return t; } } } },
+        scales:{ y:{ ticks:{ callback: kTick } } } } });
+  }
+  document.getElementById('dashAlerts').innerHTML = data.alerts.length
+    ? data.alerts.map(function(a) { return '<div class="it"><span class="dot ' + alertDot(a.kind) + '"></span><div>' + esc(a.text) + '</div></div>'; }).join('')
+    : '<div class="hint">All clear — nothing needs attention.</div>';
+  var MARK = { H:'Holiday', OFF:'Day off', S:'Sick' };
+  document.getElementById('dashOff').innerHTML = data.off_today.length
+    ? data.off_today.map(function(o) { return '<div class="it"><span class="dot ' + (o.mark === 'S' ? 'red' : o.mark === 'H' ? 'blue' : '') + '"></span><div><b>' + esc(o.name) + '</b> · ' + (MARK[o.mark] || o.mark) + '</div></div>'; }).join('')
+    : '<div class="hint">Everyone is in today.</div>';
+  document.getElementById('dashDepCard').style.display = data.upcoming_deposits ? '' : 'none';
+  if (data.upcoming_deposits) document.getElementById('dashDeps').innerHTML = data.upcoming_deposits.length
+    ? data.upcoming_deposits.map(function(d) { return '<div class="it"><span class="dot blue"></span><div><b>' + dmy(d.date) + '</b> · ' + esc(d.name) + (d.covers ? ' · ' + d.covers + ' covers' : '') + ' · ' + money(d.amount) + '</div></div>'; }).join('')
+    : '<div class="hint">No deposits in the next 14 days.</div>';
+}
+
 // ============================================================
 // INIT
 // ============================================================
@@ -3406,6 +3542,7 @@ initRevenueEntry();
 initStaffSummary();
 initMonthlySummary();
 initDashboard();
+window.HRSHIM_ready.then(function(ok) { if (ok) loadHome(); });
 initWeeklyTips();
 initCashList();
 initHolidays();

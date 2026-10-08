@@ -475,5 +475,6 @@
     var who = document.getElementById('hrWho'); if (who && ME) who.textContent = ME.name; var av = document.getElementById('hrAv'); if (av && ME) av.textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
     return true;
   })();
+  window.HRSHIM_ready = BOOT;
   window.HRSHIM_signOut = async function () { await sb.auth.signOut(); location.href = 'index.html'; };
 })();

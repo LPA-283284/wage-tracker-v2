@@ -641,7 +641,6 @@ async function loadDashboard() {
 
 // ═════════════ TABS ═════════════
 const PAGES = [
-  { key:'dashboard',group:'Overview', label:'Dashboard', show:() => canDash() },
   { key:'wages',    group:'Payroll',  label:'Wages',     show:() => can('wages') },
   { key:'advances', group:'Payroll',  label:'Advances',  show:() => can('wages_view') || can('advance_add') },
   { key:'payroll',  group:'Payroll',  label:'New Month', show:() => can('payroll_entry') },
@@ -672,7 +671,7 @@ function buildTabs() {
   document.querySelectorAll('[data-perm]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.perm)));
   document.querySelectorAll('[data-perm-card]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.permCard)));
   const saved = (() => { try { return localStorage.getItem('lpa_tab'); } catch { return null; } })();
-  showPage(canDash() ? 'dashboard' : (visible.find(p => p.key === saved) ? saved : (visible[0]?.key)));
+  showPage(visible.find(p => p.key === saved) ? saved : (visible[0]?.key));
 }
 function showPage(key) {
   if (!key) return;
