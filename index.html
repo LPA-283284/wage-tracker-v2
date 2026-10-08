@@ -435,6 +435,11 @@
     <!-- USERS -->
     <section class="page" id="page-users">
       <div class="card">
+        <h2>Users &amp; Permissions</h2>
+        <div class="scroll"><table id="usersTable"></table></div>
+        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay wages (sees only what is due) · <b>wages_view</b> all wage amounts, history &amp; signatures · <b>advance_add</b> give advances only (no list) · <b>deposits</b> add + see deposits · <b>deposits_view</b> see deposits only · <b>cash</b> cash list + cash in hand · <b>takein</b> take-in &amp; staff cost % · <b>signatures_view</b> signatures only · <b>payroll_entry</b> new-month wages (accountant) · <b>hr</b> HR screens. ADMIN can do everything.</div>
+      </div>
+      <div class="card">
         <h2>Add User</h2>
         <div class="row">
           <div><label>Name</label><input id="nuName"></div>
@@ -443,11 +448,6 @@
           <div style="flex:0;min-width:auto"><button class="btn" onclick="addUser()">Create</button></div>
         </div>
         <div class="msg" id="nuMsg"></div>
-      </div>
-      <div class="card">
-        <h2>Users &amp; Permissions</h2>
-        <div class="scroll"><table id="usersTable"></table></div>
-        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay wages (sees only what is due) · <b>wages_view</b> all wage amounts, history &amp; signatures · <b>advance_add</b> give advances only (no list) · <b>deposits</b> add + see deposits · <b>deposits_view</b> see deposits only · <b>cash</b> cash list + cash in hand · <b>takein</b> take-in &amp; staff cost % · <b>signatures_view</b> signatures only · <b>payroll_entry</b> new-month wages (accountant) · <b>hr</b> HR screens. ADMIN can do everything.</div>
       </div>
     </section>
 
