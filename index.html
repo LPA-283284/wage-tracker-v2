@@ -1022,7 +1022,7 @@ async function submitPayroll() {
 }
 
 // ═════════════ USERS ═════════════
-const ALL_PERMS = ['wages_pay','wages_view','advance_add','deposits','deposits_view','cash','takein','signatures_view','payroll_entry','hr'];
+const ALL_PERMS = ['wages_pay','wages_view','advance_add','deposits','deposits_view','cash','takein','signatures_view','payroll_entry','hr','notify_payments'];
 async function loadUsers() {
   const { data, error } = await sb.from('app_users').select('id,name,email,role,active,permissions').order('legacy_user_id', { nullsFirst:false }).order('created_at');
   if (error) { $('usersTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
@@ -1032,7 +1032,7 @@ async function loadUsers() {
       <td><b>${esc(u.name)}</b></td>
       <td><input value="${esc(u.email || '')}" placeholder="add email" onchange="setUser(${i},{email:this.value.trim().toLowerCase()||null})" style="min-width:200px"></td>
       <td><select onchange="setUser(${i},{role:this.value})">${['VIEWER','PAYER','EDITOR','ADMIN'].map(r => `<option ${u.role === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td>
-      <td style="min-width:240px"><div class="muted" style="font-size:12.5px;margin-bottom:6px">${u.role === 'ADMIN' ? 'Admin — can do everything' : ((u.permissions || []).length ? (u.permissions || []).map(p => PERM_INFO[p]?.[0] || p).join(' · ') : 'No permissions yet')}</div>
+      <td style="min-width:240px"><div class="muted" style="font-size:12.5px;margin-bottom:6px">${u.role === 'ADMIN' ? 'Admin — can do everything' + ((u.permissions || []).includes('notify_payments') ? ' · Payment alerts' : '') : ((u.permissions || []).length ? (u.permissions || []).map(p => PERM_INFO[p]?.[0] || p).join(' · ') : 'No permissions yet')}</div>
         <button class="btn small" onclick="openPerms(${i})">Edit permissions</button></td>
       <td><input type="checkbox" style="width:auto" ${u.active ? 'checked' : ''} onchange="setUser(${i},{active:this.checked})"></td>
       <td class="num"><button class="btn danger small" onclick="delUser(${i})">Delete</button></td></tr>`).join('');
@@ -1048,6 +1048,7 @@ const PERM_INFO = {
   advance_add:['Give advance','Give advances only (cannot see the list)'], deposits:['Deposits','Add deposits and see the list'],
   deposits_view:['Deposits view','See deposits only'], cash:['Cash','Cash list and cash in hand'], takein:['Take-in','Take-in and staff cost %'],
   signatures_view:['Signatures','See signatures only'], payroll_entry:['New month','Enter new-month wages (accountant)'], hr:['HR','HR screens'],
+  notify_payments:['Payment alerts','Phone notification (app) when a wage payment is made'],
 };
 let PERM_I = -1;
 function openPerms(i) { PERM_I = i; renderPerms(); openModal('permModal'); }
@@ -1055,9 +1056,9 @@ function renderPerms() {
   const u = window._users[PERM_I]; if (!u) return;
   const admin = u.role === 'ADMIN', cur = u.permissions || [];
   $('permTitle').textContent = u.name;
-  $('permNote').textContent = admin ? 'Admin can do everything — the boxes are not needed.' : 'Tick what this person can do. Changes save straight away.';
-  $('permList').innerHTML = ALL_PERMS.map(p => `<label class="perm-item${admin ? ' off' : ''}"><input type="checkbox" ${cur.includes(p) ? 'checked' : ''} ${admin ? 'disabled' : ''}
-      onchange="togglePerm(${PERM_I},'${p}',this.checked)"><span><b>${PERM_INFO[p]?.[0] || p}</b><small>${PERM_INFO[p]?.[1] || ''}</small></span></label>`).join('');
+  $('permNote').textContent = admin ? 'Admin can do everything — only “Payment alerts” needs ticking.' : 'Tick what this person can do. Changes save straight away.';
+  $('permList').innerHTML = ALL_PERMS.map(p => { const off = admin && p !== 'notify_payments'; return `<label class="perm-item${off ? ' off' : ''}"><input type="checkbox" ${cur.includes(p) ? 'checked' : ''} ${off ? 'disabled' : ''}
+      onchange="togglePerm(${PERM_I},'${p}',this.checked)"><span><b>${PERM_INFO[p]?.[0] || p}</b><small>${PERM_INFO[p]?.[1] || ''}</small></span></label>`; }).join('');
 }
 function togglePerm(i, p, on) {
   const cur = new Set(window._users[i].permissions || []); on ? cur.add(p) : cur.delete(p);
