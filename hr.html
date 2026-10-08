@@ -363,6 +363,9 @@
     /* ---- new Dashboard (home) + alerts bell ---- */
     .dash-head { display:flex; justify-content:space-between; align-items:flex-end; margin:0 60px 14px 0; gap:10px; }
     .dash-hello { font-size:26px; font-weight:700; color:#6D1B2F; }
+    .dash-tabs { display:flex; background:#EFE6DA; border-radius:12px; padding:4px; gap:4px; }
+    .dash-tabs button { border:0; background:transparent; padding:9px 16px; border-radius:9px; font-weight:600; font-size:13.5px; color:#7A5B3A; cursor:pointer; font-family:inherit; }
+    .dash-tabs button.active { background:#fff; color:#6D1B2F; box-shadow:0 2px 6px rgba(78,15,32,.12); }
     .dash-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:16px; }
     .dk { background:#fff; border-radius:14px; padding:16px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid #F0E6DA; }
     .dk .l { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#777; font-weight:700; }
@@ -487,8 +490,12 @@
   <div id="view-home" class="view active">
     <div class="dash-head">
       <div><div class="dash-hello" id="dashHello">Good day</div><div class="hint" id="dashDate"></div></div>
-      <button class="btn btn-small" onclick="loadHome()">Refresh</button>
+      <div class="dash-tabs">
+        <button id="dtab-now" class="active" onclick="dashTab('now')">This month</button>
+        <button id="dtab-year" onclick="dashTab('year')">Year in detail</button>
+      </div>
     </div>
+    <div id="dashNow">
     <div class="dash-kpis" id="dashKpis"><div class="loading">Loading…</div></div>
     <div class="dash-grid">
       <div class="card"><h2>Last 30 days</h2><div class="chart-box"><canvas id="chDaily"></canvas></div></div>
@@ -499,7 +506,9 @@
       <div class="card" id="dashDepCard"><h2>Upcoming deposits <span class="hint" style="font-weight:400">next 14 days</span></h2><div id="dashDeps" class="dash-list"></div></div>
     </div>
 
-    <div class="pg-head" style="margin-top:14px">
+    </div>
+    <div id="dashYearSec" style="display:none">
+    <div class="pg-head" style="margin-top:4px">
       <div><div class="pg-title" style="font-size:22px">Year in detail</div><div class="pg-sub">Totals, departments and day-of-week averages for any year</div></div>
       <div class="row" style="margin:0">
         <div><label>Year</label><input type="number" id="dashYear" style="width:100px"></div>
@@ -513,6 +522,7 @@
       <div class="card"><h2>Department Cost Breakdown</h2><div class="chart-wrap"><canvas id="chartDept"></canvas></div></div>
     </div>
     <div class="card"><h2>Average Take-in by Day of Week</h2><div class="chart-wrap"><canvas id="chartDow"></canvas></div></div>
+    </div>
   </div>
   </div>
 
@@ -946,7 +956,7 @@ function showView(name) {
   if (name === 'staffsummary') loadSummary();
   if (name === 'revenue') loadRecentRevenue();
   if (name === 'monthly') loadMonthlySummary();
-  if (name === 'home') { loadHome(); loadDashboard(); }
+  if (name === 'home') { loadHome(); if (DASH_TAB === 'year') loadDashboard(); }
   if (name === 'tips') loadWeeklyTips();
   if (name === 'cashlist') loadCashList();
   if (name === 'holidays') loadHolidaysView();
@@ -3502,7 +3512,15 @@ function toggleActive(i) {
 // ============================================================
 // NEW DASHBOARD (home) + ALERTS BELL — reads Supabase directly
 // ============================================================
-var HOME = null, chD = null, chM = null;
+var HOME = null, chD = null, chM = null, DASH_TAB = 'now';
+function dashTab(t) {
+  DASH_TAB = t;
+  document.getElementById('dashNow').style.display = t === 'now' ? '' : 'none';
+  document.getElementById('dashYearSec').style.display = t === 'year' ? '' : 'none';
+  document.getElementById('dtab-now').classList.toggle('active', t === 'now');
+  document.getElementById('dtab-year').classList.toggle('active', t === 'year');
+  if (t === 'year') loadDashboard(); else loadHome();
+}
 var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function pctT(v) { return v == null ? '–' : (Number(v) * 100).toFixed(1) + '%'; }
 function alertDot(k) { return (k === 'no_takein' || k === 'request') ? 'red' : k === 'no_hours' ? 'amber' : k === 'deposit' ? 'blue' : ''; }
