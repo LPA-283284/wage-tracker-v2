@@ -75,6 +75,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="TeamOS">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="hr-shim.js"></script>
   <script src="hr-core.js"></script>
@@ -310,7 +315,7 @@
     }
 
     body { padding-left:252px; }
-    @media (max-width: 800px) { body { padding-left:0; } }
+    @media (max-width: 1100px) { body { padding-left:0; } }
     @media print { body { padding-left:0; } }
 
   /* ===== TeamOS side menu (shared look: site + HR) ===== */
@@ -347,7 +352,7 @@
              border-radius:10px; padding:9px 12px; font-size:13.5px; cursor:pointer; margin-top:6px; }
   .side-foot .side-btn:hover { background:rgba(255,255,255,.07); color:#fff; }
   .side-foot .side-btn .ic { width:16px; height:16px; }
-  @media (max-width: 800px) {
+  @media (max-width: 1100px) {
     .side { position:sticky; bottom:auto; width:auto; border-right:0; border-bottom:1px solid rgba(217,178,111,.3); }
     .side-brand { padding:10px 14px; border-bottom:0; }
     .side-brand img { width:34px; }
@@ -395,7 +400,7 @@
     .bell-panel { position:absolute; right:0; top:54px; width:340px; max-height:60vh; overflow-y:auto; background:#fff; border-radius:14px;
                   box-shadow:0 16px 40px rgba(46,3,12,.25); border:1px solid #EFE3D3; padding:8px 14px 10px; }
     .bell-title { font-weight:700; color:#6D1B2F; padding:6px 0 8px; border-bottom:1px solid #eef0f2; }
-    @media (max-width: 800px) { .bell-wrap { top:10px; right:66px; } .bell { width:38px; height:38px; } .bell-panel { width:min(340px,92vw); right:-50px; } .dash-head { margin-right:0; } }
+    @media (max-width: 1100px) { .bell-wrap { top:10px; right:66px; } .bell { width:38px; height:38px; } .bell-panel { width:min(340px,92vw); right:-50px; } .dash-head { margin-right:0; } }
 
     /* ===================== TeamOS HR theme (dashboard style) ===================== */
     body { background:#F7F3EE; color:#2A1F1C; font-family:'Hanken Grotesk',-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
@@ -441,7 +446,7 @@
     .toast { border-radius:12px; background:linear-gradient(135deg,#4A0817,#2E030C); box-shadow:0 10px 30px rgba(46,3,12,.35); }
     #hoursTotalsBox { background:linear-gradient(135deg,#7A1430,#4A0817); border-radius:14px; border:1px solid rgba(231,196,138,.4); }
     .hol-cell { border-color:#F0E6DA; }
-    @media (max-width:800px) { main { padding:14px; } .pg-head { margin-right:0; } .pg-title { font-size:22px; } }
+    @media (max-width: 1100px) { main { padding:14px; } .pg-head { margin-right:0; } .pg-title { font-size:22px; } }
   </style>
 </head>
 <body>
