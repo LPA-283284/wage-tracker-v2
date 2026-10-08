@@ -1,0 +1,3336 @@
+<!-- hr.html — the HR screen (Index.html v2.5.12, unchanged) running on Supabase via hr-shim.js + hr-core.js. -->
+<!-- v2: XSS-safe rendering, live hour totals, View Entries mode, Requests tab,
+     duplicate-entry protection, combined server calls (faster tabs),
+     Staff Cost % rename, start/end dates saved correctly. -->
+<!-- v2.4 UI: Monthly summary Hours column; Staff Summary renamed Hours Report
+     (with explanation + Hours-tab shortcut); Cash List edit/delete;
+     dashboard banners for pre-history hours and revenue days missing hours;
+     tips undistributed + warning list; Save All reports skipped rows. -->
+<!-- v2.5 UI: Monthly Summary cost-exclusion panel (money only, hours untouched,
+     non-dismissible banner on Dashboard + Monthly); Take-in SC % column. -->
+<!-- v2.5.2 UI: Holiday grid cells cycle instantly on click (no waiting between
+     clicks); only the FINAL mark is saved, 0.6s after the last click. -->
+<!-- v2.5.3 UI: Hours "Weekly Grid" mode — staff × dated-day grid for any week
+     (prev/next navigation, Monday-locked); edit a cell to correct, type into
+     an empty cell to add, clear a cell to delete (with confirm); cells holding
+     more than one logged row are locked (fix in View Entries); H/OFF/S marks
+     shown grey (read-only here); yellow banner on closed-pay-period weeks. -->
+<!-- v2.5.4 UI: Weekly Grid cells now also edit H/OFF/S marks in place — type a
+     mark into an empty cell to set it, retype to change it, clear the cell to
+     remove it; typing hours over a mark saves the hours and removes the mark;
+     typing a mark over hours asks first, then deletes the hours row and sets
+     the mark. Holidays_Log stays the single source of truth (setHolidayMark). -->
+<!-- v2.5.5 UI (+ Code v2.6): Weekly Grid switches to BATCH saving. Edits no
+     longer fire one server call per cell (1.5-3s each); instead every change
+     turns yellow (pending) instantly, and one SAVE CHANGES press writes the
+     whole lot in a single applyGridEdits() call. DISCARD reloads the week;
+     leaving the week with unsaved edits asks first; deletions are confirmed
+     once, at save time, with a count. -->
+<!-- v2.5.6 UI (+ Code v2.7): big batches no longer hit Apps Script's execution
+     limit. SAVE CHANGES now sends edits in chunks of 40, with live progress on
+     the button ("SAVING 40/144…"). Cells saved so far turn white immediately;
+     if a chunk fails, the remaining YELLOW cells are untouched — pressing SAVE
+     CHANGES again retries only those. A progress bar in the save bar fills as
+     chunks land (saved/total), so big saves are visibly moving. -->
+<!-- v2.5.7 UI (+ Code v2.8): the "Recent Pool Entries" list in the Tips tab is
+     now editable — each raw entry has an Amount box, a Note box, Save and
+     Delete, content-keyed exactly like View Entries. Fixing a wrong tip entry
+     refreshes the weekly distribution immediately. -->
+<!-- v2.5.8 UI (+ Code v2.9): the pay-period report (on-screen summary AND the
+     downloaded PDF) no longer shows Holiday in the Notes column. Sick still
+     shows; holiday day counting and the Holidays tab are untouched. -->
+<!-- v2.5.9 UI (+ Code v2.10): two things.
+     (1) Staff Hours weekly boxes switch to the proven pending+SAVE model:
+     typing no longer fires one locked server call per cell (fast typing
+     queued calls and blew the 30s lock wait -> "Lock timeout"). Edits turn
+     yellow, totals update live, ONE SAVE CHANGES press writes them all via
+     setPayPeriodWeekValues; a failure KEEPS your typed values instead of
+     wiping the screen. Invalid values (abc, .3 steps, OFF) are refused on
+     the spot with the cell restored. Leaving the period with unsaved edits
+     asks first.
+     (2) Take-in gets a Manual Entry card for days LPA Banking failed to
+     deliver (e.g. 30-09-2026): date + net sales + service charge + note,
+     duplicate-guarded server-side (one entry per date). -->
+<!-- v2.5.10 UI (+ Code v2.11): the Take-in Manual Entry card now covers the
+     WHOLE missed banking day, not just revenue — Net Sales + Service Charge,
+     Cash Tips (-> Tip_Pool_Log) and Cash In Hand (-> Cash List), written in
+     ONE submitMissedBankingDay call. Gap-filling and idempotent: a piece the
+     day already has is skipped and its existing figures are reported, never
+     overwritten or doubled — pressing SAVE twice is safe. -->
+<!-- v2.5.11 UI (+ Code v2.12): Take-in Recent Entries become editable — each
+     row gets Net Sales, Service Charge and Note boxes with Save and Delete,
+     content-keyed exactly like Tips/View Entries. The DATE stays read-only
+     (one entry per day is the ledger's key): to move a day, Delete the row
+     and re-enter it with the Manual Entry card. -->
+<!-- v2.5.12 UI: Cash List re-ordered (layout only, no logic change): the
+     ledger moves up under the KPI summary; Add Entry sits below it and the
+     Denomination Counter goes to the bottom. Same ids, same JS. -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LPA HR</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="hr-shim.js"></script>
+  <script src="hr-core.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #FAF6EC;
+      margin: 0;
+      padding: 0;
+      color: #1a1a1a;
+    }
+    header {
+      background: #6D1B2F;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    header h1 { font-size: 17px; margin: 0; }
+    nav { display: flex; gap: 6px; flex-wrap: wrap; }
+    nav button {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    nav button.active { background: #fff; color: #6D1B2F; font-weight: 600; }
+    nav button:not(.active):hover { background: rgba(255,255,255,0.28); }
+    main { padding: 20px; max-width: 1300px; margin: 0 auto; }
+    @media (min-width: 1300px) {
+      main { max-width: 1600px; }
+      .kpi-grid { grid-template-columns: repeat(5, 1fr); }
+      .row { gap: 16px; }
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card h2 { font-size: 15px; color: #6D1B2F; margin: 0 0 12px 0; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+    label { font-size: 12px; font-weight: 600; color: #555; display:block; margin-bottom:4px; }
+    input[type=date], input[type=number], input[type=text], select {
+      padding: 8px 10px;
+      border: 1px solid #d0d5dc;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 100%;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 7px 6px; text-align: center; border-bottom: 1px solid #eef0f2; }
+    th { background: #6D1B2F; color: #fff; position: sticky; top: 0; }
+    td:first-child, th:first-child { text-align: left; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    /* Row tracking on hover — any data-entry or report table (item #1) */
+    .track-rows tbody tr:hover td { background: #FFF3CD !important; }
+    .track-rows tbody tr:hover td:first-child { font-weight: 700; color: #6D1B2F; }
+
+    .hours-input {
+      width: 54px;
+      padding: 6px;
+      border: 1px solid #d0d5dc;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 13px;
+    }
+    .row-total { font-weight: 700; color: #6D1B2F; background: #FAF6EC !important; white-space: nowrap; }
+    /* v2.5.3 Weekly Grid */
+    .wg-locked { background: #FBE9E7; color: #9C0006; font-size: 12px; text-align: center; cursor: not-allowed; white-space: nowrap; }
+    .wg-saving { opacity: 0.45; }
+    .wg-input::placeholder { color: #9aa3ad; font-weight: 700; }
+    .wg-input.wg-mark { color: #9aa3ad; font-weight: 700; }
+    .wg-input.wg-pending { background: #FFF3CD; border-color: #C99700; }
+    .hours-input.pp-pending { box-shadow: inset 0 0 0 2px #C99700; background: #FFF3CD; }
+    .dept-FOH { color: #6D1B2F; font-weight: 600; }
+    .dept-BOH { color: #9C4B00; font-weight: 600; }
+    .dept-CLEANING { color: #375623; font-weight: 600; }
+    .hol-cell {
+      width: 60px; height: 34px; border: 1px solid #e0e0e0; cursor: pointer;
+      font-size: 12px; font-weight: 700; text-align: center; user-select: none;
+    }
+    .hol-cell.hol-H { background: #D9E8FB; color: #1F6FEB; }
+    .hol-cell.hol-OFF { background: #FBE7D0; color: #9C4B00; }
+    .hol-cell.hol-S { background: #FBD9D9; color: #9C0006; }
+    .hol-cell:hover { outline: 2px solid #6D1B2F; }
+    .hol-cell.pending { opacity: 0.45; }
+    #holidaysGridWrap tbody tr:hover td { background: #FFF3CD; }
+    #holidaysGridWrap tbody tr:hover td:first-child { font-weight: 700; color: #6D1B2F; }
+    #holidaysGridWrap { max-height: 85vh; overflow-y: auto; }
+    #holidaysGridWrap table { table-layout: fixed; }
+    #holidaysGridWrap th { position: sticky; top: 0; z-index: 2; }
+    #holidaysGridWrap th, #holidaysGridWrap td { width: auto; }
+    #holidaysGridWrap th:first-child, #holidaysGridWrap td:first-child { width: 44px; }
+    #holidaysGridWrap th { white-space: normal; word-break: break-word; line-height: 1.2; padding: 6px 3px; }
+    .btn {
+      background: #6D1B2F;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s;
+    }
+    .btn:hover:not(:disabled) { background: #8A2439; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .btn-danger { background: #9C0006 !important; }
+    .btn-danger:hover:not(:disabled) { background: #B8000A !important; }
+    .btn.mode-active { background: #9C4B00; }
+    .btn-small { padding: 6px 10px !important; font-size: 12px !important; margin: 2px !important; }
+    tr.inactive-row td { background: #EDEDED !important; color: #888 !important; font-style: italic; }
+    tr.inactive-row input, tr.inactive-row select { opacity: 0.6; }
+    tr.overdue-row td { background: #FBD9D9 !important; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 999;
+      max-width: 90vw;
+    }
+    .toast.show { opacity: 1; }
+    .total-row td { font-weight: 700; background: #E2EFDA !important; }
+    .hint { font-size: 12px; color: #777; margin-top: 4px; }
+    .loading { text-align: center; padding: 40px; color: #888; }
+    .warn-banner {
+      background: #FBE7D0; border: 1px solid #9C4B00; color: #9C4B00;
+      border-radius: 8px; padding: 10px 38px 10px 14px; font-size: 13px; margin-bottom: 12px;
+      position: relative;
+    }
+    .warn-dismiss {
+      position: absolute; top: 6px; right: 8px;
+      background: none; border: none; color: #9C4B00;
+      font-size: 18px; font-weight: bold; cursor: pointer; padding: 2px 6px;
+      line-height: 1;
+    }
+    .warn-dismiss:hover { color: #6D1B2F; }
+
+    /* v2.5 cost exclusions */
+    .excl-chip {
+      display: inline-block; background: #FBE7D0; border: 1px solid #9C4B00;
+      color: #9C4B00; border-radius: 14px; padding: 4px 10px; margin: 3px;
+      font-size: 12px; font-weight: 600;
+    }
+    .excl-chip button {
+      background: none; border: none; color: #9C0006; font-weight: bold;
+      cursor: pointer; font-size: 13px; padding: 0 0 0 6px;
+    }
+    .excl-banner {
+      background: #FBD9D9; border: 1px solid #9C0006; color: #9C0006;
+      border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px;
+    }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+    .kpi .label { font-size: 12px; color: #666; margin-bottom: 6px; }
+    .kpi .value { font-size: 24px; font-weight: 700; color: #6D1B2F; }
+    .kpi.good .value { color: #2e7d32; }
+    .kpi.bad .value { color: #c62828; }
+    .kpi.clickable { cursor: pointer; }
+    .kpi.clickable:hover { box-shadow: 0 2px 8px rgba(109,27,47,0.25); }
+
+    /* Live totals box while entering hours (item #3) */
+    #hoursTotalsBox {
+      position: fixed; bottom: 16px; right: 16px; z-index: 60;
+      background: #6D1B2F; color: #fff; border-radius: 10px;
+      padding: 10px 16px; font-size: 13px; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      display: none; text-align: right; line-height: 1.5;
+    }
+    #hoursTotalsBox b { font-size: 17px; }
+
+    .chart-wrap { position: relative; height: 280px; margin-bottom: 8px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    [id$="Wrap"] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    [id$="Wrap"] table { min-width: 480px; }
+
+    @media (max-width: 640px) {
+      header { padding: 10px 12px; }
+      header h1 { font-size: 15px; width: 100%; text-align: center; margin-bottom: 6px; }
+      nav { width: 100%; justify-content: center; }
+      nav button { font-size: 12px; padding: 7px 10px; }
+      main { padding: 10px; }
+      .card { padding: 12px; border-radius: 8px; }
+      .row { gap: 8px; }
+      .row > div { flex: 1 1 100%; min-width: 0; }
+      .row > div[style*="width:100px"],
+      .row > div[style*="width:90px"],
+      .row > div[style*="width:80px"] { flex: 1 1 auto; }
+      input[type=date], input[type=number], input[type=text], select { width: 100%; font-size: 16px; }
+      .btn { width: 100%; padding: 12px 16px; }
+      .btn-small { width: auto; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .kpi { padding: 10px; }
+      .kpi .value { font-size: 18px; }
+      table { font-size: 12px; }
+      th, td { padding: 5px 4px; }
+      #hoursTotalsBox { bottom: 8px; right: 8px; font-size: 12px; padding: 8px 12px; }
+    }
+
+    @media print {
+      header, nav, .no-print, #hoursTotalsBox { display: none !important; }
+      body { background: #fff; }
+      main { padding: 0; max-width: none; }
+      .card { box-shadow: none; padding: 0; }
+      #tipsPrintTitle { display: block !important; font-size: 18px; color: #6D1B2F; margin-bottom: 10px; }
+      #holPrintTitle { display: block !important; font-size: 18px; color: #6D1B2F; margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>LPA Management <span style="font-weight:400;font-size:12px;opacity:.8">· HR · <span id="hrWho"></span></span></h1>
+  <nav>
+    <button id="nav-dashboard" class="active" onclick="showView('dashboard')">Dashboard</button>
+    <button id="nav-monthly" onclick="showView('monthly')">Monthly Summary</button>
+    <button id="nav-hours" onclick="showView('hours')">Hours</button>
+    <button id="nav-revenue" onclick="showView('revenue')">Take-in</button>
+    <button id="nav-staffsummary" onclick="showView('staffsummary')">Hours Report</button>
+    <button id="nav-tips" onclick="showView('tips')">Tips</button>
+    <button id="nav-cashlist" onclick="showView('cashlist')">Cash List</button>
+    <button id="nav-holidays" onclick="showView('holidays')">Holidays</button>
+    <button id="nav-payperiod" onclick="showView('payperiod')">Staff Hours</button>
+    <button id="nav-requests" onclick="showView('requests')">Requests</button>
+    <button id="nav-staff" onclick="showView('staff')">Staff Management</button>
+  </nav>
+  <nav class="no-print">
+    <button onclick="location.href='index.html'">← TeamOS</button>
+    <button onclick="HRSHIM_signOut()">Sign out</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div id="view-dashboard" class="view active">
+    <div class="card">
+      <div class="row">
+        <div><label>Year</label><input type="number" id="dashYear" style="width:100px"></div>
+        <div><label>Staff Cost Target (%)</label><input type="number" id="dashTarget" step="0.1" style="width:100px"></div>
+      </div>
+    </div>
+    <div id="dashWarn"></div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="two-col">
+      <div class="card">
+        <h2>Monthly Take-in and Staff Cost</h2>
+        <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Department Cost Breakdown</h2>
+        <div class="chart-wrap"><canvas id="chartDept"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Average Take-in by Day of Week</h2>
+      <div class="chart-wrap"><canvas id="chartDow"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ================= MONTHLY SUMMARY ================= -->
+  <div id="view-monthly" class="view">
+    <div class="card">
+      <div class="row">
+        <div><label>Year</label><input type="number" id="monthlyYear" style="width:100px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Staff Cost Exclusions</h2>
+      <p class="hint">Exclude one person's cost for one month (e.g. paid from elsewhere). Only the <b>£ figures</b> change — <b>hours are never touched</b>. While any exclusion exists, a red banner on Dashboard and here reminds you the money numbers are not the full picture. Press × on a chip to undo.</p>
+      <div class="row">
+        <div><label>Month</label><select id="exclMonth"></select></div>
+        <div><label>Staff</label><select id="exclStaff"></select></div>
+        <button class="btn" onclick="addExclusion(this)">EXCLUDE</button>
+      </div>
+      <div id="exclChips"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <h2>Monthly Performance</h2>
+      <div id="monthlyTableWrap"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card">
+      <h2>Day-of-Week Average</h2>
+      <div id="dowTableWrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= HOURS ================= -->
+  <div id="view-hours" class="view">
+    <div class="card">
+      <h2 id="ecTitle">Entry Check</h2>
+      <p class="hint" id="ecLastEntry"></p>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn btn-small" onclick="ecNav(7)">← Older week</button>
+        <button class="btn btn-small" id="ecNewerBtn" onclick="ecNav(-7)">Newer week →</button>
+        <button class="btn btn-small" id="ecTodayBtn" onclick="ecNav(0)">Today</button>
+        <div><select id="ecStaff" onchange="loadEntryCheck()"><option value="">All staff</option></select></div>
+      </div>
+      <div id="ecWrap"><div class="loading">Loading…</div></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <button class="btn" id="modeBtnDaily" onclick="switchHoursMode('daily')">Daily Entry</button>
+        <button class="btn" id="modeBtnWeekly" onclick="switchHoursMode('weekly')">Weekly Entry</button>
+        <button class="btn" id="modeBtnView" onclick="switchHoursMode('view')">View Entries</button>
+        <button class="btn" id="modeBtnGrid" onclick="switchHoursMode('grid')">Weekly Grid</button>
+        <button class="btn" onclick="showView('staffsummary')">Report →</button>
+      </div>
+      <p class="hint">Enter hours as decimals: <b>5.5</b> = 5h 30m, <b>5.25</b> = 5h 15m, <b>5.75</b> = 5h 45m. Minute-style entries like <b>5.15</b> or <b>5.30</b> are rejected — only .25 / .5 / .75 fractions are accepted. Type <b>H</b> for holiday (green), <b>S</b> for sick (orange) or <b>O</b> for day off (grey): the mark is saved to the Holidays calendar, not as hours. Only Holiday counts against the yearly entitlement.</p>
+    </div>
+
+    <!-- ---- DAILY ENTRY (default) ---- -->
+    <div id="hoursDailySection">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input type="date" id="dailyDate">
+          </div>
+          <div id="dailyDayHint" class="hint"></div>
+        </div>
+        <p class="hint">Pick any day — log today's hours today, or catch up on a day you forgot, any time.</p>
+      </div>
+      <div class="card">
+        <div id="dailyEntryTableWrap"><div class="loading">Loading staff list…</div></div>
+        <button class="btn" id="dailySubmitBtn" onclick="submitDailyHoursForm()" disabled>SUBMIT</button>
+        <span id="dailySubmitDateHint" class="hint" style="display:inline-block;margin-left:12px;font-weight:700"></span>
+      </div>
+    </div>
+
+    <!-- ---- WEEKLY ENTRY ---- -->
+    <div id="hoursWeeklySection" style="display:none">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Week Start (Monday)</label>
+            <input type="date" id="weekStart">
+          </div>
+          <div id="dayHint" class="hint"></div>
+        </div>
+        <p class="hint">Use this when you want to log several days or a whole week at once.</p>
+      </div>
+      <div class="card">
+        <div id="entryTableWrap"><div class="loading">Loading staff list…</div></div>
+        <button class="btn" id="submitBtn" onclick="submitHours()" disabled>SUBMIT</button>
+        <span id="weeklySubmitDateHint" class="hint" style="display:inline-block;margin-left:12px;font-weight:700"></span>
+      </div>
+    </div>
+
+    <!-- ---- VIEW / EDIT ENTRIES (new) ---- -->
+    <div id="hoursViewSection" style="display:none">
+      <div class="card">
+        <div class="row">
+          <div><label>From</label><input type="date" id="veFrom"></div>
+          <div><label>To</label><input type="date" id="veTo"></div>
+          <button class="btn" onclick="loadHoursEntries()">LOAD</button>
+        </div>
+        <p class="hint">Everything logged in this date range, day by day. Fix a wrong number and press Save, or Delete the row entirely.</p>
+      </div>
+      <div class="card">
+        <div id="viewEntriesWrap"><p style="color:#888">Pick a date range and press LOAD.</p></div>
+      </div>
+    </div>
+
+    <!-- ---- WEEKLY GRID (v2.5.3) ---- -->
+    <div id="hoursGridSection" style="display:none">
+      <div class="card">
+        <div class="row">
+          <button class="btn" onclick="wgNav(-7)">◀ Prev</button>
+          <div>
+            <label>Week Start (Monday)</label>
+            <input type="date" id="wgWeekStart">
+          </div>
+          <button class="btn" onclick="wgNav(7)">Next ▶</button>
+          <button class="btn" onclick="wgToday()">This Week</button>
+          <div id="wgDayHint" class="hint"></div>
+        </div>
+        <p class="hint">One week at a time, exactly like your paper sheet: change a number to correct it, type into an empty cell to add a missing day, clear a cell to delete that day (it asks first). Nothing is written while you type: every changed cell just turns yellow. When you are done, ONE press of SAVE CHANGES writes everything in a single fast call (deletions are counted and confirmed at that point). Grey <b>H / OFF / S</b> marks work the same way and stay in sync with the Holidays calendar: type <b>H</b>, <b>S</b> or <b>O</b> into an empty cell to set one, retype to change it, clear the cell to remove it. Typing hours over a mark saves the hours and removes the mark; typing a mark over hours asks first, then replaces the logged hours with the mark. A cell showing <b>2 rows</b> holds more than one logged entry for that person on that day — open View Entries to sort it out.</p>
+      </div>
+      <div id="wgPeriodWarn" class="card" style="display:none;background:#FFF7DB;border-left:6px solid #C99700"><b>Closed pay period.</b> This week belongs to a pay period that has already ended (periods run 26th → 25th). Changes here WILL alter past period totals and reports — only continue if that is what you intend.</div>
+      <div id="wgSaveBar" class="card" style="display:none;background:#FFF3CD;border-left:6px solid #C99700;position:sticky;top:0;z-index:5">
+        <b><span id="wgPendCnt">0</span> unsaved change(s)</b>
+        <button class="btn" id="wgSaveBtn" onclick="wgSaveChanges()">SAVE CHANGES</button>
+        <button class="btn" id="wgDiscardBtn" onclick="wgDiscard()">DISCARD</button>
+        <span class="hint">Edit as many cells as you like — saving sends them in fast batches.</span>
+        <div id="wgProg" style="display:none;margin-top:8px;height:12px;background:#EFE4C2;border-radius:6px;overflow:hidden">
+          <div id="wgProgBar" style="height:100%;width:0%;background:#6D1B2F;transition:width .3s"></div>
+        </div>
+        <div id="wgProgText" class="hint" style="display:none;margin-top:3px"></div>
+      </div>
+      <div class="card">
+        <div id="wgWrap"><p style="color:#888">Loading…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAKE-IN ================= -->
+  <div id="view-revenue" class="view">
+    <div class="card">
+      <h2>Manual Entry — missed banking days only</h2>
+      <p class="hint">Take-in normally arrives automatically from LPA Banking. Use this ONLY when a day failed to arrive (like 30-09-2026): copy the SAME four figures from LPA Banking. One press fills all three ledgers — Take-in, the tip pool (Cash Tips) and the Cash List (Cash In Hand). Each piece is written only if the day doesn't already have it: anything already there is left untouched and its existing figures are shown, so pressing SAVE twice (or Streamlit retrying later) can never create doubles. Leave a figure 0/empty to skip that piece.</p>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="revDate"></div>
+        <div><label>Net Sales (£)</label><input type="number" id="revNet" step="0.01" min="0"></div>
+        <div><label>Service Charge (£)</label><input type="number" id="revSC" step="0.01" min="0"></div>
+        <div><label>Cash Tips (£)</label><input type="number" id="revTips" step="0.01" min="0"></div>
+        <div><label>Cash In Hand (£)</label><input type="number" id="revCash" step="0.01" min="0"></div>
+        <div style="flex:1"><label>Note</label><input type="text" id="revNotes" placeholder="Manual entry"></div>
+      </div>
+      <button class="btn" id="revSaveBtn" onclick="submitRevenueForm()">SAVE</button>
+    </div>
+    <div class="card">
+      <h2>Recent Entries</h2>
+      <div id="recentRevenueWrap"><div class="loading">Loading…</div></div>
+      <p class="hint">Staff Cost is that day's hours × the rate in force that day. Blank cost = no hours logged for that day yet. SC % = Service Charge ÷ Net Sales — normally ~12.5%; a day far off that number is worth a look. Fix a wrong figure in its boxes and press Save, or Delete the row entirely — the date itself cannot be edited (one entry per day): to move a day, delete it and re-enter on the right date above. SC %, Total and Staff Cost refresh after the save.</p>
+    </div>
+  </div>
+
+  <!-- ================= HOURS REPORT ================= -->
+  <div id="view-staffsummary" class="view">
+    <div class="card">
+      <h2>Hours Report</h2>
+      <p class="hint">Pick a month — you get every staff member's total hours for that month. Its total always matches the Hours column in Monthly Summary. For a single day's entries use Hours → View Entries; weekly totals are on the Pay Period screen.</p>
+      <div class="row">
+        <div><label>Month</label><select id="sumMonth"></select></div>
+        <div><label>Year</label><input type="number" id="sumYear" style="width:100px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="summaryTableWrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= WEEKLY TIPS ================= -->
+  <div id="view-tips" class="view">
+    <div class="card no-print">
+      <h2>Daily Tip Pool Entry</h2>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="tipDate"></div>
+        <div><label>Total Tips (£)</label><input type="number" id="tipAmount" step="0.01"></div>
+        <div style="flex:1"><label>Note</label><input type="text" id="tipNotes"></div>
+      </div>
+      <button class="btn" onclick="submitTipPoolEntry()">SAVE</button>
+    </div>
+
+    <div class="card no-print">
+      <div class="row">
+        <button class="btn" onclick="shiftTipsWeek(-7)">◀ Previous Week</button>
+        <div><label>Week Start (Monday)</label><input type="date" id="tipsWeekStart"></div>
+        <button class="btn" onclick="shiftTipsWeek(7)">Next Week ▶</button>
+        <button class="btn" onclick="window.print()">🖨️ Print</button>
+      </div>
+      <p class="hint">Pool = that day's total tip entry. Distribution = proportional to each FOH staff member's hours that day (department as logged on the day, tip weight as it was on the day).</p>
+    </div>
+    <div class="card">
+      <h2 id="tipsPrintTitle" style="display:none"></h2>
+      <div id="tipsTableWrap"><div class="loading">Loading…</div></div>
+    </div>
+
+    <div class="card no-print">
+      <h2>Recent Tip Pool Entries</h2>
+      <div id="recentTipPoolWrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= CASH LIST ================= -->
+  <div id="view-cashlist" class="view">
+    <div class="card">
+      <h2>Cash Reconciliation</h2>
+      <div class="row">
+        <div class="kpi" style="flex:1">
+          <div class="label">Cash in Hand (per ledger)</div>
+          <div class="value" id="cashInHandValue">£0.00</div>
+        </div>
+        <div class="kpi" style="flex:1">
+          <div class="label">Physically Counted</div>
+          <div class="value" id="cashCountedValue">£0.00</div>
+        </div>
+        <div class="kpi" id="cashDiffKpi" style="flex:1">
+          <div class="label">Surplus / Deficit</div>
+          <div class="value" id="cashDiffValue">£0.00</div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="card">
+      <div class="row">
+        <div><label>Month</label><select id="cashMonth"></select></div>
+        <div><label>Year</label><input type="number" id="cashYear" style="width:100px"></div>
+      </div>
+      <p class="hint">"Automatic" rows come from LPA Banking (Cash In Hand); "Manual" rows are entries you add here yourself.</p>
+      <div id="cashListWrap"><div class="loading">Loading…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Add Entry</h2>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="cashDate"></div>
+        <div><label>Description</label><input type="text" id="cashDescription"></div>
+        <div><label>Type</label>
+          <select id="cashType">
+            <option value="income">Income (money in)</option>
+            <option value="expense">Expense (money out)</option>
+          </select>
+        </div>
+        <div><label>Amount (£)</label><input type="number" id="cashAmount" step="0.01"></div>
+        <div style="flex:1"><label>Note</label><input type="text" id="cashNotes"></div>
+      </div>
+      <button class="btn" id="cashSaveBtn" onclick="submitCashEntryForm()">SAVE</button>
+      <button class="btn" id="cashCancelBtn" onclick="cancelCashEdit()" style="display:none;background:#888">CANCEL EDIT</button>
+    </div>
+
+    <div class="card">
+      <h2>Denomination Counter</h2>
+      <p class="hint">Count the physical cash here — the Surplus / Deficit box at the top compares it with the ledger.</p>
+      <div id="denomGrid" class="row"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= HOLIDAYS ================= -->
+  <div id="view-holidays" class="view">
+    <div class="card no-print">
+      <h2>Who's Off Today</h2>
+      <div id="holidaysTodayWrap" class="loading">Loading…</div>
+    </div>
+    <div class="card no-print">
+      <h2>This Month at a Glance</h2>
+      <div id="holidaysMonthWrap" class="loading">Loading…</div>
+    </div>
+    <div class="card">
+      <div class="row no-print">
+        <div><label>Month</label><select id="holMonth"></select></div>
+        <div><label>Year</label><input type="number" id="holYear" style="width:100px"></div>
+        <button class="btn" onclick="window.print()">🖨️ Print</button>
+      </div>
+      <h2 id="holPrintTitle" style="display:none"></h2>
+      <p class="hint no-print">Click a cell to cycle: blank → <b style="color:#1F6FEB">H</b> (Holiday) → <b style="color:#9C4B00">OFF</b> (day off) → <b style="color:#9C0006">S</b> (Sick) → blank. Click as fast as you like — only the mark you stop on is saved, a moment later.</p>
+      <div id="holidaysGridWrap"><div class="loading">Loading…</div></div>
+    </div>
+    <div class="card no-print">
+      <h2>Yearly Summary</h2>
+      <div id="holidaysSummaryWrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= PAY PERIOD ================= -->
+  <div id="view-payperiod" class="view">
+    <div class="card">
+      <div class="row">
+        <div><label>Month (period ends 25th of this month)</label><select id="ppMonth"></select></div>
+        <div><label>Year</label><input type="number" id="ppYear" style="width:100px"></div>
+      </div>
+      <p class="hint" id="ppPeriodLabel"></p>
+    </div>
+
+    <div class="card">
+      <h2>Hours & Payments Report</h2>
+      <p class="hint">Weekly hours are entered by hand; the Preview column fills automatically from Hours entries. Former staff appear only if they have data in this period. Type <b>H</b> in a week box for holiday (green) or <b>S</b> for sick (orange) — they count as 0 hours and show in the Period Summary notes. Nothing is written while you type: changed boxes turn yellow and totals update live; ONE press of <b>SAVE CHANGES</b> writes everything in a single fast call — no more lock timeouts, and a failed save never wipes what you typed.</p>
+      <div id="ppSaveBar" style="display:none;background:#FFF3CD;border-left:6px solid #C99700;border-radius:8px;padding:10px 14px;margin-bottom:10px">
+        <b><span id="ppPendCnt">0</span> unsaved change(s)</b>
+        <button class="btn" id="ppSaveBtn" onclick="ppSaveChanges()">SAVE CHANGES</button>
+        <button class="btn" id="ppDiscardBtn" onclick="ppDiscard()">DISCARD</button>
+      </div>
+      <div id="ppReportWrap"><div class="loading">Loading…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Add Advance</h2>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="advDate"></div>
+        <div><label>Staff</label><select id="advStaff"></select></div>
+        <div><label>Amount (£)</label><input type="number" id="advAmount" step="0.01"></div>
+        <div style="flex:1"><label>Note</label><input type="text" id="advNotes"></div>
+      </div>
+      <button class="btn" onclick="submitAdvanceForm()">SAVE</button>
+    </div>
+
+
+    <div class="card">
+      <h2 id="psTitle">Period Summary</h2>
+      <p class="hint">Per-person total for the whole 26th→25th period (your manual weekly entries) plus advances — the old Excel's summary block. One tap makes a PDF for WhatsApp.</p>
+      <button class="btn" id="psPdfBtn" onclick="downloadPeriodPdf(this)">DOWNLOAD PDF</button>
+      <span id="psLink" style="margin-left:10px"></span>
+      <div id="psWrap" style="margin-top:12px"><div class="loading">Loading…</div></div>
+    </div>
+
+    <div class="card">
+      <h2 id="meTitle">End of Month (26–…)</h2>
+      <p class="hint">The pay period closes on the 25th; these are the hours from the 26th to the end of the selected month — the tail that belongs to the NEXT period. One tap makes a PDF for WhatsApp.</p>
+      <button class="btn" id="mePdfBtn" onclick="downloadMonthEndPdf(this)">DOWNLOAD PDF</button>
+      <span id="meLink" style="margin-left:10px"></span>
+      <div id="meWrap" style="margin-top:12px"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= REQUESTS ================= -->
+  <div id="view-requests" class="view">
+    <div class="card">
+      <h2>Add Request</h2>
+      <div class="row">
+        <div><label>Date</label><input type="date" id="reqDate"></div>
+        <div><label>Who</label><select id="reqStaff"></select></div>
+        <div style="flex:2"><label>Request</label><input type="text" id="reqText" placeholder="e.g. new apron size M, day off swap, knife sharpening…"></div>
+        <div><label>Due Date (optional)</label><input type="date" id="reqDue"></div>
+      </div>
+      <div class="row">
+        <div style="flex:1"><label>Note (optional)</label><input type="text" id="reqNotes"></div>
+      </div>
+      <button class="btn" onclick="submitRequestForm()">SAVE</button>
+    </div>
+    <div class="card">
+      <div class="row">
+        <h2 style="flex:1;margin:0">Request List</h2>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0">
+          <input type="checkbox" id="reqShowDone" onchange="loadRequests()" style="width:auto"> Show history (completed)
+        </label>
+      </div>
+      <p class="hint">Overdue requests are highlighted in red. Press Done when handled.</p>
+      <div id="requestsWrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= STAFF MANAGEMENT ================= -->
+  <div id="view-staff" class="view">
+    <div class="card">
+      <h2>Add New Staff Member</h2>
+      <div class="row">
+        <div><label>Name</label><input type="text" id="newStaffName"></div>
+        <div><label>Department</label>
+          <select id="newStaffDept">
+            <option value="FOH">FOH</option>
+            <option value="BOH">BOH</option>
+            <option value="CLEANING">CLEANING</option>
+          </select>
+        </div>
+        <div><label>Hourly Rate (£)</label><input type="number" id="newStaffRate" step="0.01" value="15"></div>
+        <div><label>Tip Weight</label><input type="number" id="newStaffTipWeight" step="0.05" value="1"></div>
+        <div><label>Holiday Entitlement (days/yr)</label><input type="number" id="newStaffHolidayEnt" step="1" value="28"></div>
+        <div><label>Start Date</label><input type="date" id="newStaffStartDate"></div>
+      </div>
+      <button class="btn" onclick="addNewStaff()">ADD</button>
+    </div>
+    <div class="card">
+      <h2>Staff List</h2>
+      <p class="hint"><b>Order:</b> use ▲▼ to move someone up or down.</p>
+      <p class="hint"><b>Note:</b> Change as many fields as you like, then hit <b>"Save All"</b> once. Rate or tip weight changes take effect from TODAY — past months keep the old rate.</p>
+      <p class="hint">Tip Weight: 1 = normal share. 1.2 = 20% more, 0.8 = 20% less. Only affects FOH tip distribution.</p>
+      <button class="btn" onclick="saveAllStaffEdits(this)" style="margin-bottom:10px">SAVE ALL</button>
+      <div id="staffMgmtTableWrap"><div class="loading">Loading…</div></div>
+      <button class="btn" onclick="saveAllStaffEdits(this)" style="margin-top:10px">SAVE ALL</button>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+<div id="hoursTotalsBox"></div>
+
+<script>
+var staffList = [];
+var staffMgmtList = [];
+var viewEntriesList = [];
+var requestsList = [];
+var cashLedgerBalance = 0; // kept in JS, never parsed back from the DOM
+var monthlyChart, deptChart, dowChart;
+var MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+// ---- HTML escaping: EVERY user-entered string goes through this before
+// being placed in innerHTML. Fixes both XSS and the O'Brien-breaks-buttons bug.
+function esc(s) {
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function showView(name) {
+  ['dashboard','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
+    document.getElementById('view-' + v).classList.toggle('active', v === name);
+    document.getElementById('nav-' + v).classList.toggle('active', v === name);
+  });
+  updateHoursTotalsVisibility();
+  if (name === 'hours') { refreshEntryTable(); loadEntryCheck(); }
+  if (name === 'staffsummary') loadSummary();
+  if (name === 'revenue') loadRecentRevenue();
+  if (name === 'monthly') loadMonthlySummary();
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'tips') loadWeeklyTips();
+  if (name === 'cashlist') loadCashList();
+  if (name === 'holidays') loadHolidaysView();
+  if (name === 'payperiod') { loadPayPeriodReport(); loadMonthEndDetail(); }
+  if (name === 'requests') loadRequests();
+  if (name === 'staff') loadStaffMgmt();
+}
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function () { t.classList.remove('show'); }, 4000);
+}
+
+function onError(err) {
+  console.error(err);
+  toast('Error: ' + (err.message || err));
+}
+
+function mondayOfThisWeek() {
+  var d = new Date();
+  var day = d.getDay();
+  var diff = (day === 0 ? -6 : 1 - day);
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function fmtDate(d) {
+  var y = d.getFullYear(), m = ('0' + (d.getMonth() + 1)).slice(-2), day = ('0' + d.getDate()).slice(-2);
+  return y + '-' + m + '-' + day;
+}
+
+// Display-only date formatter: 'yyyy-mm-dd' -> 'dd-mm-yyyy'.
+// NEVER feed its output back into date inputs or server calls —
+// the internal format stays yyyy-mm-dd (inputs, matching, sorting).
+function dmy(d) {
+  if (!d) return '';
+  var p = String(d).split('-');
+  return (p.length === 3 && p[0].length === 4) ? p[2] + '-' + p[1] + '-' + p[0] : String(d);
+}
+
+function dayNameOf(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  return DAYS[(d.getDay() + 6) % 7];
+}
+
+function deptClass(dept) { return 'dept-' + esc(dept); }
+function money(v) {
+  var n = Number(v) || 0;
+  return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function pct(v) { return (Number(v) * 100).toFixed(1) + '%'; }
+// Quarter-accurate hours display: whole numbers plain (206), anything
+// else with 2 decimals so .25/.50/.75 are always visible (154.75).
+function hrs(n) {
+  n = Number(n) || 0;
+  return (n === Math.floor(n)) ? String(n) : n.toFixed(2);
+}
+
+// ============================================================
+// HOURS
+// ============================================================
+var hoursMode = 'daily';
+
+function initHoursEntry() {
+  var monday = mondayOfThisWeek();
+  document.getElementById('weekStart').value = fmtDate(monday);
+  document.getElementById('weekStart').addEventListener('change', updateDayHint);
+  updateDayHint();
+
+  document.getElementById('dailyDate').value = fmtDate(new Date());
+  document.getElementById('dailyDate').addEventListener('change', updateDailyDayHint);
+  updateDailyDayHint();
+
+  document.getElementById('veFrom').value = fmtDate(monday);
+  document.getElementById('veTo').value = fmtDate(new Date());
+
+  document.getElementById('wgWeekStart').value = fmtDate(monday);
+  document.getElementById('wgWeekStart').addEventListener('change', wgWeekChanged);
+
+  switchHoursMode('daily');
+}
+
+var ecOffset = 0; // days back from today (0 = window ends today)
+
+function ecNav(step) {
+  ecOffset = (step === 0) ? 0 : Math.max(0, ecOffset + step);
+  loadEntryCheck();
+}
+
+function loadEntryCheck() {
+  var wrap = document.getElementById('ecWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('ecNewerBtn').disabled = (ecOffset === 0);
+  document.getElementById('ecTodayBtn').disabled = (ecOffset === 0);
+
+  // Kişi seçicisini personel listesinden doldur (bir kez; seçim korunur)
+  var sel = document.getElementById('ecStaff');
+  if (sel.options.length <= 1 && typeof staffList !== 'undefined' && staffList && staffList.length) {
+    staffList.forEach(function(st) {
+      if (!st.active) return;
+      var opt = document.createElement('option');
+      opt.value = st.id; opt.textContent = st.name;
+      sel.appendChild(opt);
+    });
+  }
+  var staffId = sel.value;
+  var who = staffId && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].textContent : '';
+
+  google.script.run.withSuccessHandler(function(d) {
+    if (d.rows.length) {
+      document.getElementById('ecTitle').textContent =
+        'Entry Check' + (who ? ' — ' + who : '') + ' — ' + dmy(d.rows[d.rows.length - 1].date) + ' – ' + dmy(d.rows[0].date);
+    }
+    document.getElementById('ecLastEntry').textContent = d.lastHoursDate
+      ? ((who ? who + ' — last day with hours logged: ' : 'Last day with hours logged: ') + dmy(d.lastHoursDate))
+      : (who ? who + ' has no hours logged yet.' : 'No hours logged yet.');
+    var mark = function(ok) {
+      return ok ? '<span style="color:#375623;font-weight:bold">✓</span>'
+                : '<span style="color:#9C0006;font-weight:bold">✗</span>';
+    };
+    var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Hours</th><th>Take-in</th><th>Tips</th><th></th></tr></thead><tbody>';
+    d.rows.forEach(function(r) {
+      var missing = !r.hasHours || !r.hasRevenue;
+      html += '<tr' + (missing ? ' style="background:#FFF4F4"' : '') + '>' +
+        '<td>' + dmy(r.date) + ' <span style="color:#888;font-size:11px">' + r.dayName.slice(0,3) + '</span></td>' +
+        '<td>' + mark(r.hasHours) + (r.hasHours ? ' <span style="color:#888;font-size:11px">' + hrs(r.hours) + 'h</span>' : '') + '</td>' +
+        '<td>' + mark(r.hasRevenue) + '</td>' +
+        '<td>' + mark(r.hasTips) + '</td>' +
+        '<td>' + (!r.hasHours ? '<a href="#" onclick="ecGoEnter(\'' + r.date + '\');return false;">Enter →</a>' : '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '<p class="hint">✓ = entered, ✗ = nothing logged that day. Red rows are missing Hours or Take-in. A closed day (or a person\'s day off) will show ✗ too — that is fine. When one person is selected, the Hours column is THEIRS only; Take-in and Tips always belong to the whole restaurant.</p>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getEntryStatus(14, ecOffset, staffId);
+}
+
+function ecGoEnter(dateStr) {
+  switchHoursMode('daily');
+  var el = document.getElementById('dailyDate');
+  el.value = dateStr;
+  el.dispatchEvent(new Event('change'));
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function switchHoursMode(mode) {
+  hoursMode = mode;
+  document.getElementById('hoursDailySection').style.display = (mode === 'daily') ? 'block' : 'none';
+  document.getElementById('hoursWeeklySection').style.display = (mode === 'weekly') ? 'block' : 'none';
+  document.getElementById('hoursViewSection').style.display = (mode === 'view') ? 'block' : 'none';
+  document.getElementById('hoursGridSection').style.display = (mode === 'grid') ? 'block' : 'none';
+  document.getElementById('modeBtnDaily').classList.toggle('mode-active', mode === 'daily');
+  document.getElementById('modeBtnWeekly').classList.toggle('mode-active', mode === 'weekly');
+  document.getElementById('modeBtnView').classList.toggle('mode-active', mode === 'view');
+  document.getElementById('modeBtnGrid').classList.toggle('mode-active', mode === 'grid');
+  updateHoursTotalsVisibility();
+  recalcHoursTotals();
+  if (mode === 'grid') {
+    if (!document.getElementById('wgWeekStart').value) {
+      document.getElementById('wgWeekStart').value = fmtDate(mondayOfThisWeek());
+    }
+    loadWeeklyGrid();
+  }
+}
+
+// Date shown right next to the SUBMIT button (item #2)
+function updateDailyDayHint() {
+  var v = document.getElementById('dailyDate').value;
+  if (!v) return;
+  var dayName = dayNameOf(v);
+  document.getElementById('dailyDayHint').textContent = 'Selected day: ' + dayName;
+  document.getElementById('dailySubmitDateHint').textContent = '→ Submitting for: ' + dmy(v) + ' (' + dayName + ')';
+}
+
+function updateDayHint() {
+  var v = document.getElementById('weekStart').value;
+  if (!v) return;
+  var dayName = dayNameOf(v);
+  var hint = document.getElementById('dayHint');
+  hint.textContent = 'Selected day: ' + dayName;
+  hint.style.color = (dayName === 'Monday') ? '#375623' : '#9C0006';
+  document.getElementById('weeklySubmitDateHint').textContent = '→ Week starting: ' + dmy(v) + ' (' + dayName + ')';
+}
+
+function refreshEntryTable() {
+  var existingWeekly = {};
+  var existingDaily = {};
+  if (staffList && staffList.length) {
+    staffList.forEach(function(s, i) {
+      for (var d = 0; d < 7; d++) {
+        var input = document.querySelector('input[data-i="' + i + '"][data-d="' + d + '"]');
+        if (input && input.value) existingWeekly[s.id + '|' + d] = input.value;
+      }
+      var dInput = document.querySelector('input[data-daily-i="' + i + '"]');
+      if (dInput && dInput.value) existingDaily[s.id] = dInput.value;
+    });
+  }
+  google.script.run.withSuccessHandler(function(staff) {
+    buildEntryTable(staff);
+    buildDailyEntryTable(staff);
+    staff.forEach(function(s, i) {
+      for (var d = 0; d < 7; d++) {
+        var key = s.id + '|' + d;
+        if (key in existingWeekly) {
+          var input = document.querySelector('input[data-i="' + i + '"][data-d="' + d + '"]');
+          if (input) input.value = existingWeekly[key];
+        }
+      }
+      if (s.id in existingDaily) {
+        var dInput = document.querySelector('input[data-daily-i="' + i + '"]');
+        if (dInput) dInput.value = existingDaily[s.id];
+      }
+    });
+    recalcHoursTotals();
+  }).withFailureHandler(onError).getStaffList();
+}
+
+function buildEntryTable(staff) {
+  staffList = staff;
+  var wrap = document.getElementById('entryTableWrap');
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Department</th>';
+  DAYS.forEach(function(d) { html += '<th>' + d + '</th>'; });
+  html += '<th>Total</th></tr></thead><tbody>';
+  staff.forEach(function(s, i) {
+    html += '<tr><td>' + esc(s.name) + '</td><td class="' + deptClass(s.dept) + '">' + esc(s.dept) + '</td>';
+    for (var d = 0; d < 7; d++) {
+      html += '<td><input class="hours-input" type="text" data-i="' + i + '" data-d="' + d + '" oninput="hoursCellInput(this)"></td>';
+    }
+    html += '<td class="row-total" id="wkRowTotal_' + i + '">–</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function buildDailyEntryTable(staff) {
+  staffList = staff;
+  var wrap = document.getElementById('dailyEntryTableWrap');
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Department</th><th>Hours</th></tr></thead><tbody>';
+  staff.forEach(function(s, i) {
+    html += '<tr><td>' + esc(s.name) + '</td><td class="' + deptClass(s.dept) + '">' + esc(s.dept) + '</td>' +
+      '<td><input class="hours-input" type="text" data-daily-i="' + i + '" oninput="hoursCellInput(this)"></td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('dailySubmitBtn').disabled = false;
+}
+
+// ---- Live totals box (item #3) ----
+function updateHoursTotalsVisibility() {
+  var box = document.getElementById('hoursTotalsBox');
+  var hoursActive = document.getElementById('view-hours').classList.contains('active');
+  box.style.display = (hoursActive && (hoursMode === 'daily' || hoursMode === 'weekly')) ? 'block' : 'none';
+}
+
+function hoursCellInput(input) {
+  var v = String(input.value).trim().toUpperCase();
+  if (v === 'O') v = 'OFF';
+  if (v === 'H' || v === 'S' || v === 'OFF') {
+    if (input.value !== v) input.value = v;
+  }
+  ppPaintCell(input); // same colour language: H green, S orange
+  recalcHoursTotals();
+}
+
+function recalcHoursTotals() {
+  var box = document.getElementById('hoursTotalsBox');
+  if (box.style.display === 'none') return;
+  if (hoursMode === 'daily') {
+    var total = 0, people = 0;
+    document.querySelectorAll('input[data-daily-i]').forEach(function(inp) {
+      var v = parseFloat(inp.value);
+      if (!isNaN(v) && v > 0) { total += v; people++; }
+    });
+    box.innerHTML = 'Day total: <b>' + total.toFixed(2) + 'h</b> · ' + people + ' staff';
+  } else if (hoursMode === 'weekly') {
+    var dayTotals = [0,0,0,0,0,0,0];
+    var rowTotals = {};
+    var grand = 0;
+    document.querySelectorAll('input[data-i][data-d]').forEach(function(inp) {
+      var v = parseFloat(inp.value);
+      if (!isNaN(v) && v > 0) {
+        dayTotals[Number(inp.getAttribute('data-d'))] += v;
+        var ri = inp.getAttribute('data-i');
+        rowTotals[ri] = (rowTotals[ri] || 0) + v;
+        grand += v;
+      }
+    });
+    // per-person total at the end of each row (live)
+    staffList.forEach(function(s, i) {
+      var cell = document.getElementById('wkRowTotal_' + i);
+      if (cell) {
+        var t = rowTotals[i] || 0;
+        cell.textContent = t > 0 ? t.toFixed(2) + 'h' : '–';
+      }
+    });
+    var parts = dayTotals.map(function(t, i) {
+      return DAYS[i].slice(0,3) + ' ' + (t > 0 ? hrs(t) : '–');
+    });
+    box.innerHTML = parts.join(' · ') + '<br>Week total: <b>' + grand.toFixed(2) + 'h</b>';
+  }
+}
+
+// ---- Submit with duplicate-confirmation flow (item #8) ----
+function handleHoursSubmitResult(res, btn, resubmit) {
+  if (res.conflicts && res.conflicts.length > 0) {
+    var lines = res.conflicts.slice(0, 15).map(function(c) { return '• ' + c.name + ' — ' + c.date; });
+    if (res.conflicts.length > 15) lines.push('…and ' + (res.conflicts.length - 15) + ' more');
+    var ok = confirm(
+      'Hours are ALREADY logged for:\n\n' + lines.join('\n') +
+      '\n\nSubmitting again will ADD ON TOP (e.g. a second shift on the same day).' +
+      '\nIf you meant to CORRECT a number instead, press Cancel and use "View Entries".' +
+      '\n\nAdd these hours anyway?'
+    );
+    if (ok) { resubmit(); return; }
+    btn.disabled = false;
+    btn.textContent = 'SUBMIT';
+    return;
+  }
+  var parts = [];
+  if (res.added > 0) parts.push(res.added + ' hour entr' + (res.added === 1 ? 'y' : 'ies'));
+  if (res.marks > 0) parts.push(res.marks + ' holiday/sick mark' + (res.marks === 1 ? '' : 's'));
+  toast(parts.length ? ('Saved: ' + parts.join(' + ') + '.') : 'Nothing to save.');
+  btn.disabled = false;
+  btn.textContent = 'SUBMIT';
+  return true;
+}
+
+function submitDailyHoursForm(force) {
+  var btn = document.getElementById('dailySubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  var entries = staffList.map(function(s, i) {
+    var input = document.querySelector('input[data-daily-i="' + i + '"]');
+    return { id: s.id, name: s.name, dept: s.dept, hours: (input ? input.value : '0') || '0' };
+  });
+  var dateStr = document.getElementById('dailyDate').value;
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      var done = handleHoursSubmitResult(res, btn, function() { submitDailyHoursForm(true); });
+      if (done) {
+        document.querySelectorAll('#dailyEntryTableWrap .hours-input').forEach(function(inp) { inp.value = ''; });
+        recalcHoursTotals();
+      }
+    })
+    .withFailureHandler(function(err) {
+      onError(err);
+      btn.disabled = false;
+      btn.textContent = 'SUBMIT';
+    })
+    .submitDailyHours(dateStr, entries, force === true);
+}
+
+function submitHours(force) {
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  var entries = staffList.map(function(s, i) {
+    var hours = [];
+    for (var d = 0; d < 7; d++) {
+      var input = document.querySelector('input[data-i="' + i + '"][data-d="' + d + '"]');
+      hours.push(input.value || '0');
+    }
+    return { id: s.id, name: s.name, dept: s.dept, hours: hours };
+  });
+  var weekStart = document.getElementById('weekStart').value;
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      var done = handleHoursSubmitResult(res, btn, function() { submitHours(true); });
+      if (done) {
+        document.querySelectorAll('#entryTableWrap .hours-input').forEach(function(inp) { inp.value = ''; });
+        var d = new Date(weekStart + 'T00:00:00');
+        d.setDate(d.getDate() + 7);
+        document.getElementById('weekStart').value = fmtDate(d);
+        updateDayHint();
+        recalcHoursTotals();
+      }
+    })
+    .withFailureHandler(function(err) {
+      onError(err);
+      btn.disabled = false;
+      btn.textContent = 'SUBMIT';
+    })
+    .submitWeeklyHours(weekStart, entries, force === true);
+}
+
+// ============================================================
+// WEEKLY GRID (v2.5.3) — one editable staff × day grid per week.
+// Change a cell -> updateHoursEntry; fill an empty cell -> submitDailyHours
+// (duplicate-checked); clear a cell -> deleteHoursEntry (confirm first).
+// Cells holding >1 logged row are locked (fix in View Entries).
+// H/OFF/S marks from Holidays_Log shown grey, read-only here.
+// ============================================================
+var wgSeq = 0; // stale-response guard: only the latest load may render
+
+function wgMondayOf_(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  var day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+  return d;
+}
+
+var wgLoadedWeek = ''; // last week actually rendered; nav guards restore it on Cancel
+
+function wgGuardPending_() {
+  var n = wgPendingInputs_().length;
+  if (n === 0) return true;
+  return window.confirm(n + ' unsaved change(s) will be LOST if you leave this week.\nLeave anyway?');
+}
+
+function wgWeekChanged() {
+  var inp = document.getElementById('wgWeekStart');
+  if (!inp.value) return;
+  if (!wgGuardPending_()) { if (wgLoadedWeek) inp.value = wgLoadedWeek; return; }
+  var mon = fmtDate(wgMondayOf_(inp.value));
+  if (inp.value !== mon) {
+    inp.value = mon;
+    toast('Snapped to Monday — the grid always starts on a Monday.');
+  }
+  loadWeeklyGrid();
+}
+
+function wgNav(step) {
+  var inp = document.getElementById('wgWeekStart');
+  if (!inp.value) return;
+  if (!wgGuardPending_()) return;
+  var d = new Date(inp.value + 'T00:00:00');
+  d.setDate(d.getDate() + step);
+  inp.value = fmtDate(d);
+  loadWeeklyGrid();
+}
+
+function wgToday() {
+  if (!wgGuardPending_()) return;
+  document.getElementById('wgWeekStart').value = fmtDate(mondayOfThisWeek());
+  loadWeeklyGrid();
+}
+
+// Current pay period start (26th -> 25th): warn when the whole week is older.
+function wgUpdatePeriodWarn_(wsStr) {
+  var today = new Date();
+  var periodStart = (today.getDate() >= 26)
+    ? new Date(today.getFullYear(), today.getMonth(), 26)
+    : new Date(today.getFullYear(), today.getMonth() - 1, 26);
+  var weekEnd = new Date(wsStr + 'T00:00:00');
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  document.getElementById('wgPeriodWarn').style.display = (weekEnd < periodStart) ? 'block' : 'none';
+}
+
+function loadWeeklyGrid() {
+  var ws = document.getElementById('wgWeekStart').value;
+  if (!ws) return;
+  var mon = fmtDate(wgMondayOf_(ws));
+  if (ws !== mon) { document.getElementById('wgWeekStart').value = mon; ws = mon; }
+
+  var dates = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(ws + 'T00:00:00');
+    d.setDate(d.getDate() + i);
+    dates.push(fmtDate(d));
+  }
+  document.getElementById('wgDayHint').textContent = 'Week: ' + dmy(dates[0]) + ' – ' + dmy(dates[6]);
+  wgUpdatePeriodWarn_(ws);
+
+  wgLoadedWeek = ws;
+  var seq = ++wgSeq;
+  var wrap = document.getElementById('wgWrap');
+  wrap.innerHTML = '<div class="loading">Loading week…</div>';
+  document.getElementById('wgSaveBar').style.display = 'none';
+
+  google.script.run.withSuccessHandler(function(staff) {
+    if (seq !== wgSeq) return;
+    google.script.run.withSuccessHandler(function(rows) {
+      if (seq !== wgSeq) return;
+      wgRender_(dates, staff, rows);
+      wgLoadMarks_(dates, seq);
+    }).withFailureHandler(function(err) {
+      if (seq !== wgSeq) return;
+      wrap.innerHTML = '<p style="color:#9C0006">Could not load the week.</p>';
+      onError(err);
+    }).getHoursEntries(dates[0], dates[6]);
+  }).withFailureHandler(function(err) {
+    if (seq !== wgSeq) return;
+    wrap.innerHTML = '<p style="color:#9C0006">Could not load the staff list.</p>';
+    onError(err);
+  }).getStaffList(false);
+}
+
+function wgRender_(dates, staff, rows) {
+  // cells: rowKey|date -> list of logged entries. rowKey = staffId, or
+  // 'x:NAME' for historical rows whose StaffID column is empty.
+  var cells = {};
+  var extraNames = {}; // name -> dept, for rows not in the staff sheet
+  var staffById = {};
+  staff.forEach(function(s) { staffById[s.id] = s; });
+  rows.forEach(function(r) {
+    var rk = (r.staffId && staffById[r.staffId]) ? r.staffId : 'x:' + r.name;
+    if (rk.indexOf('x:') === 0) extraNames[r.name] = r.dept;
+    var key = rk + '|' + r.date;
+    (cells[key] = cells[key] || []).push(r);
+  });
+
+  var gridRows = staff.filter(function(s) {
+    if (s.active) return true;
+    return dates.some(function(dt) { return cells[s.id + '|' + dt]; });
+  }).map(function(s) { return { rk: s.id, name: s.name, dept: s.dept, canAdd: true }; });
+  Object.keys(extraNames).sort().forEach(function(name) {
+    gridRows.push({ rk: 'x:' + name, name: name, dept: extraNames[name], canAdd: false });
+  });
+
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Department</th>';
+  dates.forEach(function(dt) {
+    html += '<th style="white-space:nowrap">' + dmy(dt).slice(0, 5) + '<br><span style="color:#888;font-size:11px">' + dayNameOf(dt).slice(0, 3).toUpperCase() + '</span></th>';
+  });
+  html += '<th>Total</th></tr></thead><tbody>';
+
+  gridRows.forEach(function(row, ri) {
+    html += '<tr><td>' + esc(row.name) + (row.canAdd ? '' : ' <span style="color:#888;font-size:11px">(no ID)</span>') + '</td>' +
+      '<td class="' + deptClass(row.dept) + '">' + esc(row.dept) + '</td>';
+    dates.forEach(function(dt, ci) {
+      var list = cells[row.rk + '|' + dt] || [];
+      if (list.length > 1) {
+        var sum = list.reduce(function(a, e) { return a + e.hours; }, 0);
+        html += '<td class="wg-locked" data-ri="' + ri + '" data-ci="' + ci + '" data-total="' + sum + '"' +
+          ' title="' + list.length + ' logged rows on this day — fix in View Entries" onclick="toast(\'This cell holds ' + list.length + ' logged rows — use View Entries to sort it out.\')">' +
+          hrs(sum) + '<br>(' + list.length + ' rows)</td>';
+      } else if (list.length === 1) {
+        var e = list[0];
+        var sid = (row.rk.indexOf('x:') === 0) ? '' : row.rk;
+        html += '<td><input class="hours-input wg-input" type="text" data-ri="' + ri + '" data-ci="' + ci + '"' +
+          ' data-sid="' + esc(sid) + '" data-date="' + dt + '" data-name="' + esc(row.name) + '" data-dept="' + esc(e.dept) + '"' +
+          ' data-orig="' + e.hours + '" data-mark="" data-newv="' + e.hours + '" data-row="' + e.row + '" value="' + e.hours + '" onchange="wgCellChanged(this)"></td>';
+      } else if (row.canAdd) {
+        html += '<td><input class="hours-input wg-input" type="text" data-ri="' + ri + '" data-ci="' + ci + '"' +
+          ' data-sid="' + esc(row.rk) + '" data-date="' + dt + '" data-name="' + esc(row.name) + '" data-dept="' + esc(row.dept) + '"' +
+          ' data-orig="" data-mark="" data-newv="" data-row="" onchange="wgCellChanged(this)"></td>';
+      } else {
+        html += '<td></td>'; // no StaffID -> cannot create new rows safely
+      }
+    });
+    html += '<td class="row-total" id="wgRowT_' + ri + '">–</td></tr>';
+  });
+
+  html += '<tr class="total-row"><td colspan="2">TOTAL</td>';
+  dates.forEach(function(dt, ci) { html += '<td id="wgDayT_' + ci + '">–</td>'; });
+  html += '<td id="wgGrand">–</td></tr></tbody></table>';
+  document.getElementById('wgWrap').innerHTML = html;
+  wgRecalc_(gridRows.length);
+}
+
+function wgRecalc_(rowCount) {
+  var wrap = document.getElementById('wgWrap');
+  if (rowCount === undefined) rowCount = wrap.querySelectorAll('.row-total').length;
+  var rowT = [], colT = [0, 0, 0, 0, 0, 0, 0], grand = 0;
+  for (var i = 0; i < rowCount; i++) rowT.push(0);
+  wrap.querySelectorAll('.wg-input, .wg-locked').forEach(function(el) {
+    var v = (el.classList.contains('wg-locked')) ? Number(el.dataset.total) : parseFloat(el.dataset.newv);
+    if (isNaN(v) || v <= 0) return;
+    rowT[Number(el.dataset.ri)] += v;
+    colT[Number(el.dataset.ci)] += v;
+    grand += v;
+  });
+  rowT.forEach(function(v, i) {
+    var el = document.getElementById('wgRowT_' + i);
+    if (el) el.textContent = v > 0 ? hrs(v) : '–';
+  });
+  colT.forEach(function(v, i) {
+    var el = document.getElementById('wgDayT_' + i);
+    if (el) el.textContent = v > 0 ? hrs(v) : '–';
+  });
+  var g = document.getElementById('wgGrand');
+  if (g) g.textContent = hrs(grand);
+}
+
+// One cell = "what happened that day": hours, a mark, or nothing.
+// v2.5.5: cells are edited IN MEMORY only. A changed cell turns yellow
+// (pending); nothing reaches the server until SAVE CHANGES sends the whole
+// batch in ONE applyGridEdits() call. wgSetDisplay_ paints a cell from its
+// datasets: newv = what the user wants, orig/mark = what the sheet holds.
+function wgCanonical_(input) {
+  return input.dataset.orig !== '' ? input.dataset.orig : (input.dataset.mark || '');
+}
+
+function wgSetDisplay_(input) {
+  var newv = input.dataset.newv || '';
+  var pending = (newv !== wgCanonical_(input));
+  var isMarkVal = (newv === 'H' || newv === 'S' || newv === 'OFF');
+  input.value = newv;
+  input.classList.toggle('wg-mark', isMarkVal);
+  input.classList.toggle('wg-pending', pending);
+  if (pending) {
+    input.title = 'Not saved yet — press SAVE CHANGES.';
+  } else if (input.dataset.orig !== '' && input.dataset.mark) {
+    input.title = 'Also marked ' + input.dataset.mark + ' in the Holidays calendar — hours AND a mark on the same day is unusual.';
+  } else if (isMarkVal) {
+    input.title = newv + ' — synced with the Holidays calendar.';
+  } else {
+    input.title = '';
+  }
+}
+
+function wgPendingInputs_() {
+  var out = [];
+  document.querySelectorAll('#wgWrap .wg-input').forEach(function(inp) {
+    if ((inp.dataset.newv || '') !== wgCanonical_(inp)) out.push(inp);
+  });
+  return out;
+}
+
+var wgSaving_ = false; // while true the save bar stays visible even at 0 pending
+
+function wgUpdateSaveBar_() {
+  var n = wgPendingInputs_().length;
+  document.getElementById('wgPendCnt').textContent = n;
+  document.getElementById('wgSaveBar').style.display = (n > 0 || wgSaving_) ? 'block' : 'none';
+}
+
+function wgCellChanged(input) {
+  var val = String(input.value).trim().toUpperCase();
+  if (val === 'O') val = 'OFF';
+  var isMark = (val === 'H' || val === 'S' || val === 'OFF');
+
+  if (!isMark && val !== '' && !/^\d+(\.\d+)?$/.test(val)) {
+    wgSetDisplay_(input);
+    toast('Type hours (decimals in .25 / .5 / .75 steps) or a mark: H, S or O.');
+    return;
+  }
+  if (isMark && input.dataset.sid === '') {
+    // historical rows with no StaffID: a mark would write a blank ID into
+    // Holidays_Log — refuse instead of corrupting the calendar
+    wgSetDisplay_(input);
+    toast('This row has no Staff ID, so marks cannot be saved for it.');
+    return;
+  }
+  if (!isMark && val !== '') val = String(Number(val)); // 12.50 -> 12.5, so "same value" is recognised
+
+  input.dataset.newv = val;
+  wgSetDisplay_(input);
+  wgRecalc_();
+  wgUpdateSaveBar_();
+}
+
+function wgSaveChanges() {
+  var pend = wgPendingInputs_();
+  if (pend.length === 0) { wgUpdateSaveBar_(); return; }
+
+  // v2.5.6: send in chunks of 40 so no batch can hit the server's execution
+  // limit. Each saved chunk is confirmed back into the cells immediately
+  // (yellow -> white); a failed/stopped run leaves the rest yellow, and SAVE
+  // CHANGES retries only those.
+  var CHUNK = 40;
+  var items = [], delCount = 0;
+  pend.forEach(function(inp) {
+    var newv = inp.dataset.newv || '';
+    var isNum = /^\d+(\.\d+)?$/.test(newv);
+    var oldH = (inp.dataset.orig === '') ? null : Number(inp.dataset.orig);
+    if (oldH !== null && !isNum) delCount++;
+    items.push({ input: inp, edit: {
+      date: inp.dataset.date,
+      staffId: inp.dataset.sid,
+      name: inp.dataset.name,
+      dept: inp.dataset.dept,
+      row: Number(inp.dataset.row) || 0,
+      oldHours: oldH,
+      newHours: isNum ? Number(newv) : null,
+      oldMark: inp.dataset.mark || '',
+      newMark: (newv === 'H' || newv === 'OFF' || newv === 'S') ? newv : ''
+    }});
+  });
+
+  if (delCount > 0 && !window.confirm(delCount + ' logged hour row(s) will be DELETED as part of this save.\nContinue?')) {
+    return; // pending edits stay; nothing sent
+  }
+
+  var saveBtn = document.getElementById('wgSaveBtn');
+  var discBtn = document.getElementById('wgDiscardBtn');
+  function setBusy(on) {
+    wgSaving_ = on;
+    document.querySelectorAll('#wgWrap .wg-input').forEach(function(inp) {
+      inp.disabled = on;
+      inp.classList.toggle('wg-saving', on);
+    });
+    saveBtn.disabled = on;
+    discBtn.disabled = on;
+    document.getElementById('wgProg').style.display = on ? 'block' : 'none';
+    document.getElementById('wgProgText').style.display = on ? 'block' : 'none';
+    if (on) { wgProgress_(0, items.length); } else { saveBtn.textContent = 'SAVE CHANGES'; }
+  }
+  function wgProgress_(done, total) {
+    document.getElementById('wgProgBar').style.width = Math.max(3, Math.round(done / total * 100)) + '%';
+    document.getElementById('wgProgText').textContent = done + ' / ' + total + ' saved' + (done < total ? '\u2026' : '');
+  }
+  setBusy(true);
+
+  var acc = { updates: 0, deletes: 0, adds: 0, marks: 0, failed: [] };
+
+  function finish() {
+    setBusy(false);
+    var msg = 'Saved: ' + acc.updates + ' updated, ' + acc.deletes + ' deleted, ' + acc.adds + ' added, ' + acc.marks + ' mark(s).';
+    if (acc.failed.length > 0) {
+      var lines = acc.failed.map(function(f) { return '\u2022 ' + f.name + ' \u2014 ' + dmy(f.date) + ': ' + f.reason; });
+      window.alert(msg + '\n\nNOT applied (' + acc.failed.length + '):\n' + lines.join('\n') + '\n\nThe grid will now reload so you see exactly what is in the sheet.');
+    } else {
+      toast(msg);
+    }
+    loadWeeklyGrid(); // always reload: the grid must show the sheet, not hopes
+  }
+
+  function sendChunk(startIdx) {
+    if (startIdx >= items.length) { finish(); return; }
+    var slice = items.slice(startIdx, startIdx + CHUNK);
+    saveBtn.textContent = 'SAVING ' + Math.min(startIdx + CHUNK, items.length) + '/' + items.length + '\u2026';
+
+    google.script.run.withSuccessHandler(function(res) {
+      var failedKey = {};
+      (res.failed || []).forEach(function(f) { failedKey[f.date + '|' + String(f.staffId)] = true; });
+      slice.forEach(function(it) {
+        if (failedKey[it.edit.date + '|' + String(it.edit.staffId)]) return; // stays yellow; final reload reconciles
+        var inp = it.input;
+        inp.dataset.orig = (it.edit.newHours !== null) ? String(it.edit.newHours) : '';
+        inp.dataset.mark = it.edit.newMark || '';
+        inp.dataset.row = ''; // row moved after deletes; content matching still finds it
+        wgSetDisplay_(inp);   // yellow -> white: this cell is now IN the sheet
+      });
+      acc.updates += res.updates; acc.deletes += res.deletes;
+      acc.adds += res.adds; acc.marks += res.marks;
+      acc.failed = acc.failed.concat(res.failed || []);
+      wgProgress_(Math.min(startIdx + CHUNK, items.length), items.length);
+      wgUpdateSaveBar_();
+      sendChunk(startIdx + CHUNK);
+    }).withFailureHandler(function(err) {
+      // chunks before this one ARE saved (their cells are white); the yellow
+      // cells were NOT sent/written — keep them so nothing is lost.
+      setBusy(false);
+      wgUpdateSaveBar_();
+      onError(err);
+      toast('Saving stopped: ' + wgPendingInputs_().length + ' yellow cell(s) are NOT saved yet \u2014 press SAVE CHANGES to retry just those.');
+    }).applyGridEdits(slice.map(function(it) { return it.edit; }));
+  }
+  sendChunk(0);
+}
+
+function wgDiscard() {
+  var n = wgPendingInputs_().length;
+  if (n > 0 && !window.confirm('Discard ' + n + ' unsaved change(s) and reload the week?')) return;
+  loadWeeklyGrid();
+}
+
+// Grey H/OFF/S marks from the Holidays calendar (read-only in this grid).
+// A week can span two months -> up to two getHolidaysViewData calls.
+function wgLoadMarks_(dates, seq) {
+  var months = {};
+  dates.forEach(function(dt) {
+    var y = Number(dt.slice(0, 4)), m = Number(dt.slice(5, 7));
+    months[y + '-' + m] = { y: y, m: m };
+  });
+  var keys = Object.keys(months);
+  var markByCell = {}; // 'staffId|yyyy-mm-dd' -> 'H'|'OFF'|'S'
+  var pending = keys.length;
+
+  function applyIfDone() {
+    if (--pending > 0) return;
+    if (seq !== wgSeq) return;
+    document.querySelectorAll('#wgWrap .wg-input').forEach(function(inp) {
+      var mk = markByCell[inp.dataset.sid + '|' + inp.dataset.date];
+      if (!mk) return;
+      inp.dataset.mark = mk;
+      if (inp.dataset.orig === '' && inp.dataset.newv === '') inp.dataset.newv = mk; // untouched empty cell shows the mark
+      wgSetDisplay_(inp);
+    });
+  }
+
+  keys.forEach(function(k) {
+    var mo = months[k];
+    google.script.run.withSuccessHandler(function(d) {
+      if (seq !== wgSeq) { pending = -999; return; }
+      Object.keys(d.marks || {}).forEach(function(mkKey) {
+        var parts = mkKey.split('|'); // staffId|dayOfMonth
+        var dt = mo.y + '-' + ('0' + mo.m).slice(-2) + '-' + ('0' + parts[1]).slice(-2);
+        markByCell[parts[0] + '|' + dt] = d.marks[mkKey];
+      });
+      applyIfDone();
+    }).withFailureHandler(function() {
+      if (seq !== wgSeq) { pending = -999; return; }
+      toast('Holiday marks could not be loaded (hours are unaffected).');
+      applyIfDone();
+    }).getHolidaysViewData(mo.m, mo.y);
+  });
+}
+
+// ---- View / Edit / Delete entries (item #5) ----
+function loadHoursEntries() {
+  var wrap = document.getElementById('viewEntriesWrap');
+  var from = document.getElementById('veFrom').value;
+  var to = document.getElementById('veTo').value;
+  if (!from || !to) { toast('Please pick both dates.'); return; }
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+
+  google.script.run.withSuccessHandler(function(rows) {
+    viewEntriesList = rows;
+    if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No hours logged in this range.</p>'; return; }
+
+    var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Day</th><th>Staff</th><th>Department</th><th>Hours</th><th>Actions</th></tr></thead><tbody>';
+    var total = 0;
+    var lastDate = '';
+    rows.forEach(function(r, i) {
+      total += r.hours;
+      var dateCell = (r.date === lastDate) ? '' : dmy(r.date);
+      lastDate = r.date;
+      html += '<tr><td>' + dateCell + '</td><td>' + dayNameOf(r.date) + '</td>' +
+        '<td>' + esc(r.name) + '</td><td class="' + deptClass(r.dept) + '">' + esc(r.dept) + '</td>' +
+        '<td><input class="hours-input" type="number" min="0" max="24" step="0.25" id="veHours_' + i + '" value="' + r.hours + '"></td>' +
+        '<td style="white-space:nowrap">' +
+          '<button class="btn btn-small" onclick="saveHoursEntry(' + i + ')">Save</button>' +
+          '<button class="btn btn-small btn-danger" onclick="removeHoursEntry(' + i + ')">Delete</button>' +
+        '</td></tr>';
+    });
+    html += '<tr class="total-row"><td colspan="4">TOTAL</td><td>' + total.toFixed(2) + '</td><td></td></tr>';
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getHoursEntries(from, to);
+}
+
+function saveHoursEntry(i) {
+  var r = viewEntriesList[i];
+  var newVal = document.getElementById('veHours_' + i).value;
+  var n = parseFloat(newVal);
+  if (isNaN(n) || n <= 0 || n > 24) { toast('Enter hours between 0 and 24 (use Delete to remove).'); return; }
+  google.script.run
+    .withSuccessHandler(function() { toast('Updated: ' + r.name + ' ' + dmy(r.date) + ' → ' + n + 'h'); loadHoursEntries(); })
+    .withFailureHandler(function(err) { onError(err); loadHoursEntries(); })
+    .updateHoursEntry({ row: r.row, date: r.date, staffId: r.staffId, hours: r.hours }, n);
+}
+
+function removeHoursEntry(i) {
+  var r = viewEntriesList[i];
+  if (!confirm('Delete this entry?\n\n' + r.name + ' — ' + dmy(r.date) + ' — ' + r.hours + 'h')) return;
+  google.script.run
+    .withSuccessHandler(function() { toast('Deleted.'); loadHoursEntries(); })
+    .withFailureHandler(function(err) { onError(err); loadHoursEntries(); })
+    .deleteHoursEntry({ row: r.row, date: r.date, staffId: r.staffId, hours: r.hours });
+}
+
+// ============================================================
+// TAKE-IN
+// ============================================================
+function initRevenueEntry() {
+  document.getElementById('revDate').value = fmtDate(new Date());
+}
+
+function submitRevenueForm() {
+  var date = document.getElementById('revDate').value;
+  var num = function(id) { var v = parseFloat(document.getElementById(id).value); return (isNaN(v) || v < 0) ? 0 : v; };
+  var net = num('revNet'), sc = num('revSC'), tips = num('revTips'), cash = num('revCash');
+  var notes = document.getElementById('revNotes').value.trim();
+  if (!date) { toast('Please pick a date.'); return; }
+  if (net === 0 && sc === 0 && tips === 0 && cash === 0) { toast('Enter at least one figure (Net Sales, SC, Cash Tips or Cash In Hand).'); return; }
+  var btn = document.getElementById('revSaveBtn');
+  btn.disabled = true;
+  google.script.run
+    .withSuccessHandler(function(res) {
+      btn.disabled = false;
+      var added = [], skipped = [];
+      if (res.revenue) {
+        if (res.revenue.added) added.push('Take-in ' + money(net) + ' + SC ' + money(sc));
+        else skipped.push('Take-in: already there (' + money(res.revenue.existingNet) + ' + SC ' + money(res.revenue.existingSC) + ')');
+      }
+      if (res.tips) {
+        if (res.tips.added) added.push('Cash Tips ' + money(tips));
+        else skipped.push('Cash Tips: already there (' + money(res.tips.existingAmount) + ')');
+      }
+      if (res.cash) {
+        if (res.cash.added) added.push('Cash In Hand ' + money(cash));
+        else skipped.push('Cash In Hand: already there (' + money(res.cash.existingAmount) + ')');
+      }
+      var head = dmy(date) + ' \u2014 ' + (added.length ? 'ADDED: ' + added.join(', ') + '.' : 'nothing added.');
+      if (skipped.length > 0) {
+        window.alert(head + '\n\nNOT touched (already in the books):\n\u2022 ' + skipped.join('\n\u2022 ') + '\n\nNothing was overwritten or doubled.');
+      } else {
+        toast(head);
+      }
+      ['revNet', 'revSC', 'revTips', 'revCash', 'revNotes'].forEach(function(id) { document.getElementById(id).value = ''; });
+      loadRecentRevenue();
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      onError(err); // fields are kept so you can correct and retry
+    })
+    .submitMissedBankingDay({ date: date, netSales: net, serviceCharge: sc, cashTips: tips, cashInHand: cash, notes: notes || 'Manual entry' });
+}
+
+var revRowsList = []; // v2.5.11: rows shown in the editable Take-in list
+
+function loadRecentRevenue() {
+  var wrap = document.getElementById('recentRevenueWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  google.script.run.withSuccessHandler(function(rows) {
+    revRowsList = rows || [];
+    if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No entries yet.</p>'; return; }
+    var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Net Sales (£)</th><th>Service Charge (£)</th><th>SC %</th><th>Total</th><th>Staff Cost</th><th>Staff Cost %</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
+    rows.forEach(function(r, i) {
+      html += '<tr><td>' + dmy(r.date) + '</td>' +
+        '<td><input class="hours-input" style="width:90px" type="number" min="0" step="0.01" id="rvNet_' + i + '" value="' + r.netSales + '"></td>' +
+        '<td><input class="hours-input" style="width:80px" type="number" min="0" step="0.01" id="rvSC_' + i + '" value="' + r.serviceCharge + '"></td>' +
+        '<td>' + (r.netSales > 0 && r.serviceCharge > 0 ? pct(r.serviceCharge / r.netSales) : '') + '</td>' +
+        '<td><b>' + money(r.total) + '</b></td>' +
+        '<td>' + (r.staffCost > 0 ? money(r.staffCost) : '') + '</td>' +
+        '<td>' + (r.staffCost > 0 && r.total > 0 ? pct(r.laborPct) : '') + '</td>' +
+        '<td><input type="text" id="rvNotes_' + i + '" value="' + esc(r.notes) + '" style="min-width:110px"></td>' +
+        '<td style="white-space:nowrap">' +
+          '<button class="btn btn-small" onclick="saveRevenueRow(' + i + ')">Save</button>' +
+          '<button class="btn btn-small btn-danger" onclick="removeRevenueRow(' + i + ')">Delete</button>' +
+        '</td></tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getTakeinViewData(30);
+}
+
+function saveRevenueRow(i) {
+  var r = revRowsList[i];
+  var net = parseFloat(document.getElementById('rvNet_' + i).value);
+  var sc = parseFloat(document.getElementById('rvSC_' + i).value);
+  var notes = document.getElementById('rvNotes_' + i).value;
+  if (isNaN(net) || net < 0) { toast('Enter a valid Net Sales amount (use Delete to remove the day).'); return; }
+  if (isNaN(sc) || sc < 0) sc = 0;
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Take-in updated: ' + dmy(r.date) + ' \u2192 ' + money(net) + ' + SC ' + money(sc));
+      loadRecentRevenue(); // SC %, Total and Staff Cost recompute server-side
+    })
+    .withFailureHandler(function(err) { onError(err); loadRecentRevenue(); })
+    .updateRevenueEntry({ row: r.row, date: r.date, netSales: r.netSales, serviceCharge: r.serviceCharge },
+      { netSales: net, serviceCharge: sc, notes: notes });
+}
+
+function removeRevenueRow(i) {
+  var r = revRowsList[i];
+  if (!confirm('Delete this take-in entry?\n\n' + dmy(r.date) + ' \u2014 ' + money(r.netSales) + ' + SC ' + money(r.serviceCharge) +
+    '\n\nThe day will then show as MISSING (Dashboard will flag it) until you re-enter it.')) return;
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Take-in deleted: ' + dmy(r.date) + ' \u2014 re-enter it above if needed.');
+      loadRecentRevenue();
+    })
+    .withFailureHandler(function(err) { onError(err); loadRecentRevenue(); })
+    .deleteRevenueEntry({ row: r.row, date: r.date, netSales: r.netSales, serviceCharge: r.serviceCharge });
+}
+
+// ============================================================
+// STAFF SUMMARY
+// ============================================================
+function initStaffSummary() {
+  var monthSel = document.getElementById('sumMonth');
+  MONTHS_EN.forEach(function(m, i) {
+    var opt = document.createElement('option');
+    opt.value = i + 1; opt.textContent = m;
+    monthSel.appendChild(opt);
+  });
+  monthSel.value = new Date().getMonth() + 1;
+  document.getElementById('sumYear').value = new Date().getFullYear();
+  monthSel.addEventListener('change', loadSummary);
+  document.getElementById('sumYear').addEventListener('change', loadSummary);
+}
+
+// Snap any picked date to the Monday of ITS week (Mon–Sun).
+function snapToMonday(dateStr) {
+  var p = String(dateStr).split('-');
+  var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  var idx = (d.getDay() + 6) % 7; // 0 = Monday
+  d.setDate(d.getDate() - idx);
+  return fmtDate(d);
+}
+
+var sumQuery = null; // what the table is actually showing (for the header)
+var ppData = null; // live Pay Period model (grid + summary render from this)
+
+function loadSummary() {
+  var wrap = document.getElementById('summaryTableWrap');
+  var month = Number(document.getElementById('sumMonth').value);
+  var year = Number(document.getElementById('sumYear').value);
+  if (!year || year < 2000 || year > 2100) { toast('Please enter a valid year.'); return; }
+
+  // Backend signature still wants a day + week; feed it the 1st of the
+  // month — only the monthly column is displayed.
+  var firstStr = year + '-' + ('0' + month).slice(-2) + '-01';
+  sumQuery = { month: month, year: year };
+
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  google.script.run
+    .withSuccessHandler(renderSummary)
+    .withFailureHandler(onError)
+    .getSummary(firstStr, snapToMonday(firstStr), month, year);
+}
+
+function renderSummary(result) {
+  var wrap = document.getElementById('summaryTableWrap');
+  var monthH = 'Hours';
+  if (sumQuery) monthH = 'Hours — ' + MONTHS_EN[sumQuery.month - 1] + ' ' + sumQuery.year;
+  // Only rows with hours in the selected month, in STAFF LIST order —
+  // the same order as every other screen (Saruhan, Sevil, Baki…).
+  var rows = result.filter(function(r) { return r.monthly > 0; });
+  if (!rows.length) {
+    wrap.innerHTML = '<p style="color:#888">No hours logged in ' + MONTHS_EN[sumQuery.month - 1] + ' ' + sumQuery.year + '.</p>';
+    return;
+  }
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Department</th><th>' + monthH + '</th></tr></thead><tbody>';
+  var total = 0;
+  rows.forEach(function(r) {
+    var rowClass = r.active ? '' : ' class="inactive-row"';
+    html += '<tr' + rowClass + '><td>' + esc(r.name) + '</td><td class="' + deptClass(r.dept) + '">' + esc(r.dept) + '</td>' +
+      '<td>' + hrs(r.monthly) + '</td></tr>';
+    total += r.monthly;
+  });
+  html += '<tr class="total-row"><td>TOTAL</td><td></td><td>' + hrs(total) + '</td></tr>';
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ============================================================
+// MONTHLY SUMMARY
+// ============================================================
+function initMonthlySummary() {
+  document.getElementById('monthlyYear').value = new Date().getFullYear();
+  document.getElementById('monthlyYear').addEventListener('change', loadMonthlySummary);
+
+  // v2.5: exclusion pickers — month list + full staff list (incl. inactive:
+  // you may need to exclude a former employee's past month)
+  var exclMonthSel = document.getElementById('exclMonth');
+  MONTHS_EN.forEach(function(m, i) {
+    var opt = document.createElement('option');
+    opt.value = i + 1; opt.textContent = m;
+    exclMonthSel.appendChild(opt);
+  });
+  exclMonthSel.value = new Date().getMonth() + 1;
+  google.script.run.withSuccessHandler(function(staff) {
+    var sel = document.getElementById('exclStaff');
+    staff.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name + ' (' + s.dept + ')' + (s.active ? '' : ' — inactive');
+      sel.appendChild(opt);
+    });
+    var last = null;
+    try { last = localStorage.getItem('lpa_excl_last_staff'); } catch (e) {}
+    if (last) sel.value = last;
+  }).withFailureHandler(onError).getStaffList(false);
+}
+
+function loadMonthlySummary() {
+  var year = document.getElementById('monthlyYear').value;
+  document.getElementById('monthlyTableWrap').innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('dowTableWrap').innerHTML = '<div class="loading">Loading…</div>';
+  loadExclusions();
+
+  google.script.run.withSuccessHandler(function(data) {
+    renderMonthlyTable(data);
+    renderDowTable(data);
+  }).withFailureHandler(onError).getDashboardData(year);
+}
+
+// Column renamed "Labor %" → "Staff Cost %" (item #4)
+function renderMonthlyTable(data) {
+  var wrap = document.getElementById('monthlyTableWrap');
+  var html = '<table class="track-rows"><thead><tr><th>Month</th><th>Take-in</th><th>Hours</th><th>Staff Cost</th><th>Staff Cost %</th><th>FOH</th><th>BOH</th><th>Cleaning</th><th>Take-in Less Staff Cost</th></tr></thead><tbody>';
+  data.monthly.forEach(function(m) {
+    html += '<tr><td>' + m.month + '</td><td>' + money(m.revenue) + '</td><td>' + hrs(m.hours) + 'h</td><td>' + money(m.cost) + '</td><td>' + pct(m.laborPct) + '</td>' +
+      '<td>' + money(m.foh) + '</td><td>' + money(m.boh) + '</td><td>' + money(m.cleaning) + '</td><td>' + money(m.profit) + '</td></tr>';
+  });
+  html += '<tr class="total-row"><td>TOTAL</td><td>' + money(data.totals.revenue) + '</td><td>' + hrs(data.totals.hours) + 'h</td><td>' + money(data.totals.cost) + '</td><td>' + pct(data.totals.laborPct) + '</td>' +
+    '<td>' + money(data.totals.foh) + '</td><td>' + money(data.totals.boh) + '</td><td>' + money(data.totals.cleaning) + '</td><td>' + money(data.totals.profit) + '</td></tr>';
+  html += '</tbody></table>';
+  wrap.innerHTML = exclusionBannerHtml(data) + html;
+}
+
+function renderDowTable(data) {
+  var wrap = document.getElementById('dowTableWrap');
+  var html = '<table class="track-rows"><thead><tr><th>Day</th><th>Average Take-in</th><th>Average Staff Cost</th></tr></thead><tbody>';
+  data.dayOfWeek.forEach(function(d) {
+    html += '<tr><td>' + d.day + '</td><td>' + money(d.avgRevenue) + '</td><td>' + money(d.avgCost) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ============================================================
+// COST EXCLUSIONS (v2.5) — money only, hours are NEVER touched
+// ============================================================
+var exclusionsList = [];
+
+function loadExclusions() {
+  var year = document.getElementById('monthlyYear').value;
+  document.getElementById('exclChips').innerHTML = '<div class="loading">Loading…</div>';
+  google.script.run.withSuccessHandler(renderExclusionChips)
+    .withFailureHandler(onError).getCostExclusions(year);
+}
+
+function renderExclusionChips(rows) {
+  exclusionsList = rows;
+  var wrap = document.getElementById('exclChips');
+  if (!rows.length) {
+    wrap.innerHTML = '<p class="hint">No exclusions for this year — every logged hour is counted in the £ figures.</p>';
+    return;
+  }
+  var html = '';
+  rows.forEach(function(r, i) {
+    html += '<span class="excl-chip">' + MONTHS_EN[r.month - 1] + ' ' + r.year + ' — ' + esc(r.name) +
+      '<button title="Remove this exclusion" onclick="removeExclusion(' + i + ')">×</button></span>';
+  });
+  wrap.innerHTML = html;
+}
+
+function addExclusion(btn) {
+  var year = Number(document.getElementById('monthlyYear').value);
+  var month = Number(document.getElementById('exclMonth').value);
+  var staffId = document.getElementById('exclStaff').value;
+  if (!staffId) { toast('Please pick a staff member.'); return; }
+  btn.disabled = true;
+  google.script.run
+    .withSuccessHandler(function() {
+      btn.disabled = false;
+      try { localStorage.setItem('lpa_excl_last_staff', staffId); } catch (e) {}
+      toast('Excluded. £ figures updated — hours are unchanged.');
+      loadMonthlySummary(); // re-pulls dashboard data + chips + banner
+    })
+    .withFailureHandler(function(err) { btn.disabled = false; onError(err); })
+    .addCostExclusion(month, year, staffId);
+}
+
+function removeExclusion(i) {
+  var r = exclusionsList[i];
+  if (!r) return;
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Exclusion removed — ' + r.name + ' is counted again.');
+      loadMonthlySummary();
+    })
+    .withFailureHandler(onError)
+    .removeCostExclusion(r.month, r.year, r.staffId);
+}
+
+// Non-dismissible banner shown on Dashboard AND Monthly Summary while
+// any exclusion exists — the £ numbers are deliberately incomplete.
+function exclusionBannerHtml(data) {
+  if (!data || !data.costExclusions || !data.costExclusions.length) return '';
+  var parts = data.costExclusions.map(function(e) {
+    return esc(e.name) + ' (' + MONTHS_EN[e.month - 1] + ')';
+  });
+  return '<div class="excl-banner">🚫 <b>Staff cost figures exclude ' + money(data.totals.excludedCost) +
+    '</b> for: ' + parts.join(', ') + '. Hours are complete — only the £ figures are reduced. Manage this on Monthly Summary.</div>';
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+var lastDashboardData = null;
+var dashTargetTouched = false;
+
+function initDashboard() {
+  document.getElementById('dashYear').value = new Date().getFullYear();
+  document.getElementById('dashYear').addEventListener('change', loadDashboard);
+  document.getElementById('dashTarget').addEventListener('change', function() {
+    dashTargetTouched = true;
+    renderKpisOnly();
+  });
+  loadDashboard();
+}
+
+function loadDashboard() {
+  var year = document.getElementById('dashYear').value;
+  document.getElementById('kpiGrid').innerHTML = '<div class="loading">Loading…</div>';
+
+  google.script.run.withSuccessHandler(function(data) {
+    lastDashboardData = data;
+    // Target comes from the Settings sheet unless the user typed their own
+    if (!dashTargetTouched) {
+      document.getElementById('dashTarget').value = (data.targetLaborPct * 100).toFixed(0);
+    }
+    renderDashWarn(data);
+    renderKpis(data);
+    renderMonthlyChart(data);
+    renderDeptChart(data);
+    renderDowChart(data);
+  }).withFailureHandler(onError).getDashboardData(year);
+}
+
+function warnSig(text) {
+  // Tiny deterministic hash of the banner text = its identity.
+  var h = 0;
+  for (var i = 0; i < text.length; i++) { h = ((h << 5) - h + text.charCodeAt(i)) | 0; }
+  return 'w' + (h >>> 0).toString(36);
+}
+
+function getDismissedWarns() {
+  try { return JSON.parse(localStorage.getItem('lpa_dismissed_warns') || '[]'); }
+  catch (e) { return window._dismissedWarns || []; }
+}
+
+function dismissWarn(sig) {
+  var list = getDismissedWarns();
+  if (list.indexOf(sig) === -1) list.push(sig);
+  if (list.length > 50) list = list.slice(-50); // don't grow forever
+  try { localStorage.setItem('lpa_dismissed_warns', JSON.stringify(list)); }
+  catch (e) { window._dismissedWarns = list; } // fallback: this session only
+  var el = document.getElementById('warn_' + sig);
+  if (el) el.remove();
+}
+
+function renderDashWarn(data) {
+  var el = document.getElementById('dashWarn');
+  var texts = [];
+  if (data.unmatchedHours && data.unmatchedHours > 0) {
+    texts.push('⚠️ <b>' + hrs(data.unmatchedHours) + ' hours</b> could not be costed — no rate found for: ' +
+      esc(data.unmatchedStaff.join(', ')) +
+      '. Staff Cost is UNDERSTATED by these hours. Run <b>initializeRateHistory</b> or re-add these staff IDs to Rate_History.');
+  }
+  if (data.preHistoryHours && data.preHistoryHours > 0) {
+    texts.push('⚠️ <b>' + hrs(data.preHistoryHours) + ' hours</b> predate the first Rate_History entry for: ' +
+      esc((data.preHistoryStaff || []).join(', ')) +
+      '. They were costed with the earliest known rate (approximation). If early rates differed, add earlier rows to Rate_History.');
+  }
+  if (data.revenueDaysMissingHours && data.revenueDaysMissingHours.length > 0) {
+    var mdays = data.revenueDaysMissingHours;
+    var shown = mdays.slice(0, 10).map(dmy).join(', ') + (mdays.length > 10 ? ' … (+' + (mdays.length - 10) + ' more)' : '');
+    texts.push('⚠️ <b>' + mdays.length + ' day(s)</b> have revenue but NO hours logged — almost certainly missing entries: ' + esc(shown));
+  }
+
+  var dismissed = getDismissedWarns();
+  var banners = '';
+  texts.forEach(function(t) {
+    var sig = warnSig(t);
+    if (dismissed.indexOf(sig) !== -1) return; // dismissed AND unchanged -> stay hidden
+    banners += '<div class="warn-banner" id="warn_' + sig + '">' + t +
+      '<button class="warn-dismiss" title="Dismiss (comes back if the numbers change)" onclick="dismissWarn(\'' + sig + '\')">×</button></div>';
+  });
+  banners += exclusionBannerHtml(data); // v2.5: NOT dismissible on purpose
+  el.innerHTML = banners;
+}
+
+function renderKpisOnly() {
+  if (lastDashboardData) renderKpis(lastDashboardData);
+}
+
+function renderKpis(data) {
+  var target = Number(document.getElementById('dashTarget').value) / 100;
+  var laborClass = data.totals.laborPct <= target ? 'good' : 'bad';
+  var req = data.openRequests || { open: 0, overdue: 0 };
+  var reqClass = req.overdue > 0 ? 'bad' : (req.open > 0 ? '' : 'good');
+  var grid = document.getElementById('kpiGrid');
+  grid.innerHTML =
+    '<div class="kpi"><div class="label">Total Take-in</div><div class="value">' + money(data.totals.revenue) + '</div></div>' +
+    '<div class="kpi"><div class="label">Total Staff Cost</div><div class="value">' + money(data.totals.cost) + '</div></div>' +
+    '<div class="kpi ' + laborClass + '"><div class="label">Staff Cost % (Target: ' + (target*100).toFixed(0) + '%)</div><div class="value">' + pct(data.totals.laborPct) + '</div></div>' +
+    '<div class="kpi"><div class="label">Take-in Less Staff Cost</div><div class="value">' + money(data.totals.profit) + '</div></div>' +
+    '<div class="kpi clickable ' + reqClass + '" onclick="showView(\'requests\')"><div class="label">Open Requests' + (req.overdue > 0 ? ' (' + req.overdue + ' overdue!)' : '') + '</div><div class="value">' + req.open + '</div></div>';
+}
+
+// £ formatter for chart tooltips: 2594.012 -> £2,594.01
+function gbp(v) {
+  return '£' + Number(v || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderMonthlyChart(data) {
+  var ctx = document.getElementById('chartMonthly');
+  if (monthlyChart) monthlyChart.destroy();
+  monthlyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.monthly.map(function(m) { return m.month; }),
+      datasets: [
+        { label: 'Take-in', data: data.monthly.map(function(m){return m.revenue;}), backgroundColor: '#6D1B2F' },
+        { label: 'Staff Cost', data: data.monthly.map(function(m){return m.cost;}), backgroundColor: '#C9A227' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } },
+      plugins: { tooltip: { callbacks: { label: function(c) {
+        var lbl = c.dataset.label + ': ' + gbp(c.parsed.y);
+        if (c.datasetIndex === 1) { // Staff Cost bar: add % of that month's take-in
+          var rev = data.monthly[c.dataIndex].revenue;
+          if (rev > 0) lbl += ' (' + (c.parsed.y / rev * 100).toFixed(1) + '%)';
+        }
+        return lbl;
+      } } } }
+    }
+  });
+}
+
+function renderDeptChart(data) {
+  var ctx = document.getElementById('chartDept');
+  if (deptChart) deptChart.destroy();
+  deptChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['FOH', 'BOH', 'Cleaning'],
+      datasets: [{ data: [data.totals.foh, data.totals.boh, data.totals.cleaning], backgroundColor: ['#6D1B2F', '#9C4B00', '#375623'] }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { tooltip: { callbacks: { label: function(c) {
+        var total = data.totals.foh + data.totals.boh + data.totals.cleaning;
+        var pct = total > 0 ? ' (' + (c.parsed / total * 100).toFixed(1) + '%)' : '';
+        return c.label + ': ' + gbp(c.parsed) + pct;
+      } } } }
+    }
+  });
+}
+
+function renderDowChart(data) {
+  var ctx = document.getElementById('chartDow');
+  if (dowChart) dowChart.destroy();
+  dowChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.dayOfWeek.map(function(d){return d.day;}),
+      datasets: [
+        { label: 'Average Take-in', data: data.dayOfWeek.map(function(d){return d.avgRevenue;}), backgroundColor: '#6D1B2F' },
+        { label: 'Average Staff Cost', data: data.dayOfWeek.map(function(d){return d.avgCost;}), backgroundColor: '#C9A227' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } },
+      plugins: { tooltip: { callbacks: { label: function(c) {
+        var lbl = c.dataset.label + ': ' + gbp(c.parsed.y);
+        if (c.datasetIndex === 1) { // Staff Cost bar: add % of that day's average take-in
+          var rev = data.dayOfWeek[c.dataIndex].avgRevenue;
+          if (rev > 0) lbl += ' (' + (c.parsed.y / rev * 100).toFixed(1) + '% of take-in)';
+        }
+        return lbl;
+      } } } }
+    }
+  });
+}
+
+// ============================================================
+// WEEKLY TIPS
+// ============================================================
+function initWeeklyTips() {
+  document.getElementById('tipDate').value = fmtDate(new Date());
+  document.getElementById('tipsWeekStart').value = fmtDate(mondayOfThisWeek());
+  document.getElementById('tipsWeekStart').addEventListener('change', loadWeeklyTips);
+}
+
+function submitTipPoolEntry() {
+  var entry = {
+    date: document.getElementById('tipDate').value,
+    amount: document.getElementById('tipAmount').value,
+    notes: document.getElementById('tipNotes').value
+  };
+  if (!entry.date) { toast('Please pick a date.'); return; }
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Tip pool saved.');
+      document.getElementById('tipAmount').value = '';
+      document.getElementById('tipNotes').value = '';
+      loadWeeklyTips();
+    })
+    .withFailureHandler(onError)
+    .submitTipPool(entry);
+}
+
+function shiftTipsWeek(days) {
+  var cur = document.getElementById('tipsWeekStart').value;
+  var d = new Date(cur + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  document.getElementById('tipsWeekStart').value = fmtDate(d);
+  loadWeeklyTips();
+}
+
+// One combined call: weekly distribution + recent pool list
+function loadWeeklyTips() {
+  document.getElementById('tipsTableWrap').innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('recentTipPoolWrap').innerHTML = '<div class="loading">Loading…</div>';
+  var weekStart = document.getElementById('tipsWeekStart').value;
+  google.script.run.withSuccessHandler(function(data) {
+    renderWeeklyTips(data);
+  }).withFailureHandler(onError).getTipsViewData(weekStart);
+  // v2.5.7: the raw entries come from getTipPoolEntries (with row references)
+  // so they can be corrected in place; data.recentPool is no longer used.
+  google.script.run.withSuccessHandler(renderRecentTipPool)
+    .withFailureHandler(onError).getTipPoolEntries(30);
+}
+
+var tipPoolEntriesList = []; // v2.5.7: rows shown in the editable list
+
+function renderRecentTipPool(rows) {
+  var wrap = document.getElementById('recentTipPoolWrap');
+  tipPoolEntriesList = rows || [];
+  if (!rows || !rows.length) { wrap.innerHTML = '<p style="color:#888">No entries yet.</p>'; return; }
+  var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Day</th><th>Total Tips (£)</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(function(r, i) {
+    html += '<tr><td>' + dmy(r.date) + '</td><td>' + dayNameOf(r.date) + '</td>' +
+      '<td><input class="hours-input" style="width:80px" type="number" min="0" step="0.01" id="tpAmount_' + i + '" value="' + r.amount + '"></td>' +
+      '<td><input type="text" id="tpNotes_' + i + '" value="' + esc(r.notes) + '"></td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-small" onclick="saveTipPoolEntry(' + i + ')">Save</button>' +
+        '<button class="btn btn-small btn-danger" onclick="removeTipPoolEntry(' + i + ')">Delete</button>' +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function saveTipPoolEntry(i) {
+  var r = tipPoolEntriesList[i];
+  var newVal = parseFloat(document.getElementById('tpAmount_' + i).value);
+  var newNotes = document.getElementById('tpNotes_' + i).value;
+  if (isNaN(newVal) || newVal < 0) { toast('Enter a valid amount (use Delete to remove the entry).'); return; }
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Tip entry updated: ' + dmy(r.date) + ' \u2192 \u00a3' + newVal.toFixed(2));
+      loadWeeklyTips(); // distribution depends on the pool — refresh both
+    })
+    .withFailureHandler(function(err) { onError(err); loadWeeklyTips(); })
+    .updateTipPoolEntry({ row: r.row, date: r.date, amount: r.amount }, newVal, newNotes);
+}
+
+function removeTipPoolEntry(i) {
+  var r = tipPoolEntriesList[i];
+  if (!confirm('Delete this tip entry?\n\n' + dmy(r.date) + ' \u2014 \u00a3' + Number(r.amount).toFixed(2) + (r.notes ? ' (' + r.notes + ')' : ''))) return;
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Tip entry deleted: ' + dmy(r.date));
+      loadWeeklyTips();
+    })
+    .withFailureHandler(function(err) { onError(err); loadWeeklyTips(); })
+    .deleteTipPoolEntry({ row: r.row, date: r.date, amount: r.amount });
+}
+
+function renderWeeklyTips(data) {
+  var wrap = document.getElementById('tipsTableWrap');
+  var titleEl = document.getElementById('tipsPrintTitle');
+  titleEl.textContent = 'Weekly Tip Distribution: ' + dmy(data.days[0]) + ' – ' + dmy(data.days[6]);
+
+  if (!data.staff.length) {
+    wrap.innerHTML = '<p style="color:#888">No FOH hours logged this week yet.</p>';
+    return;
+  }
+
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th>';
+  DAYS.forEach(function(d) { html += '<th>' + d + '</th>'; });
+  html += '<th>Weekly Total</th></tr></thead><tbody>';
+
+  data.staff.forEach(function(s) {
+    var weightTag = (s.tipWeight !== 1) ? ' <span style="color:#9C4B00;font-size:11px">(x' + esc(s.tipWeight) + ')</span>' : '';
+    html += '<tr><td>' + esc(s.name) + weightTag + '</td>';
+    for (var d = 0; d < 7; d++) {
+      html += '<td>' + hrs(s.hours[d]) + 'h<br>' + money(s.tips[d]) + '</td>';
+    }
+    html += '<td><b>' + money(s.weekTips) + '</b></td></tr>';
+  });
+
+  html += '<tr class="total-row"><td>Total Hours</td>';
+  data.dailyTotalHours.forEach(function(h) { html += '<td>' + hrs(h) + '</td>'; });
+  html += '<td></td></tr>';
+
+  html += '<tr class="total-row"><td>Daily Tip Pool</td>';
+  data.dailyPool.forEach(function(p) { html += '<td>' + money(p) + '</td>'; });
+  html += '<td><b>' + money(data.weekTotalPool) + '</b></td></tr>';
+
+  html += '</tbody></table>';
+
+  if (data.weekUndistributed && data.weekUndistributed > 0.004) {
+    html += '<p class="hint no-print" style="color:#9C0006"><b>' + money(data.weekUndistributed) + ' undistributed</b> — pool money on day(s) with no eligible FOH hours. Distributed ' + money(data.weekTotalTipsDistributed) + ' of ' + money(data.weekTotalPool) + '.</p>';
+  }
+  if (data.warnings && data.warnings.length) {
+    data.warnings.forEach(function(w) {
+      html += '<p class="hint no-print" style="color:#9C0006">⚠️ ' + esc(w) + '</p>';
+    });
+  }
+  wrap.innerHTML = html;
+}
+
+// ============================================================
+// CASH LIST
+// ============================================================
+var DENOMINATIONS = [50, 20, 10, 5, 2, 1, 0.50, 0.20, 0.10, 0.05];
+
+function initCashList() {
+  document.getElementById('cashDate').value = fmtDate(new Date());
+
+  var monthSel = document.getElementById('cashMonth');
+  MONTHS_EN.forEach(function(m, i) {
+    var opt = document.createElement('option');
+    opt.value = i + 1; opt.textContent = m;
+    monthSel.appendChild(opt);
+  });
+  monthSel.value = new Date().getMonth() + 1;
+  document.getElementById('cashYear').value = new Date().getFullYear();
+  document.getElementById('cashMonth').addEventListener('change', loadCashList);
+  document.getElementById('cashYear').addEventListener('change', loadCashList);
+
+  buildDenomGrid();
+}
+
+function buildDenomGrid() {
+  var wrap = document.getElementById('denomGrid');
+  var html = '';
+  DENOMINATIONS.forEach(function(d) {
+    var label = d >= 1 ? ('£' + d) : (Math.round(d * 100) + 'p');
+    html += '<div style="min-width:90px">' +
+      '<label>' + label + ' × </label>' +
+      '<input type="number" min="0" step="1" class="denom-input" data-denom="' + d + '" value="0" onchange="recalcCounted()">' +
+      '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+function recalcCounted() {
+  var total = 0;
+  document.querySelectorAll('.denom-input').forEach(function(input) {
+    total += Number(input.getAttribute('data-denom')) * (Number(input.value) || 0);
+  });
+  document.getElementById('cashCountedValue').textContent = money(total);
+  // diff computed from the JS variable, never parsed from the DOM (review #15)
+  var diff = total - cashLedgerBalance;
+  var diffEl = document.getElementById('cashDiffValue');
+  var kpiEl = document.getElementById('cashDiffKpi');
+  diffEl.textContent = (diff >= 0 ? '+' : '') + money(diff);
+  kpiEl.classList.remove('good','bad');
+  kpiEl.classList.add(Math.abs(diff) < 0.01 ? 'good' : 'bad');
+}
+
+var cashRowsList = [];
+var cashEditing = null; // snapshot of the row being edited (content-matched server-side)
+
+function submitCashEntryForm() {
+  var entry = {
+    date: document.getElementById('cashDate').value,
+    description: document.getElementById('cashDescription').value,
+    type: document.getElementById('cashType').value,
+    amount: document.getElementById('cashAmount').value,
+    notes: document.getElementById('cashNotes').value
+  };
+  if (!entry.date) { toast('Please pick a date.'); return; }
+  if (!entry.description.trim()) { toast('Please enter a description.'); return; }
+
+  var done = function() {
+    toast(cashEditing ? 'Entry updated.' : 'Entry saved.');
+    cancelCashEdit();
+    loadCashList();
+  };
+  if (cashEditing) {
+    google.script.run.withSuccessHandler(done).withFailureHandler(onError)
+      .updateCashEntry(cashEditing, entry);
+  } else {
+    google.script.run.withSuccessHandler(done).withFailureHandler(onError)
+      .submitCashEntry(entry);
+  }
+}
+
+function editCashRow(i) {
+  var r = cashRowsList[i];
+  if (!r) return;
+  cashEditing = { row: r.row, date: r.date, description: r.description, income: r.income, expense: r.expense };
+  document.getElementById('cashDate').value = r.date;
+  document.getElementById('cashDescription').value = r.description;
+  document.getElementById('cashType').value = r.expense > 0 ? 'expense' : 'income';
+  document.getElementById('cashAmount').value = (r.expense > 0 ? r.expense : r.income);
+  document.getElementById('cashNotes').value = r.notes || '';
+  document.getElementById('cashSaveBtn').textContent = 'UPDATE';
+  document.getElementById('cashCancelBtn').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Editing: ' + r.description + ' — change the fields above and press UPDATE.');
+}
+
+function cancelCashEdit() {
+  cashEditing = null;
+  document.getElementById('cashDescription').value = '';
+  document.getElementById('cashAmount').value = '';
+  document.getElementById('cashNotes').value = '';
+  document.getElementById('cashSaveBtn').textContent = 'SAVE';
+  document.getElementById('cashCancelBtn').style.display = 'none';
+}
+
+function removeCashRow(i) {
+  var r = cashRowsList[i];
+  if (!r) return;
+  var warn = (r.source === 'Automatic')
+    ? '\n\nNOTE: this is an AUTOMATIC row (from LPA Banking). Deleting it changes the cash balance.'
+    : '';
+  if (!confirm('Delete this entry?\n\n' + dmy(r.date) + ' — ' + r.description + ' — ' +
+    (r.income ? '+' : '-') + '£' + (r.income || r.expense).toFixed(2) + warn)) return;
+  google.script.run
+    .withSuccessHandler(function() { toast('Entry deleted.'); loadCashList(); })
+    .withFailureHandler(onError)
+    .deleteCashEntry({ row: r.row, date: r.date, description: r.description, income: r.income, expense: r.expense });
+}
+
+// One combined call: month ledger + all-time balance
+function loadCashList() {
+  var wrap = document.getElementById('cashListWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  var month = document.getElementById('cashMonth').value;
+  var year = document.getElementById('cashYear').value;
+
+  google.script.run.withSuccessHandler(function(res) {
+    cashLedgerBalance = res.currentBalance;
+    document.getElementById('cashInHandValue').textContent = money(cashLedgerBalance);
+    recalcCounted();
+
+    cashRowsList = res.rows;
+    var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Description</th><th>Income</th><th>Expense</th><th>Balance</th><th>Source</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
+    // Newest entries first; the Balance column is still the running balance
+    // AFTER each entry, so reading downwards means going back in time.
+    html += '<tr class="total-row"><td colspan="4">Ending Balance</td><td>' + money(res.endingBalance) + '</td><td></td><td></td><td></td></tr>';
+    for (var i = res.rows.length - 1; i >= 0; i--) {
+      var r = res.rows[i];
+      var srcColor = (r.source === 'Automatic') ? '#375623' : '#9C4B00';
+      html += '<tr><td>' + dmy(r.date) + '</td><td>' + esc(r.description) + '</td>' +
+        '<td>' + (r.income ? money(r.income) : '') + '</td>' +
+        '<td>' + (r.expense ? money(r.expense) : '') + '</td>' +
+        '<td>' + money(r.balance) + '</td>' +
+        '<td style="color:' + srcColor + ';font-weight:600">' + esc(r.source) + '</td>' +
+        '<td>' + esc(r.notes) + '</td>' +
+        '<td style="white-space:nowrap">' +
+          '<button class="btn btn-small" onclick="editCashRow(' + i + ')">Edit</button>' +
+          '<button class="btn btn-small btn-danger" onclick="removeCashRow(' + i + ')">Delete</button>' +
+        '</td></tr>';
+    }
+    html += '<tr class="total-row"><td colspan="4">Carried forward from previous month</td><td>' + money(res.carryForward) + '</td><td></td><td></td><td></td></tr>';
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getCashViewData(month, year);
+}
+
+// ============================================================
+// HOLIDAYS (one combined call for grid + today + summary)
+// ============================================================
+var holidaysData = null;
+
+function initHolidays() {
+  var monthSel = document.getElementById('holMonth');
+  MONTHS_EN.forEach(function(m, i) {
+    var opt = document.createElement('option');
+    opt.value = i + 1; opt.textContent = m;
+    monthSel.appendChild(opt);
+  });
+  monthSel.value = new Date().getMonth() + 1;
+  document.getElementById('holYear').value = new Date().getFullYear();
+  document.getElementById('holMonth').addEventListener('change', loadHolidaysView);
+  document.getElementById('holYear').addEventListener('change', loadHolidaysView);
+}
+
+function loadHolidaysView() {
+  holFlushPending_(); // v2.5.2: send any mark still in its 0.6s wait first
+  document.getElementById('holidaysGridWrap').innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('holidaysTodayWrap').innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('holidaysSummaryWrap').innerHTML = '<div class="loading">Loading…</div>';
+  var month = document.getElementById('holMonth').value;
+  var year = document.getElementById('holYear').value;
+
+  google.script.run.withSuccessHandler(function(data) {
+    holidaysData = data;
+    renderHolidaysGrid(data, month, year);
+    renderHolidaysMonth(data, month, year);
+    renderHolidaysToday(data.today);
+    renderHolidaysSummary(data.summary);
+  }).withFailureHandler(onError).getHolidaysViewData(month, year);
+}
+
+function renderHolidaysMonth(data, month, year) {
+  var wrap = document.getElementById('holidaysMonthWrap');
+  var labels = { H: 'Holiday', OFF: 'Off', S: 'Sick' };
+  var colors = { H: '#1F6FEB', OFF: '#9C4B00', S: '#9C0006' };
+
+  var byStaff = {};
+  data.staff.forEach(function(s) { byStaff[s.id] = { name: s.name, dept: s.dept, H: [], OFF: [], S: [] }; });
+
+  Object.keys(data.marks).forEach(function(key) {
+    var parts = key.split('|');
+    var staffId = parts[0], day = Number(parts[1]);
+    var type = data.marks[key];
+    if (byStaff[staffId] && byStaff[staffId][type]) byStaff[staffId][type].push(day);
+  });
+
+  var rows = Object.keys(byStaff).map(function(id) { return byStaff[id]; })
+    .filter(function(r) { return r.H.length || r.OFF.length || r.S.length; });
+
+  if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No holidays, days off, or sick days logged for ' + MONTHS_EN[month - 1] + ' ' + year + '.</p>'; return; }
+
+  var html = '<div class="row">';
+  rows.forEach(function(r) {
+    html += '<div class="kpi" style="flex:0 0 auto;min-width:180px;text-align:left;padding:12px">' +
+      '<div class="label" style="font-weight:700;margin-bottom:6px">' + esc(r.name) + ' (' + esc(r.dept) + ')</div>';
+    ['H','OFF','S'].forEach(function(type) {
+      if (r[type].length) {
+        html += '<div style="font-size:12px;color:' + colors[type] + '"><b>' + labels[type] + ':</b> ' + r[type].sort(function(a,b){return a-b;}).join(', ') + '</div>';
+      }
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function renderHolidaysGrid(data, month, year) {
+  var wrap = document.getElementById('holidaysGridWrap');
+  document.getElementById('holPrintTitle').textContent = 'Holiday Calendar: ' + MONTHS_EN[month - 1] + ' ' + year;
+  if (!data.staff.length) { wrap.innerHTML = '<p style="color:#888">No active staff.</p>'; return; }
+
+  var minWidth = 50 + data.staff.length * 64;
+  var html = '<table style="width:' + minWidth + 'px;min-width:' + minWidth + 'px"><thead><tr><th style="width:50px">Day</th>';
+  data.staff.forEach(function(s) { html += '<th>' + esc(s.name) + '</th>'; });
+  html += '</tr></thead><tbody>';
+
+  for (var day = 1; day <= data.daysInMonth; day++) {
+    html += '<tr><td>' + day + '</td>';
+    data.staff.forEach(function(s) {
+      var key = s.id + '|' + day;
+      var mark = data.marks[key] || '';
+      var cls = mark ? ' hol-' + mark : '';
+      html += '<td class="hol-cell' + cls + '" data-staff="' + esc(s.id) + '" data-day="' + day + '" onclick="cycleHolidayMark(this)">' + esc(mark) + '</td>';
+    });
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// v2.5.2: clicks cycle INSTANTLY (no waiting between clicks); the save is
+// debounced — 0.6s after the last click, only the FINAL mark is sent.
+// setHolidayMark on the server writes the final state (update-in-place or
+// delete), so intermediate states never need to be saved at all.
+// Per-cell state: want = what the screen shows, confirmed = what the server
+// has. If clicks arrive while a save is in flight, the settle handler
+// re-sends until want === confirmed. On failure the cell rolls back to the
+// last CONFIRMED value (not just one step).
+var holPending = {}; // 'staffId|day' -> {timer, inFlight, want, confirmed, cell, month, year}
+
+function holPaintCell_(cell, mark) {
+  cell.textContent = mark;
+  cell.classList.remove('hol-H', 'hol-OFF', 'hol-S');
+  if (mark) cell.classList.add('hol-' + mark);
+}
+
+function cycleHolidayMark(cell) {
+  var staffId = cell.getAttribute('data-staff');
+  var day = cell.getAttribute('data-day');
+  var key = staffId + '|' + day;
+  var current = cell.textContent.trim();
+
+  var st = holPending[key];
+  if (!st) st = holPending[key] = { timer: null, inFlight: false, want: current, confirmed: current };
+  st.cell = cell; // the grid may have been re-rendered since the last click
+  st.month = document.getElementById('holMonth').value;
+  st.year = document.getElementById('holYear').value;
+
+  var next = (current === '') ? 'H' : (current === 'H') ? 'OFF' : (current === 'OFF') ? 'S' : '';
+  st.want = next;
+  holPaintCell_(cell, next); // instant — never wait for the server to see the mark
+
+  if (st.timer) clearTimeout(st.timer);
+  st.timer = setTimeout(function() { holSendMark_(key); }, 600);
+}
+
+function holSendMark_(key) {
+  var st = holPending[key];
+  if (!st) return;
+  st.timer = null;
+  if (st.inFlight) return;              // settle handler will re-send if needed
+  if (st.want === st.confirmed) return; // clicked full circle back — nothing to save
+
+  var sending = st.want;
+  st.inFlight = true;
+  st.cell.classList.add('pending'); // dim = saving; clicking is STILL allowed
+
+  var parts = key.split('|');
+  var dateStr = st.year + '-' + ('0' + st.month).slice(-2) + '-' + ('0' + parts[1]).slice(-2);
+
+  google.script.run
+    .withSuccessHandler(function() {
+      st.inFlight = false;
+      st.confirmed = sending;
+      if (st.want !== st.confirmed) { holSendMark_(key); return; } // clicked again meanwhile
+      st.cell.classList.remove('pending');
+      // Refresh the month-glance card only if the screen still shows the
+      // month this mark belongs to (marks keys have no month in them).
+      var curMonth = document.getElementById('holMonth').value;
+      var curYear = document.getElementById('holYear').value;
+      if (holidaysData && String(curMonth) === String(st.month) && String(curYear) === String(st.year)) {
+        if (st.confirmed) holidaysData.marks[key] = st.confirmed; else delete holidaysData.marks[key];
+        renderHolidaysMonth(holidaysData, st.month, st.year);
+      }
+    })
+    .withFailureHandler(function(err) {
+      st.inFlight = false;
+      st.cell.classList.remove('pending');
+      st.want = st.confirmed; // roll back to the last value the SERVER has
+      holPaintCell_(st.cell, st.confirmed);
+      onError(err);
+    })
+    .setHolidayMark(dateStr, parts[0], sending);
+}
+
+// Any marks still waiting for their 0.6s timer are sent NOW — called before
+// the grid reloads so a quick month switch can't swallow a click.
+function holFlushPending_() {
+  Object.keys(holPending).forEach(function(key) {
+    var st = holPending[key];
+    if (st && st.timer) { clearTimeout(st.timer); st.timer = null; holSendMark_(key); }
+  });
+}
+
+function renderHolidaysToday(rows) {
+  var wrap = document.getElementById('holidaysTodayWrap');
+  if (!rows.length) { wrap.innerHTML = '<p style="color:#888">Nobody is off today.</p>'; return; }
+  var labels = { H: 'Holiday', OFF: 'Off', S: 'Sick' };
+  var colors = { H: '#1F6FEB', OFF: '#9C4B00', S: '#9C0006' };
+  var html = '<div class="row">';
+  rows.forEach(function(r) {
+    html += '<div class="kpi" style="flex:0 0 auto;min-width:140px">' +
+      '<div class="label">' + esc(r.name) + ' (' + esc(r.dept) + ')</div>' +
+      '<div class="value" style="color:' + (colors[r.type] || '#333') + ';font-size:16px">' + esc(labels[r.type] || r.type) + '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function renderHolidaysSummary(rows) {
+  var wrap = document.getElementById('holidaysSummaryWrap');
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Department</th><th>Entitlement</th><th>Holiday Days</th><th>Remaining</th><th>Off Days</th><th>Sick Days</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    var remColor = r.remaining < 0 ? '#9C0006' : '#2e7d32';
+    var rowClass = r.active ? '' : ' class="inactive-row"';
+    html += '<tr' + rowClass + '><td>' + esc(r.name) + '</td><td class="' + deptClass(r.dept) + '">' + esc(r.dept) + '</td>' +
+      '<td>' + r.entitlement + '</td><td>' + r.holidayDays + '</td>' +
+      '<td style="color:' + remColor + ';font-weight:600">' + r.remaining + '</td>' +
+      '<td>' + r.offDays + '</td><td>' + r.sickDays + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ============================================================
+// PAY PERIOD
+// ============================================================
+function loadMonthEndDetail() {
+  var wrap = document.getElementById('meWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('meLink').innerHTML = '';
+  var month = document.getElementById('ppMonth').value;
+  var year = document.getElementById('ppYear').value;
+
+  google.script.run.withSuccessHandler(function(d) {
+    document.getElementById('meTitle').textContent = 'End of Month (' + d.label + ')';
+    var order = ['FLOOR', 'KITCHEN', 'CLEANING', 'OTHER'];
+    var html = '<div class="row" style="align-items:flex-start">';
+    order.forEach(function(g) {
+      var rows = d.groups[g];
+      if (!rows.length) return;
+      html += '<div style="flex:1;min-width:220px"><table class="track-rows"><thead><tr><th colspan="2">' + g + '</th></tr></thead><tbody>';
+      rows.forEach(function(r) {
+        var cls = r.active ? '' : ' class="inactive-row"';
+        html += '<tr' + cls + '><td>' + esc(r.name) + '</td><td style="text-align:right">' + hrs(r.hours) + '</td></tr>';
+      });
+      html += '<tr class="total-row"><td>TOTAL</td><td style="text-align:right">' + hrs(d.groupTotals[g]) + '</td></tr>';
+      html += '</tbody></table></div>';
+    });
+    html += '</div>';
+    html += '<p style="font-weight:bold;margin-top:8px">GRAND TOTAL: ' + hrs(d.grandTotal) + ' h</p>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getMonthEndDetail(month, year);
+}
+
+function renderPeriodSummary(data) {
+  var wrap = document.getElementById('psWrap');
+  document.getElementById('psTitle').textContent =
+    'Period Summary (' + dmy(data.periodStart) + ' – ' + dmy(data.periodEnd) + ')';
+  var groups = { FLOOR: [], KITCHEN: [], CLEANING: [], OTHER: [] };
+  data.rows.forEach(function(r) {
+    var g = (r.dept === 'FOH') ? 'FLOOR' : (r.dept === 'BOH') ? 'KITCHEN' : (r.dept === 'CLEANING') ? 'CLEANING' : 'OTHER';
+    groups[g].push(r);
+  });
+  var grandH = 0, grandA = 0;
+  var html = '<div class="row" style="align-items:flex-start">';
+  ['FLOOR', 'KITCHEN', 'CLEANING', 'OTHER'].forEach(function(g) {
+    var rows = groups[g];
+    if (!rows.length) return;
+    var th = 0, ta = 0;
+    html += '<div style="flex:1;min-width:300px"><table class="track-rows"><thead>' +
+      '<tr><th colspan="6">' + g + '</th></tr>' +
+      '<tr><th>Name</th><th>In</th><th>Out</th><th style="text-align:right">Hours</th><th style="text-align:right">Advance</th><th>Notes</th></tr>' +
+      '</thead><tbody>';
+    rows.forEach(function(r) {
+      var adv = Number(r.advances) || 0;
+      th += Number(r.totalHours) || 0; ta += adv;
+      var cls = r.active ? '' : ' class="inactive-row"';
+      var notes = [];
+      var hWeeks = 0, sWeeks = 0;
+      (r.weeklyHours || []).forEach(function(w) {
+        if (w === 'H') hWeeks++; else if (w === 'S') sWeeks++;
+      });
+      // v2.5.8: Holiday is NOT shown in the report notes (user request);
+      // the week mark still wins over the day count for Sick.
+      if (sWeeks > 0) notes.push('<span style="color:#9C4B00;font-weight:600">Sick ' + sWeeks + 'wk</span>');
+      else if (Number(r.sickDays) > 0) notes.push('<span style="color:#9C4B00;font-weight:600">Sick ' + r.sickDays + 'd</span>');
+      html += '<tr' + cls + '><td>' + esc(r.name) + '</td>' +
+        '<td style="font-size:11px;color:#375623">' + (r.startDate ? dmy(r.startDate) : '') + '</td>' +
+        '<td style="font-size:11px;color:#9C0006">' + (r.endDate ? dmy(r.endDate) : '') + '</td>' +
+        '<td style="text-align:right">' + hrs(r.totalHours) + '</td>' +
+        '<td style="text-align:right">' + (adv > 0 ? money(adv) : '') + '</td>' +
+        '<td style="font-size:11px">' + notes.join(' \u00b7 ') + '</td></tr>';
+    });
+    html += '<tr class="total-row"><td>TOTAL</td><td></td><td></td><td style="text-align:right">' + hrs(th) + '</td><td style="text-align:right">' + (ta > 0 ? money(ta) : '') + '</td><td></td></tr>';
+    html += '</tbody></table></div>';
+    grandH += th; grandA += ta;
+  });
+  html += '</div>';
+  html += '<p style="font-weight:bold;margin-top:8px">GRAND TOTAL: ' + hrs(grandH) + ' h' + (grandA > 0 ? ' &nbsp;|&nbsp; Advances: ' + money(grandA) : '') + '</p>';
+  wrap.innerHTML = html;
+}
+
+function downloadPeriodPdf(btn) {
+  var month = document.getElementById('ppMonth').value;
+  var year = document.getElementById('ppYear').value;
+  var orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Creating PDF…';
+  google.script.run.withSuccessHandler(function(res) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    document.getElementById('psLink').innerHTML =
+      '<a href="' + res.downloadUrl + '" target="_blank" style="font-weight:bold">⬇ ' + esc(res.fileName) + '</a>' +
+      ' <a href="' + res.viewUrl + '" target="_blank" style="margin-left:8px">(view)</a>';
+    window.open(res.downloadUrl, '_blank');
+  }).withFailureHandler(function(err) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    onError(err);
+  }).exportPayPeriodPdf(month, year);
+}
+
+function downloadMonthEndPdf(btn) {
+  var month = document.getElementById('ppMonth').value;
+  var year = document.getElementById('ppYear').value;
+  var orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Creating PDF…';
+
+  google.script.run.withSuccessHandler(function(res) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    document.getElementById('meLink').innerHTML =
+      '<a href="' + res.downloadUrl + '" target="_blank" style="font-weight:bold">⬇ ' + esc(res.fileName) + '</a>' +
+      ' <a href="' + res.viewUrl + '" target="_blank" style="margin-left:8px">(view)</a>';
+    window.open(res.downloadUrl, '_blank');
+  }).withFailureHandler(function(err) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    onError(err);
+  }).exportMonthEndPdf(month, year);
+}
+
+function initPayPeriod() {
+  var monthSel = document.getElementById('ppMonth');
+  MONTHS_EN.forEach(function(m, i) {
+    var opt = document.createElement('option');
+    opt.value = i + 1; opt.textContent = m;
+    monthSel.appendChild(opt);
+  });
+  var now = new Date();
+  monthSel.value = now.getMonth() + 1;
+  document.getElementById('ppYear').value = now.getFullYear();
+  document.getElementById('ppMonth').addEventListener('change', function() { loadPayPeriodReport(); loadMonthEndDetail(); });
+  document.getElementById('ppYear').addEventListener('change', function() { loadPayPeriodReport(); loadMonthEndDetail(); });
+  document.getElementById('advDate').value = fmtDate(now);
+}
+
+function populateAdvanceStaffSelect(staff) {
+  var sel = document.getElementById('advStaff');
+  sel.innerHTML = '';
+  staff.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name + ' (' + s.dept + ')'; // textContent = safe
+    sel.appendChild(opt);
+  });
+}
+
+function submitAdvanceForm() {
+  var entry = {
+    date: document.getElementById('advDate').value,
+    staffId: document.getElementById('advStaff').value,
+    amount: document.getElementById('advAmount').value,
+    notes: document.getElementById('advNotes').value
+  };
+  if (!entry.date) { toast('Please pick a date.'); return; }
+  if (!entry.staffId) { toast('Please pick a staff member.'); return; }
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Advance saved.');
+      document.getElementById('advAmount').value = '';
+      document.getElementById('advNotes').value = '';
+      loadPayPeriodReport();
+    })
+    .withFailureHandler(onError)
+    .submitAdvance(entry);
+}
+
+var ppOrig = {};   // 'staffId|weekIndex' -> value as the SHEET has it ('', 'H', 'S' or '12.5')
+var ppDirty = {};  // 'staffId|weekIndex' -> { staffId, weekIndex, value } not yet saved
+var ppLoadedMonth = '', ppLoadedYear = ''; // the period the grid actually shows
+
+function ppCanon_(v) {
+  var raw = String(v === undefined || v === null ? '' : v).trim().toUpperCase();
+  if (raw === '' || raw === 'H' || raw === 'S') return raw;
+  var n = Number(raw);
+  return isNaN(n) ? '' : String(n);
+}
+
+function loadPayPeriodReport() {
+  // v2.5.9: unsaved edits guard — leaving the period would lose them.
+  var dirtyN = Object.keys(ppDirty).length;
+  if (dirtyN > 0 && !window.confirm(dirtyN + ' unsaved change(s) will be LOST if the report reloads.\nReload anyway?')) {
+    if (ppLoadedMonth) document.getElementById('ppMonth').value = ppLoadedMonth;
+    if (ppLoadedYear) document.getElementById('ppYear').value = ppLoadedYear;
+    return;
+  }
+  ppDirty = {};
+  var wrap = document.getElementById('ppReportWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('ppSaveBar').style.display = 'none';
+  var month = document.getElementById('ppMonth').value;
+  var year = document.getElementById('ppYear').value;
+
+  google.script.run.withSuccessHandler(function(data) {
+    document.getElementById('ppPeriodLabel').textContent =
+      'Period: ' + dmy(data.periodStart) + ' to ' + dmy(data.periodEnd) +
+      '  |  Preview (auto from Hours): ' + dmy(data.previewStart) + ' to ' + dmy(data.previewEnd);
+    ppData = data; // live model: cell edits update this, and everything re-renders from it
+    ppLoadedMonth = month; ppLoadedYear = year;
+    ppOrig = {};
+    data.rows.forEach(function(r) {
+      r.weeklyHours.forEach(function(v, wi) { ppOrig[r.id + '|' + wi] = ppCanon_(v); });
+    });
+    renderPayPeriodReport(data);
+    renderPeriodSummary(data);
+    populateAdvanceStaffSelect(data.staffSelect);
+  }).withFailureHandler(onError).getPayPeriodReport(month, year);
+}
+
+function renderPayPeriodReport(data) {
+  var wrap = document.getElementById('ppReportWrap');
+  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Start Date</th><th>End Date</th>';
+  data.weekLabels.forEach(function(label) { html += '<th>' + label + '</th>'; });
+  html += '<th>Total</th><th>Preview (auto)</th><th>Advances</th></tr></thead><tbody>';
+
+  data.rows.forEach(function(r, ri) {
+    var rowClass = r.active ? '' : ' class="inactive-row"';
+    html += '<tr' + rowClass + '><td>' + esc(r.name) + '</td>' +
+      '<td>' + esc(r.startDate) + '</td>' +
+      '<td>' + esc(r.endDate) + '</td>';
+    r.weeklyHours.forEach(function(v, wi) {
+      html += '<td><input type="text" class="hours-input" value="' + esc(v) + '" ' +
+        'data-pp-staff="' + esc(r.id) + '" data-pp-week="' + wi + '" data-pp-row="' + ri + '" ' +
+        'onchange="savePayPeriodWeek(this)"></td>';
+    });
+    html += '<td><b id="ppTotal_' + ri + '">' + hrs(r.totalHours) + '</b></td>' +
+      '<td style="color:#375623">' + hrs(r.previewHours) + '</td>' +
+      '<td>' + (r.advances ? money(r.advances) : '') + '</td></tr>';
+  });
+  // TOTAL row: per-week sums + grand total (bottom-right) — like the
+  // old Excel's TOPLAM row. Updates live as cells are edited.
+  html += '<tr class="total-row"><td>TOTAL</td><td></td><td></td>';
+  data.weekLabels.forEach(function(label, wi) {
+    html += '<td style="text-align:center" id="ppWeekSum_' + wi + '"></td>';
+  });
+  html += '<td><b id="ppGrandTotal"></b></td><td id="ppPreviewSum" style="color:#375623"></td><td id="ppAdvSum"></td></tr>';
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.hours-input').forEach(ppPaintCell);
+  updatePpFooter();
+}
+
+// Recomputes the TOTAL row from the live model.
+function updatePpFooter() {
+  if (!ppData) return;
+  var weekSums = ppData.weekLabels.map(function() { return 0; });
+  var grand = 0, prevSum = 0, advSum = 0;
+  ppData.rows.forEach(function(r) {
+    r.weeklyHours.forEach(function(v, wi) { weekSums[wi] += Number(v) || 0; });
+    grand += Number(r.totalHours) || 0;
+    prevSum += Number(r.previewHours) || 0;
+    advSum += Number(r.advances) || 0;
+  });
+  weekSums.forEach(function(w, wi) {
+    var el = document.getElementById('ppWeekSum_' + wi);
+    if (el) el.textContent = w > 0 ? hrs(w) : '';
+  });
+  var g = document.getElementById('ppGrandTotal');
+  if (g) g.textContent = hrs(grand);
+  var p = document.getElementById('ppPreviewSum');
+  if (p) p.textContent = hrs(prevSum);
+  var a = document.getElementById('ppAdvSum');
+  if (a) a.textContent = advSum > 0 ? money(advSum) : '';
+}
+
+// H = holiday (green), S = sick (orange) — same colour language as the old Excel
+function ppPaintCell(input) {
+  var v = String(input.value).trim().toUpperCase();
+  if (v === 'H') { input.style.background = '#C6EFCE'; input.style.fontWeight = 'bold'; }
+  else if (v === 'S') { input.style.background = '#FFE7C1'; input.style.fontWeight = 'bold'; }
+  else if (v === 'O' || v === 'OFF') { input.style.background = '#E0E0E0'; input.style.fontWeight = 'bold'; }
+  else { input.style.background = ''; input.style.fontWeight = ''; }
+}
+
+// v2.5.9: typing edits the LIVE MODEL only — nothing reaches the server
+// until SAVE CHANGES sends the whole batch in ONE setPayPeriodWeekValues
+// call. A changed box turns yellow; invalid input is refused on the spot
+// and the box is restored (the screen is never wiped by a server resync).
+function savePayPeriodWeek(input) {
+  var staffId = input.getAttribute('data-pp-staff');
+  var weekIndex = Number(input.getAttribute('data-pp-week'));
+  var rowIndex = Number(input.getAttribute('data-pp-row'));
+  var key = staffId + '|' + weekIndex;
+  var raw = String(input.value).trim().toUpperCase();
+  if (raw === 'O') raw = 'OFF';
+
+  function restore() {
+    var cur = (ppData && ppData.rows[rowIndex]) ? ppData.rows[rowIndex].weeklyHours[weekIndex] : '';
+    input.value = (cur === '' || cur === undefined) ? '' : String(cur);
+    ppPaintCell(input);
+  }
+
+  var value; // '', 'H', 'S' or normalised number string
+  if (raw === 'H' || raw === 'S') {
+    value = raw;
+  } else if (raw === '') {
+    value = '';
+  } else if (raw === 'OFF') {
+    restore();
+    toast('A whole-week OFF is not a pay-period value — leave the box empty instead.');
+    return;
+  } else if (/^\d+(\.\d+)?$/.test(raw)) {
+    var n = Number(raw);
+    var frac = Math.round((n - Math.floor(n)) * 100);
+    if (frac !== 0 && frac !== 25 && frac !== 50 && frac !== 75) {
+      restore();
+      toast('Only .25 / .5 / .75 fractions are accepted (e.g. 38.5, not 38.3).');
+      return;
+    }
+    if (n > 200) { restore(); toast('Weekly hours cannot exceed 200.'); return; }
+    value = String(n);
+  } else {
+    restore();
+    toast('Type weekly hours (quarter steps), H, S, or leave the box empty.');
+    return;
+  }
+
+  input.value = value;
+  ppPaintCell(input);
+
+  // Update the live model, then re-render EVERYTHING that shows totals:
+  // row total, TOTAL footer row, and the Period Summary card. One source,
+  // no screen can drift from another.
+  if (ppData && ppData.rows[rowIndex]) {
+    var r = ppData.rows[rowIndex];
+    r.weeklyHours[weekIndex] = (value === 'H' || value === 'S') ? value : (value === '' ? '' : Number(value) || 0);
+    r.totalHours = r.weeklyHours.reduce(function(sum, v) { return sum + (Number(v) || 0); }, 0);
+    document.getElementById('ppTotal_' + rowIndex).textContent = hrs(r.totalHours);
+    updatePpFooter();
+    renderPeriodSummary(ppData);
+  }
+
+  // Dirty tracking against what the SHEET holds (yellow until saved)
+  if (value === ppOrig[key]) {
+    delete ppDirty[key];
+    input.classList.remove('pp-pending');
+  } else {
+    ppDirty[key] = { staffId: staffId, weekIndex: weekIndex, value: value };
+    input.classList.add('pp-pending');
+  }
+  ppUpdateSaveBar_();
+}
+
+function ppUpdateSaveBar_() {
+  var n = Object.keys(ppDirty).length;
+  document.getElementById('ppPendCnt').textContent = n;
+  document.getElementById('ppSaveBar').style.display = (n > 0) ? 'block' : 'none';
+}
+
+function ppSaveChanges() {
+  var keys = Object.keys(ppDirty);
+  if (keys.length === 0) { ppUpdateSaveBar_(); return; }
+  var edits = keys.map(function(k) { return ppDirty[k]; });
+
+  var saveBtn = document.getElementById('ppSaveBtn');
+  var discBtn = document.getElementById('ppDiscardBtn');
+  function busy(on) {
+    saveBtn.disabled = on;
+    discBtn.disabled = on;
+    saveBtn.textContent = on ? ('SAVING ' + edits.length + '\u2026') : 'SAVE CHANGES';
+    document.querySelectorAll('#ppReportWrap .hours-input').forEach(function(inp) { inp.disabled = on; });
+  }
+  busy(true);
+
+  google.script.run.withSuccessHandler(function(res) {
+    keys.forEach(function(k) {
+      ppOrig[k] = ppDirty[k].value; // the sheet now holds these values
+    });
+    ppDirty = {};
+    document.querySelectorAll('#ppReportWrap .pp-pending').forEach(function(inp) { inp.classList.remove('pp-pending'); });
+    busy(false);
+    ppUpdateSaveBar_();
+    toast('Saved: ' + res.updates + ' updated, ' + res.adds + ' added, ' + res.deletes + ' cleared.');
+  }).withFailureHandler(function(err) {
+    // NOTHING was written (validate-first) — keep every typed value yellow.
+    busy(false);
+    ppUpdateSaveBar_();
+    onError(err);
+    toast('Nothing was saved — your yellow boxes are untouched. Fix the value in the error and press SAVE CHANGES again.');
+  }).setPayPeriodWeekValues(ppLoadedYear, ppLoadedMonth, edits);
+}
+
+function ppDiscard() {
+  var n = Object.keys(ppDirty).length;
+  if (n > 0 && !window.confirm('Discard ' + n + ' unsaved change(s) and reload the report?')) return;
+  ppDirty = {};
+  loadPayPeriodReport();
+}
+
+// ============================================================
+// REQUESTS (item #7)
+// ============================================================
+function initRequests() {
+  document.getElementById('reqDate').value = fmtDate(new Date());
+}
+
+function populateRequestStaffSelect() {
+  google.script.run.withSuccessHandler(function(staff) {
+    var sel = document.getElementById('reqStaff');
+    sel.innerHTML = '';
+    var genOpt = document.createElement('option');
+    genOpt.value = '';
+    genOpt.textContent = 'General (no specific person)';
+    sel.appendChild(genOpt);
+    staff.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name + ' (' + s.dept + ')';
+      sel.appendChild(opt);
+    });
+  }).withFailureHandler(onError).getStaffList(true);
+}
+
+function submitRequestForm() {
+  var entry = {
+    date: document.getElementById('reqDate').value,
+    staffId: document.getElementById('reqStaff').value,
+    request: document.getElementById('reqText').value,
+    dueDate: document.getElementById('reqDue').value,
+    notes: document.getElementById('reqNotes').value
+  };
+  if (!entry.date) { toast('Please pick a date.'); return; }
+  if (!entry.request.trim()) { toast('Please write the request.'); return; }
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Request saved.');
+      document.getElementById('reqText').value = '';
+      document.getElementById('reqDue').value = '';
+      document.getElementById('reqNotes').value = '';
+      loadRequests();
+    })
+    .withFailureHandler(onError)
+    .addRequest(entry);
+}
+
+function loadRequests() {
+  populateRequestStaffSelect();
+  var wrap = document.getElementById('requestsWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  var includeDone = document.getElementById('reqShowDone').checked;
+
+  google.script.run.withSuccessHandler(function(rows) {
+    requestsList = rows;
+    if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No requests. Add one above.</p>'; return; }
+    var html = '<table class="track-rows"><thead><tr><th>Request</th><th>Who</th><th>Added</th><th>Due</th><th>Status</th>' +
+      (includeDone ? '<th>Completed</th>' : '') + '<th>Note</th><th>Actions</th></tr></thead><tbody>';
+    rows.forEach(function(r, i) {
+      var rowClass = r.overdue ? ' class="overdue-row"' : (r.status === 'DONE' ? ' class="inactive-row"' : '');
+      var statusHtml = r.status === 'DONE'
+        ? '<span style="color:#2e7d32;font-weight:600">Done</span>'
+        : (r.overdue ? '<span style="color:#9C0006;font-weight:700">OVERDUE</span>' : '<span style="color:#9C4B00;font-weight:600">Open</span>');
+      html += '<tr' + rowClass + '><td>' + esc(r.request) + '</td>' +
+        '<td>' + esc(r.staffName) + '</td>' +
+        '<td>' + dmy(r.date) + '</td>' +
+        '<td>' + (r.dueDate ? dmy(r.dueDate) : '') + '</td>' +
+        '<td>' + statusHtml + '</td>' +
+        (includeDone ? '<td>' + (r.doneDate ? dmy(r.doneDate) : '') + '</td>' : '') +
+        '<td>' + esc(r.notes) + '</td>' +
+        '<td style="white-space:nowrap">' +
+          (r.status === 'OPEN'
+            ? '<button class="btn btn-small" onclick="markRequestDone(' + i + ')">Done</button>'
+            : '<button class="btn btn-small" onclick="reopenRequest(' + i + ')">Reopen</button>') +
+          '<button class="btn btn-small btn-danger" onclick="removeRequest(' + i + ')">Delete</button>' +
+        '</td></tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getRequests(includeDone);
+}
+
+function markRequestDone(i) {
+  var r = requestsList[i];
+  google.script.run
+    .withSuccessHandler(function() { toast('Marked done.'); loadRequests(); })
+    .withFailureHandler(function(err) { onError(err); loadRequests(); })
+    .setRequestStatus(r.row, r.request, 'DONE');
+}
+
+function reopenRequest(i) {
+  var r = requestsList[i];
+  google.script.run
+    .withSuccessHandler(function() { toast('Reopened.'); loadRequests(); })
+    .withFailureHandler(function(err) { onError(err); loadRequests(); })
+    .setRequestStatus(r.row, r.request, 'OPEN');
+}
+
+function removeRequest(i) {
+  var r = requestsList[i];
+  if (!confirm('Delete this request?\n\n' + r.request)) return;
+  google.script.run
+    .withSuccessHandler(function() { toast('Deleted.'); loadRequests(); })
+    .withFailureHandler(function(err) { onError(err); loadRequests(); })
+    .deleteRequest(r.row, r.request);
+}
+
+// ============================================================
+// STAFF MANAGEMENT
+// ============================================================
+function addNewStaff() {
+  var name = document.getElementById('newStaffName').value.trim();
+  var dept = document.getElementById('newStaffDept').value;
+  var rate = document.getElementById('newStaffRate').value;
+  var tipWeight = document.getElementById('newStaffTipWeight').value;
+  var holidayEnt = document.getElementById('newStaffHolidayEnt').value;
+  var startDate = document.getElementById('newStaffStartDate').value; // now actually sent (bug #2)
+  if (!name) { toast('Please enter a name.'); return; }
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast(name + ' added.');
+      document.getElementById('newStaffName').value = '';
+      document.getElementById('newStaffStartDate').value = '';
+      loadStaffMgmt();
+    })
+    .withFailureHandler(onError)
+    .addStaff(name, dept, rate, tipWeight, holidayEnt, startDate);
+}
+
+function loadStaffMgmt() {
+  var wrap = document.getElementById('staffMgmtTableWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  google.script.run.withSuccessHandler(renderStaffMgmt).withFailureHandler(onError).getStaffList(false);
+}
+
+function renderStaffMgmt(staff) {
+  staffMgmtList = staff;
+  var wrap = document.getElementById('staffMgmtTableWrap');
+  var html = '<table><thead><tr><th>Order</th><th>Name</th><th>Department</th><th>Hourly Rate</th><th>Tip Weight</th><th>Holiday Days/Yr</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+  var activeCount = 0, inactiveCount = 0;
+  staff.forEach(function(s, i) {
+    var rowClass = s.active ? '' : ' class="inactive-row"';
+    var position = s.active ? (++activeCount) : (++inactiveCount);
+    // Buttons carry only the row INDEX; names are looked up from staffMgmtList.
+    // This fixes both XSS and the O'Brien-apostrophe-breaks-onclick bug (#12).
+    html += '<tr' + rowClass + '>' +
+      '<td style="white-space:nowrap">' +
+        '<span style="display:inline-block;width:20px;text-align:center">' + position + '</span> ' +
+        '<button class="btn btn-small" style="padding:4px 6px;font-size:11px" onclick="moveStaffDir(' + i + ',-1)">▲</button>' +
+        '<button class="btn btn-small" style="padding:4px 6px;font-size:11px" onclick="moveStaffDir(' + i + ',1)">▼</button>' +
+      '</td>' +
+      '<td><input type="text" id="stName_' + i + '" value="' + esc(s.name) + '" style="width:120px"></td>' +
+      '<td><select id="stDept_' + i + '">' +
+        ['FOH','BOH','CLEANING'].map(function(d) {
+          return '<option value="' + d + '"' + (d === s.dept ? ' selected' : '') + '>' + d + '</option>';
+        }).join('') +
+      '</select></td>' +
+      '<td><input type="number" step="0.01" id="stRate_' + i + '" value="' + esc(s.rate) + '" style="width:70px"></td>' +
+      '<td><input type="number" step="0.05" id="stWeight_' + i + '" value="' + esc(s.tipWeight) + '" style="width:60px"></td>' +
+      '<td><input type="number" step="1" id="stHolEnt_' + i + '" value="' + esc(s.holidayEntitlement) + '" style="width:60px"></td>' +
+      '<td><input type="date" id="stStartDate_' + i + '" value="' + esc(s.startDate) + '" style="width:130px"></td>' +
+      '<td><input type="date" id="stEndDate_' + i + '" value="' + esc(s.endDate) + '" style="width:130px"></td>' +
+      '<td>' + (s.active ? '<span style="color:#2e7d32;font-weight:600">Active</span>' : '<span style="color:#9C0006;font-weight:600">Inactive</span>') + '</td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-small" onclick="saveStaffEdit(' + i + ')">Update This Row</button>' +
+        '<button class="btn btn-small" onclick="toggleActive(' + i + ')">' + (s.active ? 'Deactivate' : 'Activate') + '</button>' +
+        '<button class="btn btn-small btn-danger" onclick="deleteStaff(' + i + ')">Delete</button>' +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function moveStaffDir(i, direction) {
+  var s = staffMgmtList[i];
+  google.script.run
+    .withSuccessHandler(function() { loadStaffMgmt(); })
+    .withFailureHandler(onError)
+    .moveStaff(s.id, direction);
+}
+
+// Now also sends Start/End dates (fixes the date-wiping bug, review #1)
+function saveStaffEdit(i) {
+  var s = staffMgmtList[i];
+  var newName = document.getElementById('stName_' + i).value.trim();
+  var newDept = document.getElementById('stDept_' + i).value;
+  var rate = document.getElementById('stRate_' + i).value;
+  var weight = document.getElementById('stWeight_' + i).value;
+  var holEnt = document.getElementById('stHolEnt_' + i).value;
+  var startDate = document.getElementById('stStartDate_' + i).value;
+  var endDate = document.getElementById('stEndDate_' + i).value;
+
+  if (newName !== s.name) {
+    var ok = confirm(
+      'NOTE: This button does not ADD a new person, it EDITS the existing person in this row.\n\n' +
+      'You are about to rename "' + s.name + '" to "' + newName + '".\n\n' +
+      'If you meant to add a new person, use the "Add New Staff Member" form above instead and click Cancel.\n\n' +
+      'Do you really want to rename this person?'
+    );
+    if (!ok) { loadStaffMgmt(); return; }
+  }
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Saved.');
+      loadStaffMgmt();
+    })
+    .withFailureHandler(onError)
+    .editStaff(s.id, newName, newDept, rate, weight, holEnt, startDate, endDate);
+}
+
+// Now also sends Start/End dates per row (they were shown but never saved, review #2)
+function saveAllStaffEdits(btnEl) {
+  if (!staffMgmtList.length) return;
+
+  var updates = [];
+  var renameWarnings = [];
+  staffMgmtList.forEach(function(s, i) {
+    var nameInput = document.getElementById('stName_' + i);
+    if (!nameInput) return;
+    var newName = nameInput.value.trim();
+    if (newName !== s.name) renameWarnings.push(s.name + ' → ' + newName);
+    updates.push({
+      id: s.id,
+      name: newName,
+      dept: document.getElementById('stDept_' + i).value,
+      rate: document.getElementById('stRate_' + i).value,
+      tipWeight: document.getElementById('stWeight_' + i).value,
+      holidayEntitlement: document.getElementById('stHolEnt_' + i).value,
+      startDate: document.getElementById('stStartDate_' + i).value,
+      endDate: document.getElementById('stEndDate_' + i).value
+    });
+  });
+
+  if (renameWarnings.length > 0) {
+    var ok = confirm(
+      'The following name changes will be saved:\n\n' + renameWarnings.join('\n') +
+      '\n\nContinue?'
+    );
+    if (!ok) return;
+  }
+
+  var btn = btnEl;
+  var origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.skipped && res.skipped.length) {
+        alert(res.count + ' staff members updated.\n\nNOT SAVED (fix and retry):\n' + res.skipped.join('\n'));
+      } else {
+        toast(res.count + ' staff members updated.');
+      }
+      btn.disabled = false;
+      btn.textContent = origText;
+      loadStaffMgmt();
+    })
+    .withFailureHandler(function(err) {
+      onError(err);
+      btn.disabled = false;
+      btn.textContent = origText;
+    })
+    .editStaffBatch(updates);
+}
+
+function deleteStaff(i) {
+  var s = staffMgmtList[i];
+  var ok = confirm(
+    s.name + ' will be PERMANENTLY deleted.\n\n' +
+    'Past hours stay in the log and are still costed from Rate_History,\n' +
+    'but this person disappears from staff lists. "Deactivate" is usually safer.\n\n' +
+    'Do you still want to permanently delete this person?'
+  );
+  if (!ok) return;
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast(s.name + ' deleted.');
+      loadStaffMgmt();
+    })
+    .withFailureHandler(onError)
+    .deleteStaffPermanently(s.id);
+}
+
+function toggleActive(i) {
+  var s = staffMgmtList[i];
+  var newActive = !s.active;
+  google.script.run
+    .withSuccessHandler(function() {
+      toast(s.name + (newActive ? ' activated.' : ' deactivated.'));
+      loadStaffMgmt();
+    })
+    .withFailureHandler(onError)
+    .setStaffActive(s.id, newActive);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+initHoursEntry();
+initRevenueEntry();
+initStaffSummary();
+initMonthlySummary();
+initDashboard();
+initWeeklyTips();
+initCashList();
+initHolidays();
+initPayPeriod();
+initRequests();
+</script>
+</body>
+</html>

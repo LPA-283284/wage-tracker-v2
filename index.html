@@ -289,7 +289,7 @@
       <div class="card">
         <h2>Users &amp; Permissions</h2>
         <div class="scroll"><table id="usersTable"></table></div>
-        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay &amp; advances (sees only due) · <b>wages_view</b> all amounts &amp; history · <b>deposits</b> add + view · <b>deposits_view</b> view only · <b>signatures_view</b> signatures · <b>payroll_entry</b> new-month wages page (accountant). ADMIN can do everything.</div>
+        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay &amp; advances (sees only due) · <b>wages_view</b> all amounts &amp; history · <b>deposits</b> add + view · <b>deposits_view</b> view only · <b>signatures_view</b> signatures · <b>payroll_entry</b> new-month wages page (accountant) · <b>hr</b> HR screens (hours, holidays, take-in, staff…). ADMIN can do everything.</div>
       </div>
     </section>
 
@@ -431,10 +431,10 @@ function buildTabs() {
     b.onclick = () => showPage(p.key);
     tabs.appendChild(b);
   });
-  if (isAdmin()) {
+  if (isAdmin() || can('hr')) {
     const hr = document.createElement('button');
-    hr.className = 'tab ext'; hr.textContent = 'HR (old screen) ↗';
-    hr.onclick = () => window.open(HR_OLD_URL, '_blank');
+    hr.className = 'tab ext'; hr.textContent = 'HR →';
+    hr.onclick = () => { location.href = 'hr.html'; };
     tabs.appendChild(hr);
   }
   // sub-tabs that need extra permission
@@ -770,7 +770,7 @@ async function submitPayroll() {
 }
 
 // ═════════════ USERS ═════════════
-const ALL_PERMS = ['wages_pay','wages_view','deposits','deposits_view','signatures_view','payroll_entry'];
+const ALL_PERMS = ['wages_pay','wages_view','deposits','deposits_view','signatures_view','payroll_entry','hr'];
 async function loadUsers() {
   const { data, error } = await sb.from('app_users').select('id,name,email,role,active,permissions').order('legacy_user_id', { nullsFirst:false }).order('created_at');
   if (error) { $('usersTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
