@@ -70,7 +70,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LPA HR</title>
+  <title>TeamOS · HR</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="hr-shim.js"></script>
   <script src="hr-core.js"></script>
@@ -304,28 +306,57 @@
       #tipsPrintTitle { display: block !important; font-size: 18px; color: #6D1B2F; margin-bottom: 10px; }
       #holPrintTitle { display: block !important; font-size: 18px; color: #6D1B2F; margin-bottom: 10px; }
     }
+
+    /* ---- web: grouped sidebar menu ---- */
+    body { padding-left: 230px; }
+    header#sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 230px; display: block; padding: 18px 12px; overflow-y: auto; z-index: 50; }
+    header#sidebar h1 { font-size: 17px; width: auto; text-align: left; margin: 0; }
+    .sb-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .sb-who { font-size: 12px; opacity: .8; margin-top: 2px; }
+    .sb-burger { display: none; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 6px; font-size: 20px; padding: 4px 12px; cursor: pointer; }
+    header#sidebar nav { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 2px; width: auto; justify-content: flex-start; }
+    header#sidebar nav button { text-align: left; background: transparent; padding: 9px 12px; font-size: 14px; }
+    header#sidebar nav button.active { background: #fff; color: #6D1B2F; }
+    header#sidebar nav button:not(.active):hover { background: rgba(255,255,255,0.15); }
+    .sb-group { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .65; margin: 14px 8px 4px; font-weight: 700; }
+    .sb-sep { border-top: 1px solid rgba(255,255,255,0.25); margin: 14px 6px 8px; }
+    @media (max-width: 800px) {
+      body { padding-left: 0; }
+      header#sidebar { position: sticky; top: 0; bottom: auto; width: auto; padding: 10px 14px; }
+      .sb-top { align-items: center; margin: 0; }
+      .sb-burger { display: block; }
+      header#sidebar nav { display: none; margin-top: 8px; }
+      body.sb-open header#sidebar nav { display: flex; }
+    }
+    @media print { body { padding-left: 0; } }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>LPA Management <span style="font-weight:400;font-size:12px;opacity:.8">· HR · <span id="hrWho"></span></span></h1>
-  <nav>
+<header id="sidebar">
+  <div class="sb-top">
+    <div><h1>LPA Management</h1><div class="sb-who">HR · <span id="hrWho"></span></div></div>
+    <button class="sb-burger no-print" onclick="document.body.classList.toggle('sb-open')">☰</button>
+  </div>
+  <nav id="sbnav">
+    <div class="sb-group">Genel</div>
     <button id="nav-dashboard" class="active" onclick="showView('dashboard')">Dashboard</button>
     <button id="nav-monthly" onclick="showView('monthly')">Monthly Summary</button>
+    <div class="sb-group">Saatler</div>
     <button id="nav-hours" onclick="showView('hours')">Hours</button>
-    <button id="nav-revenue" onclick="showView('revenue')">Take-in</button>
     <button id="nav-staffsummary" onclick="showView('staffsummary')">Hours Report</button>
+    <button id="nav-payperiod" onclick="showView('payperiod')">Staff Hours</button>
+    <button id="nav-holidays" onclick="showView('holidays')">Holidays</button>
+    <div class="sb-group">Para</div>
+    <button id="nav-revenue" onclick="showView('revenue')">Take-in</button>
     <button id="nav-tips" onclick="showView('tips')">Tips</button>
     <button id="nav-cashlist" onclick="showView('cashlist')">Cash List</button>
-    <button id="nav-holidays" onclick="showView('holidays')">Holidays</button>
-    <button id="nav-payperiod" onclick="showView('payperiod')">Staff Hours</button>
-    <button id="nav-requests" onclick="showView('requests')">Requests</button>
+    <div class="sb-group">Personel</div>
     <button id="nav-staff" onclick="showView('staff')">Staff Management</button>
-  </nav>
-  <nav class="no-print">
-    <button onclick="location.href='index.html'">← TeamOS</button>
-    <button onclick="HRSHIM_signOut()">Sign out</button>
+    <button id="nav-requests" onclick="showView('requests')">Requests</button>
+    <div class="sb-sep"></div>
+    <button class="no-print" onclick="location.href='index.html'">← TeamOS</button>
+    <button class="no-print" onclick="HRSHIM_signOut()">Sign out</button>
   </nav>
 </header>
 
@@ -512,7 +543,7 @@
     <div class="card">
       <h2>Recent Entries</h2>
       <div id="recentRevenueWrap"><div class="loading">Loading…</div></div>
-      <p class="hint">Staff Cost is that day's hours × the rate in force that day. Blank cost = no hours logged for that day yet. SC % = Service Charge ÷ Net Sales — normally ~12.5%; a day far off that number is worth a look. Fix a wrong figure in its boxes and press Save, or Delete the row entirely — the date itself cannot be edited (one entry per day): to move a day, delete it and re-enter on the right date above. SC %, Total and Staff Cost refresh after the save.</p>
+      <p class="hint">Staff Cost is that day's hours × the rate in force that day. Blank cost = no hours logged for that day yet. SC % = Service Charge ÷ Net Sales — normally ~12.5%; a day far off that number is worth a look. Press Edit to correct a day (then Save), or Delete the row entirely — the date itself cannot be edited (one entry per day): to move a day, delete it and re-enter on the right date above. SC %, Total and Staff Cost refresh after the save.</p>
     </div>
   </div>
 
@@ -777,6 +808,7 @@ function esc(s) {
 }
 
 function showView(name) {
+  document.body.classList.remove('sb-open');
   ['dashboard','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
     document.getElementById('view-' + v).classList.toggle('active', v === name);
     document.getElementById('nav-' + v).classList.toggle('active', v === name);
@@ -1094,7 +1126,7 @@ function recalcHoursTotals() {
 // ---- Submit with duplicate-confirmation flow (item #8) ----
 function handleHoursSubmitResult(res, btn, resubmit) {
   if (res.conflicts && res.conflicts.length > 0) {
-    var lines = res.conflicts.slice(0, 15).map(function(c) { return '• ' + c.name + ' — ' + c.date; });
+    var lines = res.conflicts.slice(0, 15).map(function(c) { return '• ' + c.name + ' — ' + dmy(c.date); });
     if (res.conflicts.length > 15) lines.push('…and ' + (res.conflicts.length - 15) + ' more');
     var ok = confirm(
       'Hours are ALREADY logged for:\n\n' + lines.join('\n') +
@@ -1685,30 +1717,50 @@ function submitRevenueForm() {
 
 var revRowsList = []; // v2.5.11: rows shown in the editable Take-in list
 
+var revEditing = -1; // web: row currently opened with Edit (-1 = none)
+
 function loadRecentRevenue() {
   var wrap = document.getElementById('recentRevenueWrap');
   wrap.innerHTML = '<div class="loading">Loading…</div>';
   google.script.run.withSuccessHandler(function(rows) {
     revRowsList = rows || [];
-    if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No entries yet.</p>'; return; }
-    var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Net Sales (£)</th><th>Service Charge (£)</th><th>SC %</th><th>Total</th><th>Staff Cost</th><th>Staff Cost %</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
-    rows.forEach(function(r, i) {
-      html += '<tr><td>' + dmy(r.date) + '</td>' +
-        '<td><input class="hours-input" style="width:90px" type="number" min="0" step="0.01" id="rvNet_' + i + '" value="' + r.netSales + '"></td>' +
-        '<td><input class="hours-input" style="width:80px" type="number" min="0" step="0.01" id="rvSC_' + i + '" value="' + r.serviceCharge + '"></td>' +
-        '<td>' + (r.netSales > 0 && r.serviceCharge > 0 ? pct(r.serviceCharge / r.netSales) : '') + '</td>' +
-        '<td><b>' + money(r.total) + '</b></td>' +
-        '<td>' + (r.staffCost > 0 ? money(r.staffCost) : '') + '</td>' +
-        '<td>' + (r.staffCost > 0 && r.total > 0 ? pct(r.laborPct) : '') + '</td>' +
-        '<td><input type="text" id="rvNotes_' + i + '" value="' + esc(r.notes) + '" style="min-width:110px"></td>' +
-        '<td style="white-space:nowrap">' +
-          '<button class="btn btn-small" onclick="saveRevenueRow(' + i + ')">Save</button>' +
-          '<button class="btn btn-small btn-danger" onclick="removeRevenueRow(' + i + ')">Delete</button>' +
-        '</td></tr>';
-    });
-    html += '</tbody></table>';
-    wrap.innerHTML = html;
+    revEditing = -1;
+    renderRecentRevenue_();
   }).withFailureHandler(onError).getTakeinViewData(30);
+}
+
+function editRevenueRow(i) { revEditing = i; renderRecentRevenue_(); }
+function cancelRevenueEdit() { revEditing = -1; renderRecentRevenue_(); }
+
+function renderRecentRevenue_() {
+  var wrap = document.getElementById('recentRevenueWrap');
+  var rows = revRowsList;
+  if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No entries yet.</p>'; return; }
+  var html = '<table class="track-rows"><thead><tr><th>Date</th><th>Net Sales (£)</th><th>Service Charge (£)</th><th>SC %</th><th>Total</th><th>Staff Cost</th><th>Staff Cost %</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(function(r, i) {
+    var editing = (i === revEditing);
+    html += '<tr' + (editing ? ' style="outline:2px solid #C99700"' : '') + '><td>' + dmy(r.date) + '</td>' +
+      (editing
+        ? '<td><input class="hours-input" style="width:90px" type="number" min="0" step="0.01" id="rvNet_' + i + '" value="' + r.netSales + '"></td>' +
+          '<td><input class="hours-input" style="width:80px" type="number" min="0" step="0.01" id="rvSC_' + i + '" value="' + r.serviceCharge + '"></td>'
+        : '<td>' + money(r.netSales) + '</td><td>' + money(r.serviceCharge) + '</td>') +
+      '<td>' + (r.netSales > 0 && r.serviceCharge > 0 ? pct(r.serviceCharge / r.netSales) : '') + '</td>' +
+      '<td><b>' + money(r.total) + '</b></td>' +
+      '<td>' + (r.staffCost > 0 ? money(r.staffCost) : '') + '</td>' +
+      '<td>' + (r.staffCost > 0 && r.total > 0 ? pct(r.laborPct) : '') + '</td>' +
+      (editing
+        ? '<td><input type="text" id="rvNotes_' + i + '" value="' + esc(r.notes) + '" style="min-width:110px"></td>'
+        : '<td style="color:#666">' + esc(r.notes) + '</td>') +
+      '<td style="white-space:nowrap">' +
+        (editing
+          ? '<button class="btn btn-small" onclick="saveRevenueRow(' + i + ')">Save</button>' +
+            '<button class="btn btn-small" style="background:#888" onclick="cancelRevenueEdit()">Cancel</button>'
+          : '<button class="btn btn-small" onclick="editRevenueRow(' + i + ')">Edit</button>' +
+            '<button class="btn btn-small btn-danger" onclick="removeRevenueRow(' + i + ')">Delete</button>') +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
 }
 
 function saveRevenueRow(i) {
@@ -2848,8 +2900,8 @@ function renderPayPeriodReport(data) {
   data.rows.forEach(function(r, ri) {
     var rowClass = r.active ? '' : ' class="inactive-row"';
     html += '<tr' + rowClass + '><td>' + esc(r.name) + '</td>' +
-      '<td>' + esc(r.startDate) + '</td>' +
-      '<td>' + esc(r.endDate) + '</td>';
+      '<td>' + dmy(r.startDate) + '</td>' +
+      '<td>' + dmy(r.endDate) + '</td>';
     r.weeklyHours.forEach(function(v, wi) {
       html += '<td><input type="text" class="hours-input" value="' + esc(v) + '" ' +
         'data-pp-staff="' + esc(r.id) + '" data-pp-week="' + wi + '" data-pp-row="' + ri + '" ' +

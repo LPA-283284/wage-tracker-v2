@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>LPA Management</title>
+<title>TeamOS</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4A0817">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -81,12 +85,36 @@
   .sig-pad { border:1.5px dashed var(--gold); border-radius:12px; width:100%; height:180px; touch-action:none; background:#FFFDF8; display:block; }
 
   /* Login */
-  .login { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#5A0C1E,#3A0511); padding:20px; }
-  .login-card { background:var(--bg); border-radius:20px; padding:30px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.3); }
-  .login-card h1 { font-family:'Playfair Display',serif; color:var(--wine); margin:0 0 4px; }
-  .login-card .btn { width:100%; margin-top:10px; padding:12px; }
-  .gbtn { background:#fff !important; color:#222 !important; border:1px solid #ddd !important; display:flex; align-items:center; justify-content:center; gap:10px; }
-  .divider { margin:16px 0 6px; font-size:12px; color:var(--ink-soft); }
+  .login { min-height:100vh; display:grid; grid-template-columns: 1.15fr 1fr; background:#FBF1E4; }
+  .l-hero { position:relative; overflow:hidden; background:radial-gradient(120% 90% at 20% 30%, #5E0A1F 0%, #45061A 55%, #2E030C 100%); display:flex; align-items:center; justify-content:center; padding:40px 18% 40px 40px; }
+  .l-wave { position:absolute; pointer-events:none; }
+  .l-wave-v { top:-2px; right:-2px; height:calc(100% + 4px); width:38%; }
+  .l-wave-h { display:none; }
+  .l-brand { position:relative; text-align:center; color:#F3DDB4; }
+  .l-logo { width:min(260px, 46vw); height:auto; filter:drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
+  .l-name { font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:clamp(46px,6vw,84px); line-height:1; margin-top:8px;
+            background:linear-gradient(180deg,#FFF3DC,#E7C48A 60%,#C99A55); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .l-tag { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:16px; letter-spacing:.32em; font-size:13px; color:#EAD7B5; white-space:nowrap; }
+  .l-tag span { display:inline-block; width:40px; height:1px; background:#D9B26F; }
+  .l-side { display:flex; align-items:center; justify-content:center; padding:40px 32px; }
+  .l-box { width:100%; max-width:440px; text-align:center; }
+  .l-box h1 { font-family:'Hanken Grotesk',sans-serif; font-weight:700; color:#4A0817; font-size:clamp(28px,3.4vw,42px); letter-spacing:-.02em; margin:0 0 26px; }
+  .lb { width:100%; display:flex; align-items:center; justify-content:center; gap:14px; border-radius:12px; padding:16px; font-size:17px; font-weight:600; cursor:pointer; margin-top:12px; border:0; font-family:inherit; }
+  .lb-apple { background:#111; color:#fff; }
+  .lb-google { background:#fff; color:#222; border:1px solid #DDD3C6; }
+  .lb-email { background:#5A0A1F; color:#fff; }
+  .lb:hover { filter:brightness(1.08); }
+  .l-small { margin-top:24px; color:#7A6E66; font-size:15px; }
+  .l-small a { color:#4A0817; font-weight:700; text-decoration:none; }
+  #emailForm input { width:100%; padding:14px; border-radius:12px; border:1px solid #DDD3C6; font-size:16px; background:#fff; }
+  @media (max-width: 820px) {
+    .login { grid-template-columns: 1fr; }
+    .l-hero { min-height:46vh; padding:36px 20px 70px; }
+    .l-wave-v { display:none; }
+    .l-wave-h { display:block; left:-2px; bottom:-2px; width:calc(100% + 4px); height:26%; }
+    .l-logo { width:150px; }
+    .l-side { padding:10px 20px 40px; }
+  }
   .hidden { display:none !important; }
   .sig-img { max-width:220px; max-height:90px; border:1px solid var(--line); border-radius:8px; background:#fff; }
   .thumb { max-width:120px; max-height:80px; border-radius:8px; cursor:pointer; border:1px solid var(--line); }
@@ -97,18 +125,38 @@
 
 <!-- ───────────── LOGIN ───────────── -->
 <div id="loginView" class="login hidden">
-  <div class="login-card">
-    <h1>LPA Management</h1>
-    <div class="muted">TeamOS · HR</div>
-    <button class="btn gbtn" id="googleBtn">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Continue with Google
-    </button>
-    <div class="divider">or with email</div>
-    <input id="loginEmail" type="email" placeholder="Email" autocomplete="username" />
-    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" style="margin-top:8px" />
-    <button class="btn" id="emailBtn">Log in</button>
-    <div id="loginMsg" class="msg err"></div>
+  <div class="l-hero">
+    <svg class="l-wave l-wave-v" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M62,0 C40,22 88,40 66,64 C50,82 60,92 54,100 L100,100 L100,0 Z" fill="#FBF1E4"/>
+      <path d="M62,0 C40,22 88,40 66,64 C50,82 60,92 54,100" fill="none" stroke="#D9B26F" stroke-width="3" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <svg class="l-wave l-wave-h" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,78 C25,98 55,62 100,86 L100,100 L0,100 Z" fill="#FBF1E4"/>
+      <path d="M0,78 C25,98 55,62 100,86" fill="none" stroke="#D9B26F" stroke-width="3" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="l-brand">
+      <img src="logo.png" alt="" class="l-logo">
+      <div class="l-name">TeamOS</div>
+      <div class="l-tag"><span></span>MANAGE.&nbsp; GROW.&nbsp; SUCCEED.<span></span></div>
+    </div>
+  </div>
+  <div class="l-side">
+    <div class="l-box">
+      <h1>Welcome to TeamOS</h1>
+      <div id="loginChoices">
+        <button class="lb lb-apple hidden" id="appleBtn"><svg width="20" height="22" viewBox="0 0 384 512" fill="#fff"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Continue with Apple</button>
+        <button class="lb lb-google" id="googleBtn"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
+        <button class="lb lb-email" id="showEmailBtn"><svg width="24" height="20" viewBox="0 0 24 20" fill="none" stroke="#fff" stroke-width="1.8"><rect x="1.5" y="1.5" width="21" height="17" rx="2"/><path d="M2 3l10 8 10-8"/></svg>Continue with Email</button>
+        <div class="l-small">Already have an account? <a href="#" id="loginLink">Log in</a></div>
+      </div>
+      <div id="emailForm" class="hidden">
+        <input id="loginEmail" type="email" placeholder="Email" autocomplete="username" />
+        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" style="margin-top:10px" />
+        <button class="lb lb-email" id="emailBtn" style="margin-top:14px">Log in</button>
+        <div class="l-small"><a href="#" id="backBtn">← Back</a></div>
+      </div>
+      <div id="loginMsg" class="msg err"></div>
+    </div>
   </div>
 </div>
 
@@ -376,6 +424,13 @@ const isAdmin = () => ME?.role === 'ADMIN';
 const isCashRole = () => ['ADMIN','EDITOR'].includes(ME?.role);
 
 // ═════════════ AUTH ═════════════
+const APPLE_WEB = false; // Apple sign-in on the web needs an Apple "Services ID" first
+if (APPLE_WEB) $('appleBtn').classList.remove('hidden');
+$('appleBtn').onclick = () => sb.auth.signInWithOAuth({ provider:'apple', options:{ redirectTo: location.origin + location.pathname } });
+const showEmail = (on) => { $('emailForm').classList.toggle('hidden', !on); $('loginChoices').classList.toggle('hidden', on); setMsg('loginMsg', ''); if (on) setTimeout(() => $('loginEmail').focus(), 50); };
+$('showEmailBtn').onclick = () => showEmail(true);
+$('loginLink').onclick = (e) => { e.preventDefault(); showEmail(true); };
+$('backBtn').onclick = (e) => { e.preventDefault(); showEmail(false); };
 $('googleBtn').onclick = () => sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin + location.pathname } });
 $('emailBtn').onclick = async () => {
   setMsg('loginMsg', '');
