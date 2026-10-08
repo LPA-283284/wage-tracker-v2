@@ -2190,35 +2190,28 @@ function dismissWarn(sig) {
   if (el) el.remove();
 }
 
+// web: data warnings now go to the alerts bell (top right), not banners
+var YEAR_ALERTS = [];
 function renderDashWarn(data) {
-  var el = document.getElementById('dashWarn');
-  var texts = [];
+  var out = [];
   if (data.unmatchedHours && data.unmatchedHours > 0) {
-    texts.push('⚠️ <b>' + hrs(data.unmatchedHours) + ' hours</b> could not be costed — no rate found for: ' +
-      esc(data.unmatchedStaff.join(', ')) +
-      '. Staff Cost is UNDERSTATED by these hours. Run <b>initializeRateHistory</b> or re-add these staff IDs to Rate_History.');
+    out.push({ kind:'data', text: hrs(data.unmatchedHours) + ' hours could not be costed — no rate found for: ' + data.unmatchedStaff.join(', ') + '. Staff cost is understated.' });
   }
   if (data.preHistoryHours && data.preHistoryHours > 0) {
-    texts.push('⚠️ <b>' + hrs(data.preHistoryHours) + ' hours</b> predate the first Rate_History entry for: ' +
-      esc((data.preHistoryStaff || []).join(', ')) +
-      '. They were costed with the earliest known rate (approximation). If early rates differed, add earlier rows to Rate_History.');
+    out.push({ kind:'data', text: hrs(data.preHistoryHours) + ' hours are older than the first rate entry for: ' + (data.preHistoryStaff || []).join(', ') + ' — costed with the earliest known rate.' });
   }
   if (data.revenueDaysMissingHours && data.revenueDaysMissingHours.length > 0) {
-    var mdays = data.revenueDaysMissingHours;
-    var shown = mdays.slice(0, 10).map(dmy).join(', ') + (mdays.length > 10 ? ' … (+' + (mdays.length - 10) + ' more)' : '');
-    texts.push('⚠️ <b>' + mdays.length + ' day(s)</b> have revenue but NO hours logged — almost certainly missing entries: ' + esc(shown));
+    // the last 14 days are already listed one by one in the bell
+    var cut = new Date(); cut.setDate(cut.getDate() - 15);
+    var older = data.revenueDaysMissingHours.filter(function(d) { return new Date(d + 'T00:00:00') < cut; });
+    if (older.length) {
+      var shown = older.slice(0, 10).map(dmy).join(', ') + (older.length > 10 ? ' … (+' + (older.length - 10) + ' more)' : '');
+      out.push({ kind:'no_hours', text: older.length + ' older day(s) in ' + data.year + ' have take-in but no hours: ' + shown });
+    }
   }
-
-  var dismissed = getDismissedWarns();
-  var banners = '';
-  texts.forEach(function(t) {
-    var sig = warnSig(t);
-    if (dismissed.indexOf(sig) !== -1) return; // dismissed AND unchanged -> stay hidden
-    banners += '<div class="warn-banner" id="warn_' + sig + '">' + t +
-      '<button class="warn-dismiss" title="Dismiss (comes back if the numbers change)" onclick="dismissWarn(\'' + sig + '\')">×</button></div>';
-  });
-  banners += exclusionBannerHtml(data); // v2.5: NOT dismissible on purpose
-  el.innerHTML = banners;
+  YEAR_ALERTS = out;
+  renderBell();
+  document.getElementById('dashWarn').innerHTML = exclusionBannerHtml(data); // cost exclusions stay visible on purpose
 }
 
 function renderKpisOnly() {
@@ -3523,9 +3516,9 @@ function dashTab(t) {
 }
 var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function pctT(v) { return v == null ? '–' : (Number(v) * 100).toFixed(1) + '%'; }
-function alertDot(k) { return (k === 'no_takein' || k === 'request') ? 'red' : k === 'no_hours' ? 'amber' : k === 'deposit' ? 'blue' : ''; }
+function alertDot(k) { return (k === 'no_takein' || k === 'request') ? 'red' : (k === 'no_hours' || k === 'data') ? 'amber' : k === 'deposit' ? 'blue' : ''; }
 function renderBell() {
-  var list = (HOME && HOME.alerts) || [];
+  var list = ((HOME && HOME.alerts) || []).concat(YEAR_ALERTS || []);
   var b = document.getElementById('bellBadge');
   b.textContent = list.length > 99 ? '99+' : list.length;
   b.style.display = list.length ? 'flex' : 'none';
