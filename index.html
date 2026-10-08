@@ -386,15 +386,27 @@ $('emailBtn').onclick = async () => {
 $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('emailBtn').click(); });
 $('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
+let BOOTING = false;
 async function boot() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden'); return; }
-  const { data, error } = await sb.rpc('my_profile');
-  if (error || !data?.ok) {
-    await sb.auth.signOut();
-    $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden');
-    return setMsg('loginMsg', data?.error || error?.message || 'No access');
-  }
+  if (BOOTING || ME) return;          // run once
+  BOOTING = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden'); return; }
+    const { data, error } = await sb.rpc('my_profile');
+    if (error) {                      // network / temporary problem: keep the session, show the error
+      $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden');
+      return setMsg('loginMsg', 'Could not reach the server: ' + error.message + ' — please reload.');
+    }
+    if (!data?.ok) {                  // signed in, but not on the TeamOS user list
+      await sb.auth.signOut();
+      $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden');
+      return setMsg('loginMsg', data?.error || 'No access');
+    }
+    await finishBoot(data);
+  } finally { BOOTING = false; }
+}
+async function finishBoot(data) {
   ME = data.me;
   $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
   $('whoSub').textContent = `· ${ME.name} (${ME.role})`;
@@ -800,7 +812,8 @@ async function addUser() {
 }
 
 // ═════════════ START ═════════════
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' && !ME) boot(); });
+// After Google redirects back, supabase-js reads the session from the URL during
+// start-up; getSession() inside boot() waits for that, so one boot() is enough.
 boot();
 </script>
 </body>
