@@ -22,17 +22,28 @@
   button, input, select, textarea { font-family:inherit; font-size:14px; }
   a { color:var(--wine); }
 
-  /* Top bar */
-  .topbar { background:var(--wine); color:#fff; display:flex; align-items:center; gap:16px; padding:12px 20px; flex-wrap:wrap; position:sticky; top:0; z-index:20; }
-  .brand { font-weight:700; font-size:19px; letter-spacing:.2px; margin-right:auto; display:flex; align-items:center; gap:10px; }
-  .brand small { font-weight:500; font-size:12px; opacity:.75; }
-  .tabs { display:flex; gap:8px; flex-wrap:wrap; }
-  .tab { background:rgba(255,255,255,.12); color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:600; cursor:pointer; white-space:nowrap; }
-  .tab:hover { background:rgba(255,255,255,.2); }
-  .tab.active { background:#fff; color:var(--wine); }
-  .tab.ext { background:transparent; border:1px solid rgba(255,255,255,.35); }
-  .who { font-size:12px; opacity:.85; display:flex; gap:10px; align-items:center; }
-  .who button { background:transparent; border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:8px; padding:5px 10px; cursor:pointer; }
+  /* Left menu (same style as the HR screen) */
+  #appView { padding-left:230px; }
+  .topbar { background:var(--wine); color:#fff; position:fixed; top:0; left:0; bottom:0; width:230px; padding:18px 12px; overflow-y:auto; z-index:20; display:flex; flex-direction:column; }
+  .brand { font-weight:700; font-size:19px; letter-spacing:.2px; }
+  .sb-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+  .sb-who { font-size:12px; opacity:.8; margin-top:2px; }
+  .sb-burger { display:none; background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:6px; font-size:20px; padding:4px 12px; cursor:pointer; }
+  .tabs { display:flex; flex-direction:column; gap:2px; }
+  .tab { background:transparent; color:#fff; border:0; border-radius:6px; padding:9px 12px; font-size:14px; font-weight:500; cursor:pointer; text-align:left; }
+  .tab:hover { background:rgba(255,255,255,.15); }
+  .tab.active { background:#fff; color:var(--wine); font-weight:600; }
+  .sb-group { font-size:11px; letter-spacing:.08em; text-transform:uppercase; opacity:.65; margin:14px 8px 4px; font-weight:700; }
+  .sb-sep { border-top:1px solid rgba(255,255,255,.25); margin:14px 6px 8px; }
+  .sb-foot { display:flex; flex-direction:column; }
+  @media (max-width: 800px) {
+    #appView { padding-left:0; }
+    .topbar { position:sticky; bottom:auto; width:auto; padding:10px 14px; }
+    .sb-top { align-items:center; margin:0; }
+    .sb-burger { display:block; }
+    .tabs, .sb-foot { display:none; }
+    body.sb-open .tabs, body.sb-open .sb-foot { display:flex; margin-top:8px; }
+  }
 
   .wrap { max-width:1200px; margin:0 auto; padding:20px; }
   .page { display:none; }
@@ -162,10 +173,13 @@
 
 <!-- ───────────── APP ───────────── -->
 <div id="appView" class="hidden">
-  <div class="topbar">
-    <div class="brand">LPA Management <small id="whoSub"></small></div>
-    <div class="tabs" id="tabs"></div>
-    <div class="who"><button id="logoutBtn">Log out</button></div>
+  <div class="topbar" id="sidebar">
+    <div class="sb-top">
+      <div><div class="brand">TeamOS</div><div class="sb-who" id="whoSub"></div></div>
+      <button class="sb-burger" onclick="document.body.classList.toggle('sb-open')">☰</button>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="sb-foot"><div class="sb-sep"></div><button class="tab" id="logoutBtn">Log out</button></div>
   </div>
 
   <div class="wrap">
@@ -218,7 +232,7 @@
 
     <!-- ADVANCES -->
     <section class="page" id="page-advances">
-      <div class="card" data-perm-card="wages_pay">
+      <div class="card" data-perm-card="advance_add">
         <h2>Give an Advance</h2>
         <div class="row">
           <div><label>Person</label><select id="advPerson"></select></div>
@@ -337,7 +351,7 @@
       <div class="card">
         <h2>Users &amp; Permissions</h2>
         <div class="scroll"><table id="usersTable"></table></div>
-        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay &amp; advances (sees only due) · <b>wages_view</b> all amounts &amp; history · <b>deposits</b> add + view · <b>deposits_view</b> view only · <b>signatures_view</b> signatures · <b>payroll_entry</b> new-month wages page (accountant) · <b>hr</b> HR screens (hours, holidays, take-in, staff…). ADMIN can do everything.</div>
+        <div class="muted" style="margin-top:10px;font-size:12px">Permissions: <b>wages_pay</b> pay wages (sees only what is due) · <b>wages_view</b> all wage amounts, history &amp; signatures · <b>advance_add</b> give advances only (no list) · <b>deposits</b> add + see deposits · <b>deposits_view</b> see deposits only · <b>cash</b> cash list + cash in hand · <b>takein</b> take-in &amp; staff cost % · <b>signatures_view</b> signatures only · <b>payroll_entry</b> new-month wages (accountant) · <b>hr</b> HR screens. ADMIN can do everything.</div>
       </div>
     </section>
 
@@ -417,11 +431,12 @@ function can(p) {
   const map = {
     wages:['wages_pay','wages_view','wages_full'], wages_pay:['wages_pay','wages_full'], wages_view:['wages_view','wages_full'],
     deposits:['deposits','deposits_full'], deposits_view:['deposits','deposits_view','deposits_full'],
+    advance_add:['advance_add','wages_pay','wages_full'], signatures_view:['signatures_view','wages_view','wages_full'],
   };
   return (map[p] || [p]).some(x => ps.includes(x));
 }
 const isAdmin = () => ME?.role === 'ADMIN';
-const isCashRole = () => ['ADMIN','EDITOR'].includes(ME?.role);
+const isCashRole = () => can('cash');
 
 // ═════════════ AUTH ═════════════
 const APPLE_WEB = false; // Apple sign-in on the web needs an Apple "Services ID" first
@@ -464,31 +479,34 @@ async function boot() {
 async function finishBoot(data) {
   ME = data.me;
   $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
-  $('whoSub').textContent = `· ${ME.name} (${ME.role})`;
+  $('whoSub').textContent = `${ME.name} · ${ME.role}`;
   buildTabs();
 }
 
 // ═════════════ TABS ═════════════
 const PAGES = [
-  { key:'wages',    label:'Wages',     show:() => can('wages') },
-  { key:'advances', label:'Advances',  show:() => can('wages_pay') || can('wages_view') },
-  { key:'deposits', label:'Deposits',  show:() => can('deposits_view') },
-  { key:'cash',     label:'Cash List', show:() => isCashRole() },
-  { key:'payroll',  label:'New Month', show:() => can('payroll_entry') },
-  { key:'users',    label:'Users',     show:() => isAdmin() },
+  { key:'wages',    group:'Maaş',    label:'Wages',     show:() => can('wages') },
+  { key:'advances', group:'Maaş',    label:'Advances',  show:() => can('wages_view') || can('advance_add') },
+  { key:'payroll',  group:'Maaş',    label:'New Month', show:() => can('payroll_entry') },
+  { key:'cash',     group:'Para',    label:'Cash List', show:() => isCashRole() },
+  { key:'deposits', group:'Para',    label:'Deposits',  show:() => can('deposits_view') },
+  { key:'users',    group:'Ayarlar', label:'Users',     show:() => isAdmin() },
 ];
 function buildTabs() {
   const tabs = $('tabs'); tabs.innerHTML = '';
   const visible = PAGES.filter(p => p.show());
+  let lastGroup = '';
   visible.forEach(p => {
+    if (p.group !== lastGroup) { const g = document.createElement('div'); g.className = 'sb-group'; g.textContent = p.group; tabs.appendChild(g); lastGroup = p.group; }
     const b = document.createElement('button');
     b.className = 'tab'; b.textContent = p.label; b.dataset.key = p.key;
     b.onclick = () => showPage(p.key);
     tabs.appendChild(b);
   });
   if (isAdmin() || can('hr')) {
+    const g = document.createElement('div'); g.className = 'sb-group'; g.textContent = 'HR'; tabs.appendChild(g);
     const hr = document.createElement('button');
-    hr.className = 'tab ext'; hr.textContent = 'HR →';
+    hr.className = 'tab'; hr.textContent = 'HR screens →';
     hr.onclick = () => { location.href = 'hr.html'; };
     tabs.appendChild(hr);
   }
@@ -501,6 +519,7 @@ function buildTabs() {
 function showPage(key) {
   if (!key) return;
   try { localStorage.setItem('lpa_tab', key); } catch {}
+  document.body.classList.remove('sb-open');
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
   ({ wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: loadUsers })[key]?.();
@@ -825,7 +844,7 @@ async function submitPayroll() {
 }
 
 // ═════════════ USERS ═════════════
-const ALL_PERMS = ['wages_pay','wages_view','deposits','deposits_view','signatures_view','payroll_entry','hr'];
+const ALL_PERMS = ['wages_pay','wages_view','advance_add','deposits','deposits_view','cash','takein','signatures_view','payroll_entry','hr'];
 async function loadUsers() {
   const { data, error } = await sb.from('app_users').select('id,name,email,role,active,permissions').order('legacy_user_id', { nullsFirst:false }).order('created_at');
   if (error) { $('usersTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
