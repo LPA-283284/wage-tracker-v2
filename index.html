@@ -458,7 +458,7 @@
           <div class="vform">
             <div><label>Person</label><select id="advPerson"></select></div>
             <div class="two"><div><label>Amount (£)</label><input id="advAmount" type="number" step="0.01" min="0"></div><div><label>Method</label><select id="advMethod" onchange="$('advFromWrap').classList.toggle('hidden', this.value !== 'CASH')"><option>CASH</option><option>BANK</option></select></div></div>
-            <div id="advFromWrap"><label>Paid from</label><select id="advFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="OWNER">Saruhan</option><option value="TILL">Today's till</option></select><small class="from-hint">Only "Cash List" takes the money off the cash list.</small></div>
+            <div id="advFromWrap"><label>Paid from</label><select id="advFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="TILL">Today's till</option></select><small class="from-hint">Only "Cash List" takes the money off the cash list.</small></div>
             <div><label>Given by</label><input id="advBy"></div>
             <div><label>Note</label><input id="advNote"></div>
             <button class="btn" onclick="startAdvance()">Sign &amp; save</button>
@@ -649,7 +649,7 @@
     <div class="row">
       <div><label>Amount (£)</label><input id="pmAmount" type="number" step="0.01" min="0"></div>
       <div id="pmMethodWrap"><label>Method</label><select id="pmMethod" onchange="pmFromToggle()"><option>CASH</option><option>BANK</option></select></div>
-      <div id="pmFromWrap"><label>Paid from</label><select id="pmFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="OWNER">Saruhan</option><option value="TILL">Today's till</option></select></div>
+      <div id="pmFromWrap"><label>Paid from</label><select id="pmFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="TILL">Today's till</option></select></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div><label>Paid by</label><input id="pmBy"></div>
