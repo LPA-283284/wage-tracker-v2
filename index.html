@@ -288,6 +288,15 @@
   .thumb { max-width:64px; max-height:48px; border-radius:8px; }
   .sig-img { max-width:160px; max-height:60px; }
   .dk .l, .kpi .l { white-space:normal; }
+  .rq-list { display:flex; flex-direction:column; gap:10px; }
+  .rq { display:flex; gap:12px; align-items:flex-start; border:1px solid #F0E6DA; border-radius:12px; padding:12px 14px; background:#fff; }
+  .rq.overdue { border-color:#F6CACA; background:#FFF6F6; } .rq.done { opacity:.6; }
+  .rq-check { width:28px; height:28px; flex:none; border-radius:50%; border:2px solid #D8C7B3; background:#fff; color:transparent; cursor:pointer; font-weight:900; padding:0; }
+  .rq-check:hover { border-color:#2E7D32; color:#2E7D32; } .rq-check.on { background:#2E7D32; border-color:#2E7D32; color:#fff; }
+  .rq-body { flex:1; min-width:0; } .rq-t { font-weight:600; } .rq.done .rq-t { text-decoration:line-through; }
+  .rq-meta { display:flex; flex-wrap:wrap; gap:6px 12px; font-size:12px; color:#8A7D74; margin-top:5px; align-items:center; }
+  .chip { background:#FBF1E0; color:#6D1B2F; font-weight:700; padding:2px 9px; border-radius:999px; }
+  .due { font-weight:700; color:#9C4B00; } .due.od { color:#C62828; }
   .side-urole { text-transform:none; letter-spacing:.02em; font-size:11.5px; }
   @media (max-width:640px) { .pill-input { width:100%; } .seg { flex-wrap:wrap; } .pg-tools { width:100%; } .vform .two { grid-template-columns:1fr; } }
 </style>
@@ -428,7 +437,7 @@
       <div class="pg-head"><div><div class="pg-title">Advances</div><div class="pg-sub">Give an advance with a signature, and see who got what</div></div></div>
       <div class="side-grid">
         <div class="card">
-          <h2>Advance history</h2>
+          <div class="list-head"><h2 style="margin:0">Advance history</h2><span class="sum-line" id="advSum" style="margin:0"></span></div>
           <div class="scroll"><table id="advTable"></table></div>
         </div>
         <div class="card" data-perm-card="advance_add">
@@ -546,6 +555,32 @@
       </div>
     </section>
 
+    <!-- REQUESTS -->
+    <section class="page" id="page-requests">
+      <div class="pg-head"><div><div class="pg-title">Requests</div><div class="pg-sub">Staff requests and follow-ups — shared with TeamOS HR</div></div></div>
+      <div class="kpis" id="reqKpis"></div>
+      <div class="side-grid" id="reqGrid">
+        <div class="card" id="reqListCard">
+          <div class="list-head">
+            <h2 style="margin:0">Requests</h2>
+            <div class="seg"><button id="reqOpenBtn" class="active" onclick="reqShowDone(false)">Open</button><button id="reqAllBtn" onclick="reqShowDone(true)">With completed</button></div>
+          </div>
+          <div id="reqList"><div class="loading">Loading…</div></div>
+        </div>
+        <div class="card">
+          <h2>Add request</h2>
+          <div class="vform">
+            <div><label>Who</label><select id="rqStaff"></select></div>
+            <div><label>Request</label><input id="rqBody" placeholder="e.g. new apron size M, day off swap…"></div>
+            <div><label>Due (optional)</label><input type="date" id="rqDue"></div>
+            <div><label>Note (optional)</label><input id="rqNotes"></div>
+            <button class="btn" onclick="addReq()">Save request</button>
+            <div class="msg" id="rqMsg"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- USERS -->
     <section class="page" id="page-users">
       <div class="pg-head"><div><div class="pg-title">Users</div><div class="pg-sub">Who can sign in to TeamOS, their roles and permissions</div></div></div>
@@ -659,6 +694,7 @@ function can(p) {
     wages:['wages_pay','wages_view','wages_full'], wages_pay:['wages_pay','wages_full'], wages_view:['wages_view','wages_full'],
     deposits:['deposits','deposits_full'], deposits_view:['deposits','deposits_view','deposits_full'],
     advance_add:['advance_add','wages_pay','wages_full'], signatures_view:['signatures_view','wages_view','wages_full'],
+    requests_add:['requests_add','requests'],
   };
   return (map[p] || [p]).some(x => ps.includes(x));
 }
@@ -785,9 +821,10 @@ const PAGES = [
   { key:'payroll',  group:'Payroll',  label:'New Month', show:() => can('payroll_entry') },
   { key:'cash',     group:'Money',    label:'Cash List', show:() => isCashRole() },
   { key:'deposits', group:'Money',    label:'Deposits',  show:() => can('deposits_view') },
+  { key:'requests', group:'Team',     label:'Requests',  show:() => can('requests_add') },
   { key:'users',    group:'Settings', label:'Users',     show:() => isAdmin() },
 ];
-const NAV_ICONS = {"dashboard": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
+const NAV_ICONS = {"dashboard": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "requests": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
 function buildTabs() {
   const tabs = $('tabs'); tabs.innerHTML = '';
   const visible = PAGES.filter(p => p.show());
@@ -811,7 +848,7 @@ function showPage(key) {
   document.body.classList.remove('sb-open');
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
-  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: () => TeamOSUsers.load() })[key]?.();
+  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, requests: loadReqs, users: () => TeamOSUsers.load() })[key]?.();
 }
 function wireSeg(segId, prefix) {
   $(segId).querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -978,10 +1015,16 @@ async function loadAdvances() {
   if (!SUMMARY) { const { data } = await sb.rpc('wage_summary'); if (data?.ok) { SUMMARY = data; fillPeople(); } }
   $('advBy').value = $('advBy').value || ME.name;
   if (!can('wages_view')) { $('advTable').innerHTML = '<tr><td class="muted">You can give advances; history needs “wages_view”.</td></tr>'; return; }
-  const { data, error } = await sb.from('advances').select('id,date,person,method,amount,paid_by,note').eq('is_deleted', false).order('date', { ascending:false }).limit(500);
+  const { data, error } = await sb.from('advances').select('id,date,person,method,amount,paid_by,note,settled_at,settled_by').eq('is_deleted', false).order('date', { ascending:false }).limit(500);
   if (error) { $('advTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
-  $('advTable').innerHTML = `<tr><th>Date</th><th>Person</th><th>Method</th><th class="num">Amount</th><th>Given by</th><th>Note</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
-    data.map(r => `<tr><td>${dmy(r.date)}</td><td>${esc(r.person)}</td><td>${esc(r.method)}</td><td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
+  const rows = [...data].sort((a, b) => (!!a.settled_at - !!b.settled_at) || (a.date < b.date ? 1 : -1));
+  const open = rows.filter(r => !r.settled_at);
+  $('advSum').textContent = open.length ? `${open.length} open · ${gbp(open.reduce((a, r) => a + Number(r.amount), 0))}` : 'All advances are done';
+  $('advTable').innerHTML = `<tr><th>Date</th><th>Person</th><th>Method</th><th class="num">Amount</th><th>Given by</th><th>Note</th><th>Status</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
+    rows.map(r => `<tr class="${r.settled_at ? 'zero' : ''}"><td>${dmy(r.date)}</td><td><b>${esc(r.person)}</b></td><td>${esc(r.method)}</td><td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
+      <td style="white-space:nowrap">${r.settled_at
+        ? `<span class="pos" style="font-weight:700">✓ Done ${dmy(String(r.settled_at).slice(0,10))}</span>${r.settled_by ? ' <small class="muted">· ' + esc(r.settled_by) + '</small>' : ''} <button class="btn ghost small" onclick="settleAdv('${r.id}',false)">Undo</button>`
+        : `<button class="btn small" onclick="settleAdv('${r.id}',true)">✓ Done</button>`}</td>
       ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="softDelete('${r.id}','advance')">Delete</button></td>` : ''}</tr>`).join('');
 }
 
@@ -1251,18 +1294,67 @@ async function addUser() {
   loadUsers();
 }
 
+
+// ═════════════ REQUESTS ═════════════
+let REQ_DONE = false, REQ_STAFF_OK = false;
+function reqShowDone(all) { REQ_DONE = all; $('reqOpenBtn').classList.toggle('active', !all); $('reqAllBtn').classList.toggle('active', all); loadReqs(); }
+async function loadReqs() {
+  const canSee = can('requests');
+  $('reqListCard').classList.toggle('hidden', !canSee);
+  $('reqKpis').classList.toggle('hidden', !canSee);
+  $('reqGrid').style.gridTemplateColumns = canSee ? '' : 'minmax(0,560px)';
+  if (!REQ_STAFF_OK) {
+    const { data } = await sb.rpc('request_staff_list');
+    if (data?.ok) { REQ_STAFF_OK = true; $('rqStaff').innerHTML = '<option value="">General (no specific person)</option>' + data.staff.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.dept)})</option>`).join(''); }
+  }
+  if (!canSee) return;
+  const { data, error } = await sb.rpc('requests_list', { p_include_done: REQ_DONE });
+  if (error || !data?.ok) { $('reqList').innerHTML = `<div class="neg">${esc(error?.message || data?.error)}</div>`; return; }
+  const rows = data.rows, open = rows.filter(r => !r.done), od = open.filter(r => r.overdue);
+  const wk = new Date(); wk.setDate(wk.getDate() + 7); const wkS = wk.toISOString().slice(0,10);
+  const soon = open.filter(r => !r.overdue && r.due && r.due <= wkS);
+  $('reqKpis').innerHTML = `<div class="kpi hero"><div class="l">Open requests</div><div class="v">${open.length}</div><div class="s">${open.length ? 'Waiting to be handled' : 'Nothing waiting'}</div></div>
+    <div class="kpi"><div class="l">Overdue</div><div class="v ${od.length ? 'neg' : ''}">${od.length}</div><div class="s">${od.length ? od.slice(0,3).map(r => esc(r.staff)).join(', ') : 'All on time'}</div></div>
+    <div class="kpi"><div class="l">Due in 7 days</div><div class="v">${soon.length}</div><div class="s">${soon.length ? 'Next: ' + dmy(soon.map(r => r.due).sort()[0]) : 'Nothing due soon'}</div></div>`;
+  $('reqList').innerHTML = rows.length ? '<div class="rq-list">' + rows.map(r => `<div class="rq${r.done ? ' done' : r.overdue ? ' overdue' : ''}">
+      <button class="rq-check${r.done ? ' on' : ''}" title="${r.done ? 'Reopen' : 'Mark done'}" onclick="setReq(${r.id},${!r.done})">✓</button>
+      <div class="rq-body"><div class="rq-t">${esc(r.body)}</div><div class="rq-meta"><span class="chip">${esc(r.staff)}</span><span>Added ${dmy(r.date)}</span>
+        ${r.due ? `<span class="due${r.overdue ? ' od' : ''}">${r.overdue ? 'Overdue · ' : 'Due '}${dmy(r.due)}</span>` : ''}
+        ${r.done && r.done_at ? `<span class="pos">Done ${dmy(String(r.done_at).slice(0,10))}</span>` : ''}${r.notes ? `<span class="muted">${esc(r.notes)}</span>` : ''}</div></div></div>`).join('') + '</div>'
+    : '<div class="empty">No requests.</div>';
+}
+async function setReq(id, done) {
+  const { data, error } = await sb.rpc('request_set_done', { p_id: id, p_done: done });
+  if (error || !data?.ok) return alert(error?.message || data?.error || 'Could not update');
+  loadReqs();
+}
+async function addReq() {
+  const body = $('rqBody').value.trim(); if (!body) return setMsg('rqMsg', 'Please write the request');
+  const { data, error } = await sb.rpc('request_add', { p_staff_id: $('rqStaff').value ? Number($('rqStaff').value) : null, p_body: body, p_due: $('rqDue').value || null, p_notes: $('rqNotes').value.trim() });
+  if (error || !data?.ok) return setMsg('rqMsg', error?.message || data?.error);
+  ['rqBody','rqDue','rqNotes'].forEach(i => $(i).value = '');
+  setMsg('rqMsg', '✅ Request saved', true); loadReqs();
+}
+async function settleAdv(id, done) {
+  if (done && !confirm('Mark this advance as done (paid back / taken from wages)?')) return;
+  const { data, error } = await sb.rpc('advance_settle', { p_id: id, p_done: done });
+  if (error || !data?.ok) return alert(error?.message || data?.error || 'Could not update');
+  loadAdvances();
+}
+
 function filterRows(tableId, q) {
   q = String(q || '').trim().toLowerCase();
   $(tableId).querySelectorAll('tr').forEach(tr => { if (tr.querySelector('th')) return; tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none'; });
 }
 // ===== TeamOS Users & Permissions (shared by TeamOS App and TeamOS HR) =====
 window.TeamOSUsers = (function () {
-  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'hr', 'notify_payments'];
+  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'requests_add', 'requests', 'hr', 'notify_payments'];
   var INFO = {
     wages_pay: ['Pay wages', 'Pay wages — sees only what is due'], wages_view: ['Wages view', 'All wage amounts, history and signatures'],
     advance_add: ['Give advance', 'Give advances only (cannot see the list)'], deposits: ['Deposits', 'Add deposits and see the list'],
     deposits_view: ['Deposits view', 'See deposits only'], cash: ['Cash', 'Cash list and cash in hand'], takein: ['Take-in', 'Take-in and staff cost %'],
-    signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'], hr: ['HR', 'TeamOS HR screens'],
+    signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'],
+    requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
     notify_payments: ['Payment alerts', 'Phone notification (app) when a wage payment is made']
   };
   var ROLES = ['VIEWER', 'PAYER', 'EDITOR', 'ADMIN'];
