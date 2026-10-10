@@ -572,6 +572,138 @@
     .empty { color:#8A7D74; padding:18px 0; text-align:center; }
     #holidaysSummaryWrap { max-height:520px; overflow-y:auto; }
     @media print { .hol-table .nm { position:static; } #holidaysGridWrap { overflow:visible; } .hol-table td.hol-cell { height:22px; } }
+    /* ===================== v2.7 shared components ===================== */
+    .pg-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:18px; }
+    .pg-kpis:empty { display:none; }
+    .dk .v .pill { font-size:12px; }
+    .dk.good .v { color:#2E7D32; } .dk.bad .v { color:#C62828; }
+    .pos { color:#2E7D32; } .neg { color:#C62828; } .amber { color:#C77700; } .muted { color:#A89C91; }
+    .b { font-weight:700; } .nowrap { white-space:nowrap; } .big { font-size:15px; }
+    .pill.soft { background:#F3ECE3; color:#6F625A; } .pill.warn { background:#FFF0D9; color:#B26A00; } .pill.man { background:#FBE7D0; color:#9C4B00; }
+    .pill.now { background:#E7C48A; color:#4A0817; font-size:10px; }
+    .seg { display:inline-flex; background:#EFE6DB; border-radius:12px; padding:4px; gap:2px; flex-wrap:nowrap; flex:none; }
+    @media (max-width:640px) { .seg { flex-wrap:wrap; } }
+    .seg button { border:0; background:transparent; padding:9px 16px; border-radius:9px; font:inherit; font-size:14px; font-weight:600; color:#6F625A; cursor:pointer; box-shadow:none; }
+    .seg button:hover { color:#4A0817; }
+    .seg button.mode-active, .seg button.mode-active:hover { background:#fff !important; color:#4A0817; box-shadow:0 2px 8px rgba(78,15,32,.12); }
+    .seg.small button { padding:6px 12px; font-size:13px; }
+    .hours-tabs { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin:4px 0 16px; }
+    details.howto { font-size:13px; color:#8A7D74; margin:2px 0 12px; }
+    details.howto > summary { cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#9C7A4E; font-size:12.5px; }
+    details.howto > summary::-webkit-details-marker { display:none; }
+    details.howto > summary::before { content:'i'; width:16px; height:16px; border-radius:50%; background:#F3E3C6; color:#7A5B3A; font-size:11px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; font-style:italic; font-family:Georgia,serif; }
+    details.howto[open] > summary { margin-bottom:6px; }
+    details.howto p { margin:0; background:#FBF7F1; border:1px solid #F0E6DA; border-radius:10px; padding:10px 12px; max-width:900px; }
+    details.fold { padding:0; }
+    details.fold > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:14px; padding:16px 22px; }
+    details.fold > summary::-webkit-details-marker { display:none; }
+    details.fold > summary b { color:#4A0817; font-size:15px; } details.fold > summary small { display:block; color:#8A7D74; font-size:12.5px; margin-top:2px; }
+    .fold-ic { width:30px; height:30px; flex:none; border-radius:50%; background:#FBF1E0; color:#7A1430; font-size:20px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:transform .2s; }
+    details.fold[open] .fold-ic { transform:rotate(45deg); }
+    details.fold[open] > summary { border-bottom:1px solid #F0E6DA; }
+    details.fold > :not(summary) { margin-left:22px; margin-right:22px; }
+    details.fold > :last-child { margin-bottom:20px; }
+    details.fold > .hint:first-of-type { margin-top:14px; }
+    .side-grid { display:grid; grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr); gap:18px; align-items:start; }
+    @media (max-width:1100px) { .side-grid { grid-template-columns:1fr; } }
+    .list-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+    .vform { display:flex; flex-direction:column; gap:12px; }
+    .vform > div > input, .vform > div > select { width:100%; }
+    .vform label { display:block; }
+    .vform .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; } .vform .two input { width:100%; }
+    .vform .btn { align-self:flex-start; }
+    .card.editing { border-color:#E7C48A; box-shadow:0 0 0 3px rgba(231,196,138,.35); }
+    .scroll-box { max-height:430px; overflow:auto; }
+    .pill-select { width:auto !important; }
+    .pill-select, .pill-input { height:42px; border-radius:999px !important; padding:0 16px !important; border:1px solid #E6D6C2 !important; background:#fff !important; font-weight:600; color:#4A0817; box-shadow:0 4px 14px rgba(78,15,32,.08); }
+    .pill-input { width:190px !important; }
+    .period button:disabled { opacity:.3; cursor:default; background:transparent; }
+    .period button.txt { width:auto; border-radius:999px; padding:0 12px; font-size:13px; font-weight:700; }
+    .period.range { padding:4px 12px; gap:4px; } .period .pl { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#8A7D74; }
+    .entry-top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:14px 22px; }
+    .entry-top .et-hint { margin:0 0 0 auto; }
+    .day-badge:empty { display:none; }
+    .day-badge { background:#FBF1E0; color:#6D1B2F; font-weight:700; font-size:13px; padding:6px 12px; border-radius:999px; }
+    /* modern tables */
+    table.tbl { width:100%; border-collapse:separate; border-spacing:0; }
+    .tbl th, .tbl td { text-align:left; } .mbar { text-align:left; }
+    .tbl td, .tbl th { padding:10px 10px; }
+    .tbl .r { text-align:right; } .tbl .c { text-align:center; }
+    .tbl td.r { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .tbl tbody tr:hover td { background:#FFF8EE; }
+    .tbl tr.zero td { color:#B5A99E; }
+    .tbl tr.cur td { background:#FFF6E6 !important; }
+    .tbl tr.editing td { background:#FFF8E1 !important; }
+    .tbl tr.dirty td { background:#FFF6D6 !important; }
+    .tbl small { font-size:11px; }
+    .tbl th small { display:block; font-size:10px; color:#B5A99E; font-weight:600; letter-spacing:0; }
+    .tbl input, .tbl select { padding:7px 8px; }
+    td.acts { white-space:nowrap; text-align:right; width:1%; }
+    .ibtn { width:32px; height:32px; border-radius:9px; border:1px solid #EADFCF; background:#fff; color:#6D1B2F; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; margin-left:4px; vertical-align:middle; }
+    .ibtn svg { width:15px; height:15px; } .ibtn:hover { background:#FBF1E0; }
+    .ibtn.danger { color:#C62828; } .ibtn.danger:hover { background:#FDE3E3; border-color:#F5C2C2; }
+    .ibtn.go { background:#6D1B2F; color:#fff; border-color:#6D1B2F; } .ibtn.go:hover { background:#8A1D3B; }
+    .mbar { position:relative; min-width:170px; height:26px; border-radius:7px; background:#F7F1EA; overflow:hidden; }
+    .mbar i { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,#F1D9B0,#E7C48A); border-radius:7px; }
+    .mbar span { position:relative; line-height:26px; padding-left:9px; font-weight:700; color:#4A0817; font-variant-numeric:tabular-nums; }
+    .dow-list { display:flex; flex-direction:column; gap:10px; }
+    .dow-it { display:grid; grid-template-columns:42px 1fr 130px; align-items:center; gap:12px; }
+    .dow-d { font-weight:700; color:#4A0817; }
+    .dow-bars { display:flex; flex-direction:column; gap:3px; }
+    .dow-b { height:11px; border-radius:6px; min-width:2px; } .dow-b.rev { background:#6D1B2F; } .dow-b.cost { background:#E7C48A; }
+    .dow-v { text-align:right; } .dow-v b { display:block; color:#4A0817; font-variant-numeric:tabular-nums; } .dow-v small { color:#8A7D74; font-size:11.5px; }
+    .legend { display:flex; flex-wrap:wrap; gap:16px; margin-top:14px; font-size:12px; color:#8A7D74; align-items:center; }
+    .lg { display:inline-block; width:11px; height:11px; border-radius:4px; margin-right:6px; vertical-align:-1px; }
+    .lg.rev { background:#6D1B2F; } .lg.cost { background:#E7C48A; } .lg.ok { background:#CFEBD3; border:1px solid #2E7D32; } .lg.warn { background:#FFE7BF; border:1px solid #C77700; } .lg.miss { background:#FAD4D4; border:1px solid #C62828; }
+    /* Hours: entry check */
+    .ec-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+    @media (max-width:900px) { .ec-grid { grid-template-columns:repeat(4,1fr); } }
+    @media (max-width:520px) { .ec-grid { grid-template-columns:repeat(2,1fr); } }
+    .ec-day { text-align:left; border:1px solid #F0E6DA; border-radius:12px; padding:10px 12px; background:#fff; cursor:pointer; font:inherit; transition:transform .1s, box-shadow .1s; }
+    .ec-day:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(78,15,32,.1); }
+    .ec-day.ok { background:#F4FBF5; border-color:#CFEBD3; } .ec-day.warn { background:#FFF8EC; border-color:#FFE0AE; } .ec-day.miss { background:#FFF4F4; border-color:#F6CACA; }
+    .ec-day.today { box-shadow:0 0 0 2px #E7C48A; }
+    .ec-d { font-size:12px; color:#8A7D74; } .ec-d b { color:#4A0817; }
+    .ec-h { font-size:20px; font-weight:800; color:#4A0817; margin:4px 0 6px; min-height:26px; font-variant-numeric:tabular-nums; } .ec-h small { font-size:12px; font-weight:700; margin-left:1px; }
+    .ec-day.miss .ec-h { font-size:13px; color:#C62828; padding-top:6px; }
+    .ec-f { display:flex; gap:8px; flex-wrap:wrap; } .ec-f span { font-size:11px; font-weight:700; white-space:nowrap; }
+    .ec-f .y { color:#2E7D32; } .ec-f .n { color:#C62828; }
+    /* Hours report bars */
+    .hb-list { padding:8px 14px 12px; display:flex; flex-direction:column; gap:7px; }
+    .hb { display:grid; grid-template-columns:minmax(90px,130px) 1fr 52px; gap:10px; align-items:center; font-size:13.5px; }
+    .hb.inactive { opacity:.55; } .hb-n { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hb-bar { height:10px; background:#F4EEE7; border-radius:6px; overflow:hidden; } .hb-bar i { display:block; height:100%; background:linear-gradient(90deg,#C99A55,#7A1430); border-radius:6px; }
+    .hb-v { text-align:right; font-weight:700; color:#4A0817; font-variant-numeric:tabular-nums; }
+    /* Tips */
+    .tips-t td.tc b { display:block; color:#4A0817; font-variant-numeric:tabular-nums; } .tips-t td.tc small { color:#8A7D74; }
+    /* Cash counter */
+    .denom-grid { display:grid; grid-template-columns:1fr; gap:8px; }
+    .dn { display:grid; grid-template-columns:44px 12px 1fr 84px; align-items:center; gap:6px; }
+    .dn-l { font-weight:800; color:#4A0817; text-align:right; } .dn-x { color:#B5A99E; }
+    .dn input { width:100%; padding:7px 8px; text-align:center; } .dn-t { text-align:right; font-size:12.5px; color:#8A7D74; font-variant-numeric:tabular-nums; }
+    @media (max-width:520px) { .denom-grid { grid-template-columns:1fr; } }
+    /* Requests */
+    .rq-list { display:flex; flex-direction:column; gap:10px; }
+    .rq { display:flex; gap:12px; align-items:flex-start; border:1px solid #F0E6DA; border-radius:12px; padding:12px 14px; background:#fff; }
+    .rq.overdue { border-color:#F6CACA; background:#FFF6F6; } .rq.done { opacity:.6; }
+    .rq-check { width:28px; height:28px; flex:none; border-radius:50%; border:2px solid #D8C7B3; background:#fff; color:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+    .rq-check svg { width:15px; height:15px; } .rq-check:hover { border-color:#2E7D32; color:#2E7D32; }
+    .rq-check.on { background:#2E7D32; border-color:#2E7D32; color:#fff; }
+    .rq-body { flex:1; min-width:0; } .rq-t { font-weight:600; color:#2A1F1C; } .rq.done .rq-t { text-decoration:line-through; }
+    .rq-meta { display:flex; flex-wrap:wrap; gap:6px 12px; font-size:12px; color:#8A7D74; margin-top:5px; align-items:center; }
+    .chip { background:#FBF1E0; color:#6D1B2F; font-weight:700; padding:2px 9px; border-radius:999px; }
+    .due { font-weight:700; color:#9C4B00; } .due.od { color:#C62828; }
+    /* Staff */
+    .st-t td { padding:7px 6px; white-space:nowrap; } .st-t th { text-align:left; }
+    .list-head .pg-tools { flex-wrap:nowrap; } @media (max-width:760px) { .list-head .pg-tools { flex-wrap:wrap; } } .st-t input[type=date] { width:136px; padding:7px 6px; }
+    .ord { display:inline-block; width:20px; text-align:center; color:#8A7D74; font-weight:700; font-size:12px; }
+    .mv { border:0; background:#F6EFE6; color:#6D1B2F; width:22px; height:22px; border-radius:6px; font-size:9px; cursor:pointer; margin-left:2px; padding:0; }
+    .mv:hover { background:#EADFCF; }
+    .status-pill { border:0; border-radius:999px; padding:5px 12px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+    .status-pill.on { background:#E3F4E5; color:#2E7D32; } .status-pill.off { background:#EEE; color:#777; }
+    .status-pill:hover { box-shadow:0 0 0 2px rgba(109,27,47,.2); }
+    #view-staff .entry-foot { margin-top:14px; }
+    @media (max-width:640px) { .pill-input { width:100%; } .entry-top .et-hint { margin-left:0; } .dow-it { grid-template-columns:36px 1fr 100px; } }
   </style>
 </head>
 <body>
@@ -658,67 +790,66 @@
 
   <!-- ================= MONTHLY SUMMARY ================= -->
   <div id="view-monthly" class="view">
+    <div class="card"><div class="row"><div><label>Year</label><input type="number" id="monthlyYear" style="width:100px"></div></div></div>
+    <div class="pg-kpis" id="msKpis"></div>
     <div class="card">
-      <div class="row">
-        <div><label>Year</label><input type="number" id="monthlyYear" style="width:100px"></div>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Staff Cost Exclusions</h2>
-      <p class="hint">Exclude one person's cost for one month (e.g. paid from elsewhere). Only the <b>£ figures</b> change — <b>hours are never touched</b>. While any exclusion exists, a red banner on Dashboard and here reminds you the money numbers are not the full picture. Press × on a chip to undo.</p>
-      <div class="row">
-        <div><label>Month</label><select id="exclMonth"></select></div>
-        <div><label>Staff</label><select id="exclStaff"></select></div>
-        <button class="btn" onclick="addExclusion(this)">EXCLUDE</button>
-      </div>
-      <div id="exclChips"><div class="loading">Loading…</div></div>
-    </div>
-    <div class="card">
-      <h2>Monthly Performance</h2>
+      <h2>Monthly performance</h2>
       <div id="monthlyTableWrap"><div class="loading">Loading…</div></div>
     </div>
-    <div class="card">
-      <h2>Day-of-Week Average</h2>
-      <div id="dowTableWrap"><div class="loading">Loading…</div></div>
+    <div class="dash-grid">
+      <div class="card"><h2>Day-of-week average</h2><div id="dowTableWrap"><div class="loading">Loading…</div></div></div>
+      <div class="card">
+        <h2>Staff cost exclusions</h2>
+        <p class="hint" style="margin-top:-6px">Leave one person's cost out of one month (e.g. paid from elsewhere). Only the £ figures change — hours are never touched. Press × to undo.</p>
+        <div class="row">
+          <div><label>Month</label><select id="exclMonth"></select></div>
+          <div style="flex:1"><label>Staff</label><select id="exclStaff" style="width:100%"></select></div>
+          <button class="btn" onclick="addExclusion(this)">EXCLUDE</button>
+        </div>
+        <div id="exclChips"><div class="loading">Loading…</div></div>
+      </div>
     </div>
   </div>
 
   <!-- ================= HOURS ================= -->
   <div id="view-hours" class="view">
-    <div class="card">
-      <h2 id="ecTitle">Entry Check</h2>
-      <p class="hint" id="ecLastEntry"></p>
-      <div class="row" style="margin-bottom:8px">
-        <button class="btn btn-small" onclick="ecNav(7)">← Older week</button>
-        <button class="btn btn-small" id="ecNewerBtn" onclick="ecNav(-7)">Newer week →</button>
-        <button class="btn btn-small" id="ecTodayBtn" onclick="ecNav(0)">Today</button>
-        <div><select id="ecStaff" onchange="loadEntryCheck()"><option value="">All staff</option></select></div>
+    <div class="card ec-card">
+      <div class="list-head">
+        <div><h2 id="ecTitle" style="margin:0 0 4px">Last 14 days</h2><div class="hint" id="ecLastEntry" style="margin:0"></div></div>
+        <div class="pg-tools">
+          <select id="ecStaff" onchange="loadEntryCheck()" class="pill-select"><option value="">All staff</option></select>
+          <div class="period">
+            <button type="button" onclick="ecNav(7)" title="Older week">&#8249;</button>
+            <button type="button" id="ecTodayBtn" class="txt" onclick="ecNav(0)">Today</button>
+            <button type="button" id="ecNewerBtn" onclick="ecNav(-7)" title="Newer week">&#8250;</button>
+          </div>
+        </div>
       </div>
       <div id="ecWrap"><div class="loading">Loading…</div></div>
     </div>
 
-    <div class="card">
-      <div class="row">
-        <button class="btn" id="modeBtnDaily" onclick="switchHoursMode('daily')">Daily Entry</button>
-        <button class="btn" id="modeBtnWeekly" onclick="switchHoursMode('weekly')">Weekly Entry</button>
-        <button class="btn" id="modeBtnView" onclick="switchHoursMode('view')">View Entries</button>
-        <button class="btn" id="modeBtnGrid" onclick="switchHoursMode('grid')">Weekly Grid</button>
-        <button class="btn" onclick="showView('staffsummary')">Report →</button>
+    <div class="hours-tabs">
+      <div class="seg" id="hoursSeg">
+        <button type="button" id="modeBtnDaily" onclick="switchHoursMode('daily')">Daily entry</button>
+        <button type="button" id="modeBtnWeekly" onclick="switchHoursMode('weekly')">Weekly entry</button>
+        <button type="button" id="modeBtnGrid" onclick="switchHoursMode('grid')">Weekly grid</button>
+        <button type="button" id="modeBtnView" onclick="switchHoursMode('view')">View &amp; fix entries</button>
       </div>
-      <p class="hint">Enter hours as decimals: <b>5.5</b> = 5h 30m, <b>5.25</b> = 5h 15m, <b>5.75</b> = 5h 45m. Minute-style entries like <b>5.15</b> or <b>5.30</b> are rejected — only .25 / .5 / .75 fractions are accepted. Type <b>H</b> for holiday (green), <b>S</b> for sick (orange) or <b>O</b> for day off (grey): the mark is saved to the Holidays calendar, not as hours. Only Holiday counts against the yearly entitlement.</p>
+      <details class="howto"><summary>How to type hours</summary>
+        <p>Decimals: <b>5.5</b> = 5h 30m, <b>5.25</b> = 5h 15m, <b>5.75</b> = 5h 45m. Minute-style entries like <b>5.15</b> or <b>5.30</b> are rejected — only .25 / .5 / .75 fractions are accepted. Type <b>H</b> for holiday, <b>S</b> for sick or <b>O</b> for day off: the mark is saved to the Holidays calendar, not as hours. Only Holiday counts against the yearly entitlement.</p>
+      </details>
     </div>
 
     <!-- ---- DAILY ENTRY (default) ---- -->
     <div id="hoursDailySection">
-      <div class="card">
-        <div class="row">
-          <div>
-            <label>Date</label>
-            <input type="date" id="dailyDate">
-          </div>
-          <div id="dailyDayHint" class="hint"></div>
+      <div class="card entry-top">
+        <div class="period" title="Day to enter">
+          <button type="button" onclick="shiftDateInput('dailyDate',-1)" title="Previous day">&#8249;</button>
+          <input type="date" id="dailyDate">
+          <button type="button" onclick="shiftDateInput('dailyDate',1)" title="Next day">&#8250;</button>
         </div>
-        <p class="hint">Pick any day — log today's hours today, or catch up on a day you forgot, any time.</p>
+        <div id="dailyDayHint" class="day-badge"></div>
+        <span class="hint et-hint">Pick any day — log today's hours or catch up on a day you missed.</span>
       </div>
       <div class="card">
         <div id="dailyEntryTableWrap"><div class="loading">Loading staff list…</div></div>
@@ -729,15 +860,14 @@
 
     <!-- ---- WEEKLY ENTRY ---- -->
     <div id="hoursWeeklySection" style="display:none">
-      <div class="card">
-        <div class="row">
-          <div>
-            <label>Week Start (Monday)</label>
-            <input type="date" id="weekStart">
-          </div>
-          <div id="dayHint" class="hint"></div>
+      <div class="card entry-top">
+        <div class="period" title="Week starting (Monday)">
+          <button type="button" onclick="shiftDateInput('weekStart',-7)" title="Previous week">&#8249;</button>
+          <input type="date" id="weekStart">
+          <button type="button" onclick="shiftDateInput('weekStart',7)" title="Next week">&#8250;</button>
         </div>
-        <p class="hint">Use this when you want to log several days or a whole week at once.</p>
+        <div id="dayHint" class="day-badge"></div>
+        <span class="hint et-hint">Log several days or a whole week at once.</span>
       </div>
       <div class="card">
         <div id="entryTableWrap"><div class="loading">Loading staff list…</div></div>
@@ -749,9 +879,8 @@
     <!-- ---- VIEW / EDIT ENTRIES (new) ---- -->
     <div id="hoursViewSection" style="display:none">
       <div class="card">
-        <div class="row">
-          <div><label>From</label><input type="date" id="veFrom"></div>
-          <div><label>To</label><input type="date" id="veTo"></div>
+        <div class="entry-top" style="padding:0">
+          <div class="period range"><span class="pl">From</span><input type="date" id="veFrom"><span class="pl">to</span><input type="date" id="veTo"></div>
           <button class="btn" onclick="loadHoursEntries()">LOAD</button>
         </div>
         <p class="hint">Everything logged in this date range, day by day. Fix a wrong number and press Save, or Delete the row entirely.</p>
@@ -764,15 +893,14 @@
     <!-- ---- WEEKLY GRID (v2.5.3) ---- -->
     <div id="hoursGridSection" style="display:none">
       <div class="card">
-        <div class="row">
-          <button class="btn" onclick="wgNav(-7)">◀ Prev</button>
-          <div>
-            <label>Week Start (Monday)</label>
+        <div class="entry-top" style="padding:0">
+          <div class="period" title="Week starting (Monday)">
+            <button type="button" onclick="wgNav(-7)" title="Previous week">&#8249;</button>
             <input type="date" id="wgWeekStart">
+            <button type="button" onclick="wgNav(7)" title="Next week">&#8250;</button>
           </div>
-          <button class="btn" onclick="wgNav(7)">Next ▶</button>
-          <button class="btn" onclick="wgToday()">This Week</button>
-          <div id="wgDayHint" class="hint"></div>
+          <button type="button" class="tool-btn" onclick="wgToday()">This week</button>
+          <div id="wgDayHint" class="day-badge"></div>
         </div>
         <p class="hint">One week at a time, exactly like your paper sheet: change a number to correct it, type into an empty cell to add a missing day, clear a cell to delete that day (it asks first). Nothing is written while you type: every changed cell just turns yellow. When you are done, ONE press of SAVE CHANGES writes everything in a single fast call (deletions are counted and confirmed at that point). Grey <b>H / OFF / S</b> marks work the same way and stay in sync with the Holidays calendar: type <b>H</b>, <b>S</b> or <b>O</b> into an empty cell to set one, retype to change it, clear the cell to remove it. Typing hours over a mark saves the hours and removes the mark; typing a mark over hours asks first, then replaces the logged hours with the mark. A cell showing <b>2 rows</b> holds more than one logged entry for that person on that day — open View Entries to sort it out.</p>
       </div>
@@ -795,9 +923,10 @@
 
   <!-- ================= TAKE-IN ================= -->
   <div id="view-revenue" class="view">
-    <div class="card">
-      <h2>Manual Entry — missed banking days only</h2>
-      <p class="hint">Take-in normally arrives automatically from LPA Banking. Use this ONLY when a day failed to arrive (like 30-09-2026): copy the SAME four figures from LPA Banking. One press fills all three ledgers — Take-in, the tip pool (Cash Tips) and the Cash List (Cash In Hand). Each piece is written only if the day doesn't already have it: anything already there is left untouched and its existing figures are shown, so pressing SAVE twice (or Streamlit retrying later) can never create doubles. Leave a figure 0/empty to skip that piece.</p>
+    <div class="pg-kpis" id="revKpis"></div>
+    <details class="card fold">
+      <summary><span class="fold-ic">+</span><div><b>Missed a banking day?</b><small>Take-in normally arrives automatically from LPA Banking — add a day by hand only if it failed to arrive.</small></div></summary>
+      <p class="hint">Copy the SAME four figures from LPA Banking. One press fills all three ledgers — Take-in, the tip pool (Cash Tips) and the Cash List (Cash In Hand). Each piece is written only if the day doesn't already have it, so pressing SAVE twice can never create doubles. Leave a figure 0/empty to skip that piece.</p>
       <div class="row">
         <div><label>Date</label><input type="date" id="revDate"></div>
         <div><label>Net Sales (£)</label><input type="number" id="revNet" step="0.01" min="0"></div>
@@ -807,16 +936,18 @@
         <div style="flex:1"><label>Note</label><input type="text" id="revNotes" placeholder="Manual entry"></div>
       </div>
       <button class="btn" id="revSaveBtn" onclick="submitRevenueForm()">SAVE</button>
-    </div>
+    </details>
+    <div class="card"><h2>Last 30 days</h2><div class="chart-box" style="height:230px"><canvas id="revChart"></canvas></div></div>
     <div class="card">
-      <h2>Recent Entries</h2>
+      <h2>Daily take-in</h2>
       <div id="recentRevenueWrap"><div class="loading">Loading…</div></div>
-      <p class="hint">Staff Cost is that day's hours × the rate in force that day. Blank cost = no hours logged for that day yet. SC % = Service Charge ÷ Net Sales — normally ~12.5%; a day far off that number is worth a look. Press Edit to correct a day (then Save), or Delete the row entirely — the date itself cannot be edited (one entry per day): to move a day, delete it and re-enter on the right date above. SC %, Total and Staff Cost refresh after the save.</p>
+      <p class="hint">Staff Cost is that day's hours × the rate in force that day. Blank cost = no hours logged for that day yet. SC % = Service Charge ÷ Net Sales — normally ~12.5%; a day far off that number is shown in orange. Press Edit to correct a day, or Delete the row — the date itself cannot be edited (one entry per day): to move a day, delete it and re-enter it with the right date.</p>
     </div>
   </div>
 
   <!-- ================= HOURS REPORT ================= -->
   <div id="view-staffsummary" class="view">
+    <div class="pg-kpis" id="sumKpis"></div>
     <div class="card">
       <h2>Hours Report</h2>
       <p class="hint">Pick a month — you get every staff member's total hours for that month. Its total always matches the Hours column in Monthly Summary. For a single day's entries use Hours → View Entries; weekly totals are on the Pay Period screen.</p>
@@ -833,89 +964,79 @@
   <!-- ================= WEEKLY TIPS ================= -->
   <div id="view-tips" class="view">
     <div class="card no-print">
-      <h2>Daily Tip Pool Entry</h2>
       <div class="row">
-        <div><label>Date</label><input type="date" id="tipDate"></div>
-        <div><label>Total Tips (£)</label><input type="number" id="tipAmount" step="0.01"></div>
-        <div style="flex:1"><label>Note</label><input type="text" id="tipNotes"></div>
-      </div>
-      <button class="btn" onclick="submitTipPoolEntry()">SAVE</button>
-    </div>
-
-    <div class="card no-print">
-      <div class="row">
-        <button class="btn" onclick="shiftTipsWeek(-7)">◀ Previous Week</button>
+        <button class="btn" onclick="shiftTipsWeek(-7)">Prev</button>
         <div><label>Week Start (Monday)</label><input type="date" id="tipsWeekStart"></div>
-        <button class="btn" onclick="shiftTipsWeek(7)">Next Week ▶</button>
-        <button class="btn" onclick="window.print()">🖨️ Print</button>
+        <button class="btn" onclick="shiftTipsWeek(7)">Next</button>
       </div>
       <p class="hint">Pool = that day's total tip entry. Distribution = proportional to each FOH staff member's hours that day (department as logged on the day, tip weight as it was on the day).</p>
     </div>
+    <div class="pg-kpis no-print" id="tipKpis"></div>
     <div class="card">
       <h2 id="tipsPrintTitle" style="display:none"></h2>
       <div id="tipsTableWrap"><div class="loading">Loading…</div></div>
     </div>
-
-    <div class="card no-print">
-      <h2>Recent Tip Pool Entries</h2>
-      <div id="recentTipPoolWrap"><div class="loading">Loading…</div></div>
+    <div class="side-grid no-print">
+      <div class="card">
+        <h2>Recent tip pool entries</h2>
+        <div id="recentTipPoolWrap" class="scroll-box"><div class="loading">Loading…</div></div>
+      </div>
+      <div class="card">
+        <h2>Add tip pool</h2>
+        <div class="vform">
+          <div><label>Date</label><input type="date" id="tipDate"></div>
+          <div><label>Total Tips (£)</label><input type="number" id="tipAmount" step="0.01"></div>
+          <div><label>Note</label><input type="text" id="tipNotes"></div>
+          <button class="btn" onclick="submitTipPoolEntry()">SAVE</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- ================= CASH LIST ================= -->
   <div id="view-cashlist" class="view">
-    <div class="card">
-      <h2>Cash Reconciliation</h2>
-      <div class="row">
-        <div class="kpi" style="flex:1">
-          <div class="label">Cash in Hand (per ledger)</div>
-          <div class="value" id="cashInHandValue">£0.00</div>
+    <div class="pg-kpis">
+      <div class="dk hero"><div class="l">Cash in hand (ledger)</div><div class="v" id="cashInHandValue">£0.00</div><div class="s">All-time running balance</div></div>
+      <div class="dk"><div class="l">Physically counted</div><div class="v" id="cashCountedValue">£0.00</div><div class="s">From the till counter</div></div>
+      <div class="dk" id="cashDiffKpi"><div class="l">Surplus / deficit</div><div class="v" id="cashDiffValue">£0.00</div><div class="s">Counted − ledger</div></div>
+      <div class="dk"><div class="l" id="cashMonLbl">This month</div><div class="v" id="cashMonNet">–</div><div class="s" id="cashMonSub"></div></div>
+    </div>
+    <div class="side-grid">
+      <div class="card">
+        <div class="row">
+          <div><label>Month</label><select id="cashMonth"></select></div>
+          <div><label>Year</label><input type="number" id="cashYear" style="width:100px"></div>
         </div>
-        <div class="kpi" style="flex:1">
-          <div class="label">Physically Counted</div>
-          <div class="value" id="cashCountedValue">£0.00</div>
+        <div id="cashListWrap"><div class="loading">Loading…</div></div>
+        <p class="hint">"Auto" rows come from LPA Banking (Cash In Hand); "Manual" rows are entries added here.</p>
+      </div>
+      <div>
+        <div class="card" id="cashFormCard">
+          <h2 id="cashFormTitle">Add entry</h2>
+          <div class="vform">
+            <div><label>Type</label>
+              <select id="cashType">
+                <option value="expense">Expense (money out)</option>
+                <option value="income">Income (money in)</option>
+              </select>
+            </div>
+            <div><label>Date</label><input type="date" id="cashDate"></div>
+            <div><label>Description</label><input type="text" id="cashDescription"></div>
+            <div><label>Amount (£)</label><input type="number" id="cashAmount" step="0.01"></div>
+            <div><label>Note</label><input type="text" id="cashNotes"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" id="cashSaveBtn" onclick="submitCashEntryForm()">SAVE</button>
+              <button class="btn" id="cashCancelBtn" onclick="cancelCashEdit()" style="display:none;background:#888">CANCEL</button>
+            </div>
+          </div>
         </div>
-        <div class="kpi" id="cashDiffKpi" style="flex:1">
-          <div class="label">Surplus / Deficit</div>
-          <div class="value" id="cashDiffValue">£0.00</div>
+        <div class="card">
+          <h2>Count the till</h2>
+          <div id="denomGrid" class="denom-grid"></div>
+          <button type="button" class="tool-btn" style="margin-top:10px;height:36px" onclick="document.querySelectorAll('.denom-input').forEach(function(i){i.value=0;});recalcCounted();">Reset count</button>
         </div>
       </div>
     </div>
-
-
-    <div class="card">
-      <div class="row">
-        <div><label>Month</label><select id="cashMonth"></select></div>
-        <div><label>Year</label><input type="number" id="cashYear" style="width:100px"></div>
-      </div>
-      <p class="hint">"Automatic" rows come from LPA Banking (Cash In Hand); "Manual" rows are entries you add here yourself.</p>
-      <div id="cashListWrap"><div class="loading">Loading…</div></div>
-    </div>
-
-    <div class="card">
-      <h2>Add Entry</h2>
-      <div class="row">
-        <div><label>Date</label><input type="date" id="cashDate"></div>
-        <div><label>Description</label><input type="text" id="cashDescription"></div>
-        <div><label>Type</label>
-          <select id="cashType">
-            <option value="income">Income (money in)</option>
-            <option value="expense">Expense (money out)</option>
-          </select>
-        </div>
-        <div><label>Amount (£)</label><input type="number" id="cashAmount" step="0.01"></div>
-        <div style="flex:1"><label>Note</label><input type="text" id="cashNotes"></div>
-      </div>
-      <button class="btn" id="cashSaveBtn" onclick="submitCashEntryForm()">SAVE</button>
-      <button class="btn" id="cashCancelBtn" onclick="cancelCashEdit()" style="display:none;background:#888">CANCEL EDIT</button>
-    </div>
-
-    <div class="card">
-      <h2>Denomination Counter</h2>
-      <p class="hint">Count the physical cash here — the Surplus / Deficit box at the top compares it with the ledger.</p>
-      <div id="denomGrid" class="row"></div>
-    </div>
-
   </div>
 
   <!-- ================= HOLIDAYS ================= -->
@@ -958,7 +1079,13 @@
       <p class="hint" id="ppPeriodLabel"></p>
     </div>
 
-    <div class="card">
+    <div class="pg-kpis" id="ppKpis"></div>
+    <div class="seg" id="ppSeg" style="margin-bottom:16px">
+      <button type="button" data-t="report" class="mode-active">Weekly hours &amp; advances</button>
+      <button type="button" data-t="summary">Period summary</button>
+      <button type="button" data-t="end">End of month</button>
+    </div>
+    <div class="card pp-sec" data-sec="report">
       <h2>Hours & Payments Report</h2>
       <p class="hint">Weekly hours are entered by hand; the Preview column fills automatically from Hours entries. Former staff appear only if they have data in this period. Type <b>H</b> in a week box for holiday (green) or <b>S</b> for sick (orange) — they count as 0 hours and show in the Period Summary notes. Nothing is written while you type: changed boxes turn yellow and totals update live; ONE press of <b>SAVE CHANGES</b> writes everything in a single fast call — no more lock timeouts, and a failed save never wipes what you typed.</p>
       <div id="ppSaveBar" style="display:none;background:#FFF3CD;border-left:6px solid #C99700;border-radius:8px;padding:10px 14px;margin-bottom:10px">
@@ -969,7 +1096,7 @@
       <div id="ppReportWrap"><div class="loading">Loading…</div></div>
     </div>
 
-    <div class="card">
+    <div class="card pp-sec" data-sec="report">
       <h2>Add Advance</h2>
       <div class="row">
         <div><label>Date</label><input type="date" id="advDate"></div>
@@ -981,7 +1108,7 @@
     </div>
 
 
-    <div class="card">
+    <div class="card pp-sec" data-sec="summary" style="display:none">
       <h2 id="psTitle">Period Summary</h2>
       <p class="hint">Per-person total for the whole 26th→25th period (your manual weekly entries) plus advances — the old Excel's summary block. One tap makes a PDF for WhatsApp.</p>
       <button class="btn" id="psPdfBtn" onclick="downloadPeriodPdf(this)">DOWNLOAD PDF</button>
@@ -989,7 +1116,7 @@
       <div id="psWrap" style="margin-top:12px"><div class="loading">Loading…</div></div>
     </div>
 
-    <div class="card">
+    <div class="card pp-sec" data-sec="end" style="display:none">
       <h2 id="meTitle">End of Month (26–…)</h2>
       <p class="hint">The pay period closes on the 25th; these are the hours from the 26th to the end of the selected month — the tail that belongs to the NEXT period. One tap makes a PDF for WhatsApp.</p>
       <button class="btn" id="mePdfBtn" onclick="downloadMonthEndPdf(this)">DOWNLOAD PDF</button>
@@ -1000,35 +1127,37 @@
 
   <!-- ================= REQUESTS ================= -->
   <div id="view-requests" class="view">
-    <div class="card">
-      <h2>Add Request</h2>
-      <div class="row">
-        <div><label>Date</label><input type="date" id="reqDate"></div>
-        <div><label>Who</label><select id="reqStaff"></select></div>
-        <div style="flex:2"><label>Request</label><input type="text" id="reqText" placeholder="e.g. new apron size M, day off swap, knife sharpening…"></div>
-        <div><label>Due Date (optional)</label><input type="date" id="reqDue"></div>
+    <div class="pg-kpis" id="reqKpis"></div>
+    <div class="side-grid">
+      <div class="card">
+        <div class="list-head">
+          <h2 style="margin:0">Requests</h2>
+          <div class="seg small">
+            <button type="button" id="reqTabOpen" class="mode-active" onclick="reqTab(false)">Open</button>
+            <button type="button" id="reqTabAll" onclick="reqTab(true)">With completed</button>
+          </div>
+          <input type="checkbox" id="reqShowDone" style="display:none">
+        </div>
+        <div id="requestsWrap"><div class="loading">Loading…</div></div>
       </div>
-      <div class="row">
-        <div style="flex:1"><label>Note (optional)</label><input type="text" id="reqNotes"></div>
+      <div class="card">
+        <h2>Add request</h2>
+        <div class="vform">
+          <div><label>Who</label><select id="reqStaff"></select></div>
+          <div><label>Request</label><input type="text" id="reqText" placeholder="e.g. new apron size M, day off swap…"></div>
+          <div class="two"><div><label>Date</label><input type="date" id="reqDate"></div><div><label>Due (optional)</label><input type="date" id="reqDue"></div></div>
+          <div><label>Note (optional)</label><input type="text" id="reqNotes"></div>
+          <button class="btn" onclick="submitRequestForm()">SAVE</button>
+        </div>
       </div>
-      <button class="btn" onclick="submitRequestForm()">SAVE</button>
-    </div>
-    <div class="card">
-      <div class="row">
-        <h2 style="flex:1;margin:0">Request List</h2>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0">
-          <input type="checkbox" id="reqShowDone" onchange="loadRequests()" style="width:auto"> Show history (completed)
-        </label>
-      </div>
-      <p class="hint">Overdue requests are highlighted in red. Press Done when handled.</p>
-      <div id="requestsWrap"><div class="loading">Loading…</div></div>
     </div>
   </div>
 
   <!-- ================= STAFF MANAGEMENT ================= -->
   <div id="view-staff" class="view">
-    <div class="card">
-      <h2>Add New Staff Member</h2>
+    <div class="pg-kpis" id="stKpis"></div>
+    <details class="card fold" id="stAddFold">
+      <summary><span class="fold-ic">+</span><div><b>Add a new staff member</b><small>Name, department, rate, tip weight, holiday days and start date.</small></div></summary>
       <div class="row">
         <div><label>Name</label><input type="text" id="newStaffName"></div>
         <div><label>Department</label>
@@ -1040,19 +1169,28 @@
         </div>
         <div><label>Hourly Rate (£)</label><input type="number" id="newStaffRate" step="0.01" value="15"></div>
         <div><label>Tip Weight</label><input type="number" id="newStaffTipWeight" step="0.05" value="1"></div>
-        <div><label>Holiday Entitlement (days/yr)</label><input type="number" id="newStaffHolidayEnt" step="1" value="28"></div>
+        <div><label>Holiday days / yr</label><input type="number" id="newStaffHolidayEnt" step="1" value="28"></div>
         <div><label>Start Date</label><input type="date" id="newStaffStartDate"></div>
       </div>
       <button class="btn" onclick="addNewStaff()">ADD</button>
-    </div>
+    </details>
     <div class="card">
-      <h2>Staff List</h2>
-      <p class="hint"><b>Order:</b> use ▲▼ to move someone up or down.</p>
-      <p class="hint"><b>Note:</b> Change as many fields as you like, then hit <b>"Save All"</b> once. Rate or tip weight changes take effect from TODAY — past months keep the old rate.</p>
-      <p class="hint">Tip Weight: 1 = normal share. 1.2 = 20% more, 0.8 = 20% less. Only affects FOH tip distribution.</p>
-      <button class="btn" onclick="saveAllStaffEdits(this)" style="margin-bottom:10px">SAVE ALL</button>
+      <div class="list-head">
+        <h2 style="margin:0">Staff list</h2>
+        <div class="pg-tools">
+          <input type="text" id="stSearch" class="pill-input" placeholder="Search name…">
+          <div class="seg small" id="stSeg">
+            <button type="button" data-f="active" class="mode-active">Active</button>
+            <button type="button" data-f="inactive">Inactive</button>
+            <button type="button" data-f="all">All</button>
+          </div>
+        </div>
+      </div>
+      <details class="howto"><summary>How editing works</summary>
+        <p>Change as many fields as you like — changed rows turn yellow — then press <b>SAVE ALL</b> once. Rate or tip weight changes take effect from TODAY; past months keep the old rate. Use ▲▼ to change the order (the same order is used on every screen). Tip Weight: 1 = normal share, 1.2 = 20% more, 0.8 = 20% less (FOH tips only).</p>
+      </details>
       <div id="staffMgmtTableWrap"><div class="loading">Loading…</div></div>
-      <button class="btn" onclick="saveAllStaffEdits(this)" style="margin-top:10px">SAVE ALL</button>
+      <div class="entry-foot"><button class="btn" onclick="saveAllStaffEdits(this)">SAVE ALL</button><span class="hint" id="stDirty"></span></div>
     </div>
   </div>
 
@@ -3941,6 +4079,433 @@ monthly: 'Month by month performance and cost exclusions',
     if (box.parentNode !== foot) foot.appendChild(box);
     _uhtv();
   };
+})();
+
+
+// ============================================================
+// v2.7 REDESIGN — every HR page in the dashboard style
+// (render functions below replace the older ones of the same name)
+// ============================================================
+function kpiTile(l, v, s, cls) {
+  return '<div class="dk' + (cls ? ' ' + cls : '') + '"><div class="l">' + l + '</div><div class="v">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
+}
+function shiftDateInput(id, days) {
+  var el = document.getElementById(id); if (!el.value) el.value = fmtDate(new Date());
+  var d = new Date(el.value + 'T00:00:00'); d.setDate(d.getDate() + days);
+  el.value = fmtDate(d); el.dispatchEvent(new Event('change'));
+}
+function dowShort(dateStr) { return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(dateStr + 'T00:00:00').getDay()]; }
+function targetPct_() {
+  if (window.HOME && HOME.mtd && HOME.mtd.target) return Number(HOME.mtd.target);
+  if (lastDashboardData && lastDashboardData.targetLaborPct) return Number(lastDashboardData.targetLaborPct);
+  return 0.34;
+}
+function costPill(p, target) {
+  if (p == null || !isFinite(p) || p <= 0) return '';
+  return '<span class="pill ' + (p > target ? 'bad' : 'ok') + '">' + (p * 100).toFixed(1) + '%</span>';
+}
+var IC = {
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+  save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>'
+};
+function ibtn(icon, title, onclick, cls) { return '<button type="button" class="ibtn' + (cls ? ' ' + cls : '') + '" title="' + title + '" onclick="' + onclick + '">' + IC[icon] + '</button>'; }
+
+// ---------------- MONTHLY SUMMARY ----------------
+function renderMonthlyTable(data) {
+  var wrap = document.getElementById('monthlyTableWrap');
+  var t = data.totals, target = Number(data.targetLaborPct) || targetPct_();
+  var withData = data.monthly.filter(function(m) { return m.revenue > 0 || m.cost > 0; });
+  var best = withData.slice().sort(function(a, b) { return b.revenue - a.revenue; })[0];
+  var k = [];
+  k.push(kpiTile('Take-in ' + data.year, money(t.revenue), withData.length + ' month' + (withData.length === 1 ? '' : 's') + ' with data', 'hero'));
+  k.push(kpiTile('Staff cost', money(t.cost), hrs(t.hours) + ' hours'));
+  k.push(kpiTile('Staff cost %', (t.laborPct * 100).toFixed(1) + '% <span class="pill ' + (t.laborPct > target ? 'bad' : 'ok') + '">target ' + (target * 100).toFixed(0) + '%</span>', t.laborPct > target ? 'Above target' : 'Within target'));
+  k.push(kpiTile('Take-in less staff cost', money(t.profit), 'FOH ' + money(t.foh) + ' · BOH ' + money(t.boh)));
+  k.push(kpiTile('Best month', best ? best.month : '–', best ? money(best.revenue) : 'No data yet'));
+  document.getElementById('msKpis').innerHTML = k.join('');
+
+  var maxRev = Math.max.apply(null, data.monthly.map(function(m) { return m.revenue; }).concat([1]));
+  var now = new Date(), curIdx = (Number(data.year) === now.getFullYear()) ? now.getMonth() : -1;
+  var html = '<table class="tbl"><thead><tr><th>Month</th><th>Take-in</th><th class="r">Hours</th><th class="r">Staff cost</th><th class="r">Cost %</th><th class="r">FOH</th><th class="r">BOH</th><th class="r">Cleaning</th><th class="r">Take-in less cost</th></tr></thead><tbody>';
+  data.monthly.forEach(function(m, i) {
+    var empty = !(m.revenue > 0 || m.cost > 0);
+    html += '<tr class="' + (empty ? 'zero' : '') + (i === curIdx ? ' cur' : '') + '"><td class="b">' + m.month + (i === curIdx ? ' <span class="pill now">now</span>' : '') + '</td>' +
+      '<td><div class="mbar"><i style="width:' + (m.revenue / maxRev * 100).toFixed(1) + '%"></i><span>' + (empty ? '–' : money(m.revenue)) + '</span></div></td>' +
+      '<td class="r">' + (m.hours ? hrs(m.hours) + 'h' : '–') + '</td><td class="r">' + (m.cost ? money(m.cost) : '–') + '</td>' +
+      '<td class="r">' + (m.revenue > 0 && m.cost > 0 ? costPill(m.laborPct, target) : '–') + '</td>' +
+      '<td class="r">' + (m.foh ? money(m.foh) : '–') + '</td><td class="r">' + (m.boh ? money(m.boh) : '–') + '</td><td class="r">' + (m.cleaning ? money(m.cleaning) : '–') + '</td>' +
+      '<td class="r b ' + (m.profit < 0 ? 'neg' : '') + '">' + (empty ? '–' : money(m.profit)) + '</td></tr>';
+  });
+  html += '<tr class="total-row"><td>Total</td><td>' + money(t.revenue) + '</td><td class="r">' + hrs(t.hours) + 'h</td><td class="r">' + money(t.cost) + '</td><td class="r">' + costPill(t.laborPct, target) + '</td>' +
+    '<td class="r">' + money(t.foh) + '</td><td class="r">' + money(t.boh) + '</td><td class="r">' + money(t.cleaning) + '</td><td class="r">' + money(t.profit) + '</td></tr>';
+  html += '</tbody></table>';
+  wrap.innerHTML = exclusionBannerHtml(data) + html;
+}
+function renderDowTable(data) {
+  var wrap = document.getElementById('dowTableWrap');
+  var max = Math.max.apply(null, data.dayOfWeek.map(function(d) { return d.avgRevenue; }).concat([1]));
+  wrap.innerHTML = '<div class="dow-list">' + data.dayOfWeek.map(function(d) {
+    var p = d.avgRevenue > 0 ? d.avgCost / d.avgRevenue : 0;
+    return '<div class="dow-it"><div class="dow-d">' + d.day.slice(0, 3) + '</div><div class="dow-bars">' +
+      '<div class="dow-b rev" style="width:' + (d.avgRevenue / max * 100).toFixed(1) + '%"></div>' +
+      '<div class="dow-b cost" style="width:' + (d.avgCost / max * 100).toFixed(1) + '%"></div></div>' +
+      '<div class="dow-v"><b>' + money(d.avgRevenue) + '</b><small>cost ' + money(d.avgCost) + (p ? ' · ' + (p * 100).toFixed(0) + '%' : '') + '</small></div></div>';
+  }).join('') + '</div><div class="legend"><span><i class="lg rev"></i>Average take-in</span><span><i class="lg cost"></i>Average staff cost</span></div>';
+}
+
+// ---------------- HOURS: entry check tiles ----------------
+function loadEntryCheck() {
+  var wrap = document.getElementById('ecWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  document.getElementById('ecNewerBtn').disabled = (ecOffset === 0);
+  document.getElementById('ecTodayBtn').disabled = (ecOffset === 0);
+  var sel = document.getElementById('ecStaff');
+  if (sel.options.length <= 1 && typeof staffList !== 'undefined' && staffList && staffList.length) {
+    staffList.forEach(function(st) {
+      if (!st.active) return;
+      var opt = document.createElement('option'); opt.value = st.id; opt.textContent = st.name; sel.appendChild(opt);
+    });
+  }
+  var staffId = sel.value;
+  var who = staffId && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].textContent : '';
+  google.script.run.withSuccessHandler(function(d) {
+    var rows = d.rows.slice().reverse();
+    if (rows.length) document.getElementById('ecTitle').textContent = (who ? who + ' — ' : '') + dmy(rows[0].date) + ' → ' + dmy(rows[rows.length - 1].date);
+    var miss = d.rows.filter(function(r) { return !r.hasHours; }).length;
+    var noRev = d.rows.filter(function(r) { return r.hasHours && !r.hasRevenue; }).length;
+    document.getElementById('ecLastEntry').innerHTML = (d.lastHoursDate ? 'Last day with hours: <b>' + dmy(d.lastHoursDate) + '</b>' : (who ? who + ' has no hours yet' : 'No hours logged yet')) +
+      (miss ? ' · <span class="neg">' + miss + ' day' + (miss > 1 ? 's' : '') + ' without hours</span>' : ' · all days have hours') +
+      (noRev ? ' · <span class="amber">' + noRev + ' without take-in</span>' : '');
+    var todayStr = fmtDate(new Date());
+    var html = '<div class="ec-grid">';
+    rows.forEach(function(r) {
+      var st = !r.hasHours ? 'miss' : !r.hasRevenue ? 'warn' : 'ok';
+      var dd = r.date.split('-');
+      html += '<button type="button" class="ec-day ' + st + (r.date === todayStr ? ' today' : '') + '" onclick="ecGoEnter(\'' + r.date + '\')" title="Open ' + dmy(r.date) + ' in Daily entry">' +
+        '<div class="ec-d"><b>' + r.dayName.slice(0, 3) + '</b> ' + Number(dd[2]) + ' ' + MONTHS_EN[Number(dd[1]) - 1].slice(0, 3) + '</div>' +
+        '<div class="ec-h">' + (r.hasHours ? hrs(r.hours) + '<small>h</small>' : (r.date > todayStr ? '' : 'Enter →')) + '</div>' +
+        '<div class="ec-f"><span class="' + (r.hasRevenue ? 'y' : 'n') + '">' + (r.hasRevenue ? '✓' : '✗') + ' Take-in</span><span class="' + (r.hasTips ? 'y' : 'n') + '">' + (r.hasTips ? '✓' : '✗') + ' Tips</span></div></button>';
+    });
+    html += '</div><div class="legend"><span><i class="lg ok"></i>Hours + take-in in</span><span><i class="lg warn"></i>Take-in missing</span><span><i class="lg miss"></i>Hours missing — click to enter</span><span class="hint" style="margin:0">A closed day shows as missing too — that is fine.' + (who ? ' Hours here are ' + esc(who) + '\'s only.' : '') + '</span></div>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getEntryStatus(14, ecOffset, staffId);
+}
+
+// ---------------- HOURS REPORT ----------------
+function renderSummary(result) {
+  var wrap = document.getElementById('summaryTableWrap');
+  var lbl = sumQuery ? MONTHS_EN[sumQuery.month - 1] + ' ' + sumQuery.year : '';
+  var rows = result.filter(function(r) { return r.monthly > 0; });
+  var G = { FOH: 'Floor', BOH: 'Kitchen', CLEANING: 'Cleaning' }, groups = {}, tot = 0;
+  rows.forEach(function(r) { var g = G[r.dept] ? r.dept : 'OTHER'; (groups[g] = groups[g] || []).push(r); tot += r.monthly; });
+  var k = [kpiTile('Hours — ' + lbl, hrs(tot) + ' h', rows.length + ' people worked', 'hero')];
+  ['FOH', 'BOH', 'CLEANING'].forEach(function(g) {
+    var sum = (groups[g] || []).reduce(function(a, r) { return a + r.monthly; }, 0);
+    k.push(kpiTile(G[g], hrs(sum) + ' h', (groups[g] || []).length + ' people' + (tot ? ' · ' + (sum / tot * 100).toFixed(0) + '%' : '')));
+  });
+  k.push(kpiTile('Average per person', rows.length ? hrs(Math.round(tot / rows.length * 4) / 4) + ' h' : '–', 'This month'));
+  document.getElementById('sumKpis').innerHTML = k.join('');
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No hours logged in ' + lbl + '.</div>'; return; }
+  var max = Math.max.apply(null, rows.map(function(r) { return r.monthly; }));
+  var html = '<div class="dept-grid">';
+  ['FOH', 'BOH', 'CLEANING', 'OTHER'].forEach(function(g) {
+    var list = groups[g]; if (!list) return;
+    var sum = list.reduce(function(a, r) { return a + r.monthly; }, 0);
+    html += '<div class="dept-card"><div class="dept-head"><div><b>' + (G[g] || 'Other') + '</b><small>' + list.length + ' people</small></div><div class="dept-tot">' + hrs(sum) + ' h</div></div><div class="hb-list">' +
+      list.map(function(r) {
+        return '<div class="hb' + (r.active ? '' : ' inactive') + '"><span class="hb-n">' + esc(r.name) + '</span><span class="hb-bar"><i style="width:' + (r.monthly / max * 100).toFixed(1) + '%"></i></span><span class="hb-v">' + hrs(r.monthly) + '</span></div>';
+      }).join('') + '</div></div>';
+  });
+  wrap.innerHTML = html + '</div>';
+}
+
+// ---------------- TAKE-IN ----------------
+var revChart = null;
+function renderRecentRevenue_() {
+  var wrap = document.getElementById('recentRevenueWrap');
+  var rows = revRowsList, target = targetPct_();
+  var asc = rows.slice().sort(function(a, b) { return a.date < b.date ? -1 : 1; });
+  // KPIs
+  var k = [];
+  if (asc.length) {
+    var last = asc[asc.length - 1], lm = last.date.slice(0, 7);
+    var mtd = asc.filter(function(r) { return r.date.slice(0, 7) === lm; });
+    var mtdSum = mtd.reduce(function(a, r) { return a + r.total; }, 0);
+    var l7 = asc.slice(-7), avg7 = l7.reduce(function(a, r) { return a + r.total; }, 0) / l7.length;
+    var net = asc.reduce(function(a, r) { return a + r.netSales; }, 0), sc = asc.reduce(function(a, r) { return a + r.serviceCharge; }, 0);
+    var costed = asc.filter(function(r) { return r.staffCost > 0 && r.total > 0; });
+    var cTot = costed.reduce(function(a, r) { return a + r.total; }, 0), cCost = costed.reduce(function(a, r) { return a + r.staffCost; }, 0);
+    k.push(kpiTile('Last day', money(last.total), dowShort(last.date) + ' ' + dmy(last.date), 'hero'));
+    k.push(kpiTile(MONTHS_EN[Number(lm.slice(5)) - 1] + ' so far', money(mtdSum), mtd.length + ' days'));
+    k.push(kpiTile('7-day average', money(avg7), 'per day'));
+    k.push(kpiTile('Service charge', net ? (sc / net * 100).toFixed(1) + '%' : '–', 'of net sales, last 30 days'));
+    k.push(kpiTile('Staff cost %', cTot ? costPill(cCost / cTot, target) : '–', 'Days with hours · target ' + (target * 100).toFixed(0) + '%'));
+  }
+  document.getElementById('revKpis').innerHTML = k.join('');
+  // chart
+  if (window.Chart && document.getElementById('revChart')) {
+    if (revChart) revChart.destroy();
+    revChart = new Chart(document.getElementById('revChart'), { data: { labels: asc.map(function(r) { return dmy(r.date).slice(0, 5); }), datasets: [
+      { type: 'bar', label: 'Take-in', data: asc.map(function(r) { return r.total; }), backgroundColor: '#6D1B2F', borderRadius: 4 },
+      { type: 'line', label: 'Staff cost', data: asc.map(function(r) { return r.staffCost || null; }), borderColor: '#C99A55', backgroundColor: '#C99A55', tension: .3, pointRadius: 2, spanGaps: true }] },
+      options: { maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + money(c.parsed.y); } } } }, scales: { y: { ticks: { callback: function(v) { return '£' + (v / 1000) + 'k'; } } } } } });
+  }
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
+  var html = '<table class="tbl"><thead><tr><th>Date</th><th class="r">Net sales</th><th class="r">Service charge</th><th class="r">SC %</th><th class="r">Total</th><th class="r">Staff cost</th><th class="r">Cost %</th><th>Note</th><th></th></tr></thead><tbody>';
+  rows.forEach(function(r, i) {
+    var editing = (i === revEditing);
+    var scp = r.netSales > 0 && r.serviceCharge > 0 ? r.serviceCharge / r.netSales : null;
+    var scOff = scp != null && (scp < 0.1 || scp > 0.15);
+    html += '<tr class="' + (editing ? 'editing' : '') + '"><td class="b nowrap">' + dmy(r.date) + ' <small class="muted">' + dowShort(r.date) + '</small></td>' +
+      (editing
+        ? '<td class="r"><input class="hours-input" style="width:100px" type="number" min="0" step="0.01" id="rvNet_' + i + '" value="' + r.netSales + '"></td>' +
+          '<td class="r"><input class="hours-input" style="width:90px" type="number" min="0" step="0.01" id="rvSC_' + i + '" value="' + r.serviceCharge + '"></td>'
+        : '<td class="r">' + money(r.netSales) + '</td><td class="r">' + money(r.serviceCharge) + '</td>') +
+      '<td class="r">' + (scp != null ? '<span class="pill ' + (scOff ? 'warn' : 'soft') + '">' + (scp * 100).toFixed(1) + '%</span>' : '') + '</td>' +
+      '<td class="r b">' + money(r.total) + '</td>' +
+      '<td class="r">' + (r.staffCost > 0 ? money(r.staffCost) : '<span class="muted">–</span>') + '</td>' +
+      '<td class="r">' + (r.staffCost > 0 && r.total > 0 ? costPill(r.laborPct, target) : '') + '</td>' +
+      (editing ? '<td><input type="text" id="rvNotes_' + i + '" value="' + esc(r.notes) + '" style="min-width:110px"></td>' : '<td class="muted">' + esc(r.notes) + '</td>') +
+      '<td class="acts">' + (editing
+        ? ibtn('save', 'Save', 'saveRevenueRow(' + i + ')', 'go') + ibtn('x', 'Cancel', 'cancelRevenueEdit()')
+        : ibtn('edit', 'Edit', 'editRevenueRow(' + i + ')') + ibtn('del', 'Delete', 'removeRevenueRow(' + i + ')', 'danger')) + '</td></tr>';
+  });
+  wrap.innerHTML = html + '</tbody></table>';
+}
+
+// ---------------- TIPS ----------------
+function renderWeeklyTips(data) {
+  var wrap = document.getElementById('tipsTableWrap');
+  document.getElementById('tipsPrintTitle').textContent = 'Weekly Tip Distribution: ' + dmy(data.days[0]) + ' – ' + dmy(data.days[6]);
+  var totH = (data.dailyTotalHours || []).reduce(function(a, h) { return a + (Number(h) || 0); }, 0);
+  var top = (data.staff || []).slice().sort(function(a, b) { return b.weekTips - a.weekTips; })[0];
+  if (top && !(top.weekTips > 0)) top = null;
+  var k = [kpiTile('Tip pool this week', money(data.weekTotalPool), dmy(data.days[0]) + ' → ' + dmy(data.days[6]), 'hero')];
+  k.push(kpiTile('Distributed', money(data.weekTotalTipsDistributed || 0), data.weekUndistributed > 0.004 ? '<span class="neg">' + money(data.weekUndistributed) + ' not distributed</span>' : 'All of the pool'));
+  k.push(kpiTile('Per FOH hour', totH ? money(data.weekTotalPool / totH) : '–', hrs(totH) + ' FOH hours'));
+  k.push(kpiTile('Top share', top ? esc(top.name) : '–', top ? money(top.weekTips) : 'No tips shared yet'));
+  document.getElementById('tipKpis').innerHTML = k.join('');
+  if (!data.staff.length) { wrap.innerHTML = '<div class="empty">No FOH hours logged this week yet.</div>'; return; }
+  var html = '<table class="tbl tips-t"><thead><tr><th>Staff</th>';
+  data.days.forEach(function(d, i) { html += '<th class="c">' + DAYS[i].slice(0, 3) + '<small>' + dmy(d).slice(0, 5) + '</small></th>'; });
+  html += '<th class="r">Week</th></tr></thead><tbody>';
+  data.staff.forEach(function(s) {
+    var weightTag = (s.tipWeight !== 1) ? ' <span class="pill soft">×' + esc(s.tipWeight) + '</span>' : '';
+    html += '<tr><td class="b">' + esc(s.name) + weightTag + '</td>';
+    for (var d = 0; d < 7; d++) {
+      html += (s.hours[d] > 0) ? '<td class="c tc"><b>' + money(s.tips[d]) + '</b><small>' + hrs(s.hours[d]) + 'h</small></td>' : '<td class="c muted">–</td>';
+    }
+    html += '<td class="r b big">' + money(s.weekTips) + '</td></tr>';
+  });
+  html += '<tr class="total-row"><td>FOH hours</td>';
+  data.dailyTotalHours.forEach(function(h) { html += '<td class="c">' + (h ? hrs(h) : '–') + '</td>'; });
+  html += '<td class="r">' + hrs(totH) + '</td></tr><tr class="total-row"><td>Tip pool</td>';
+  data.dailyPool.forEach(function(p) { html += '<td class="c">' + (p ? money(p) : '–') + '</td>'; });
+  html += '<td class="r">' + money(data.weekTotalPool) + '</td></tr></tbody></table>';
+  if (data.warnings && data.warnings.length) data.warnings.forEach(function(w) { html += '<p class="hint no-print neg">⚠️ ' + esc(w) + '</p>'; });
+  wrap.innerHTML = html;
+}
+function renderRecentTipPool(rows) {
+  var wrap = document.getElementById('recentTipPoolWrap');
+  tipPoolEntriesList = rows || [];
+  if (!rows || !rows.length) { wrap.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
+  wrap.innerHTML = '<table class="tbl"><thead><tr><th>Date</th><th class="r">Tips (£)</th><th>Note</th><th></th></tr></thead><tbody>' + rows.map(function(r, i) {
+    return '<tr><td class="b nowrap">' + dmy(r.date) + ' <small class="muted">' + dowShort(r.date) + '</small></td>' +
+      '<td class="r"><input class="hours-input" style="width:90px;text-align:right" type="number" min="0" step="0.01" id="tpAmount_' + i + '" value="' + r.amount + '"></td>' +
+      '<td><input type="text" id="tpNotes_' + i + '" value="' + esc(r.notes) + '" style="width:100%"></td>' +
+      '<td class="acts">' + ibtn('save', 'Save', 'saveTipPoolEntry(' + i + ')', 'go') + ibtn('del', 'Delete', 'removeTipPoolEntry(' + i + ')', 'danger') + '</td></tr>';
+  }).join('') + '</tbody></table>';
+}
+
+// ---------------- CASH LIST ----------------
+function buildDenomGrid() {
+  document.getElementById('denomGrid').innerHTML = DENOMINATIONS.map(function(d) {
+    var label = d >= 1 ? ('£' + d) : (Math.round(d * 100) + 'p');
+    return '<div class="dn"><span class="dn-l">' + label + '</span><span class="dn-x">×</span>' +
+      '<input type="number" min="0" step="1" class="denom-input" data-denom="' + d + '" value="0" oninput="recalcCounted()" onfocus="this.select()">' +
+      '<span class="dn-t" id="dnT_' + String(d).replace('.', '_') + '">£0.00</span></div>';
+  }).join('');
+}
+var _recalcCounted0 = recalcCounted;
+recalcCounted = function() {
+  document.querySelectorAll('.denom-input').forEach(function(i) {
+    var t = document.getElementById('dnT_' + i.getAttribute('data-denom').replace('.', '_'));
+    if (t) t.textContent = money(Number(i.getAttribute('data-denom')) * (Number(i.value) || 0));
+  });
+  _recalcCounted0();
+};
+function loadCashList() {
+  var wrap = document.getElementById('cashListWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  var month = document.getElementById('cashMonth').value, year = document.getElementById('cashYear').value;
+  google.script.run.withSuccessHandler(function(res) {
+    cashLedgerBalance = res.currentBalance;
+    document.getElementById('cashInHandValue').textContent = money(cashLedgerBalance);
+    recalcCounted();
+    cashRowsList = res.rows;
+    var inM = 0, outM = 0;
+    res.rows.forEach(function(r) { inM += Number(r.income) || 0; outM += Number(r.expense) || 0; });
+    document.getElementById('cashMonLbl').textContent = MONTHS_EN[month - 1] + ' ' + year;
+    document.getElementById('cashMonNet').innerHTML = '<span class="' + (inM - outM < 0 ? 'neg' : '') + '">' + (inM - outM >= 0 ? '+' : '') + money(inM - outM) + '</span>';
+    document.getElementById('cashMonSub').innerHTML = '<span class="pos">In ' + money(inM) + '</span> · <span class="neg">Out ' + money(outM) + '</span>';
+    var html = '<table class="tbl"><thead><tr><th>Date</th><th>Description</th><th class="r">Amount</th><th class="r">Balance</th><th></th></tr></thead><tbody>';
+    html += '<tr class="total-row"><td colspan="3">Ending balance</td><td class="r">' + money(res.endingBalance) + '</td><td></td></tr>';
+    for (var i = res.rows.length - 1; i >= 0; i--) {
+      var r = res.rows[i], auto = (r.source === 'Automatic');
+      html += '<tr><td class="b nowrap">' + dmy(r.date) + '</td>' +
+        '<td><div>' + esc(r.description) + ' <span class="pill ' + (auto ? 'soft' : 'man') + '">' + (auto ? 'Auto' : 'Manual') + '</span></div>' + (r.notes ? '<small class="muted">' + esc(r.notes) + '</small>' : '') + '</td>' +
+        '<td class="r b ' + (r.income ? 'pos' : 'neg') + '">' + (r.income ? '+' + money(r.income) : '−' + money(r.expense)) + '</td>' +
+        '<td class="r">' + money(r.balance) + '</td>' +
+        '<td class="acts">' + ibtn('edit', 'Edit', 'editCashRow(' + i + ')') + ibtn('del', 'Delete', 'removeCashRow(' + i + ')', 'danger') + '</td></tr>';
+    }
+    if (!res.rows.length) html += '<tr><td colspan="5" class="empty">No entries this month.</td></tr>';
+    html += '<tr class="total-row"><td colspan="3">Carried forward from previous month</td><td class="r">' + money(res.carryForward) + '</td><td></td></tr></tbody></table>';
+    wrap.innerHTML = html;
+  }).withFailureHandler(onError).getCashViewData(month, year);
+}
+var _editCashRow0 = editCashRow, _cancelCashEdit0 = cancelCashEdit;
+editCashRow = function(i) {
+  _editCashRow0(i);
+  document.getElementById('cashFormTitle').textContent = 'Edit entry';
+  document.getElementById('cashFormCard').classList.add('editing');
+  document.getElementById('cashFormCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+cancelCashEdit = function() {
+  _cancelCashEdit0();
+  document.getElementById('cashFormTitle').textContent = 'Add entry';
+  document.getElementById('cashFormCard').classList.remove('editing');
+};
+
+// ---------------- REQUESTS ----------------
+function reqTab(all) {
+  document.getElementById('reqShowDone').checked = all;
+  document.getElementById('reqTabOpen').classList.toggle('mode-active', !all);
+  document.getElementById('reqTabAll').classList.toggle('mode-active', all);
+  loadRequests();
+}
+function loadRequests() {
+  populateRequestStaffSelect();
+  var wrap = document.getElementById('requestsWrap');
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  var includeDone = document.getElementById('reqShowDone').checked;
+  google.script.run.withSuccessHandler(function(rows) {
+    requestsList = rows;
+    var open = rows.filter(function(r) { return r.status !== 'DONE'; });
+    var od = open.filter(function(r) { return r.overdue; });
+    var soon = new Date(); soon.setDate(soon.getDate() + 7); var soonS = fmtDate(soon);
+    var dueSoon = open.filter(function(r) { return !r.overdue && r.dueDate && r.dueDate <= soonS; });
+    var k = [kpiTile('Open requests', open.length, open.length ? 'Waiting to be handled' : 'Nothing waiting', 'hero')];
+    k.push(kpiTile('Overdue', '<span class="' + (od.length ? 'neg' : '') + '">' + od.length + '</span>', od.length ? od.slice(0, 3).map(function(r) { return esc(r.staffName); }).join(', ') : 'All on time'));
+    k.push(kpiTile('Due in 7 days', dueSoon.length, dueSoon.length ? 'Next: ' + dmy(dueSoon.map(function(r) { return r.dueDate; }).sort()[0]) : 'Nothing due soon'));
+    if (includeDone) k.push(kpiTile('Completed', rows.length - open.length, 'In the history'));
+    document.getElementById('reqKpis').innerHTML = k.join('');
+    if (!rows.length) { wrap.innerHTML = '<div class="empty">No requests. Add one on the right.</div>'; return; }
+    wrap.innerHTML = '<div class="rq-list">' + rows.map(function(r, i) {
+      var done = r.status === 'DONE';
+      return '<div class="rq' + (done ? ' done' : r.overdue ? ' overdue' : '') + '">' +
+        (done ? '<button type="button" class="rq-check on" title="Reopen" onclick="reopenRequest(' + i + ')">' + IC.save + '</button>'
+              : '<button type="button" class="rq-check" title="Mark done" onclick="markRequestDone(' + i + ')">' + IC.save + '</button>') +
+        '<div class="rq-body"><div class="rq-t">' + esc(r.request) + '</div><div class="rq-meta">' +
+          '<span class="chip">' + esc(r.staffName || 'General') + '</span><span>Added ' + dmy(r.date) + '</span>' +
+          (r.dueDate ? '<span class="due' + (r.overdue && !done ? ' od' : '') + '">' + (r.overdue && !done ? 'Overdue · ' : 'Due ') + dmy(r.dueDate) + '</span>' : '') +
+          (done && r.doneDate ? '<span class="pos">Done ' + dmy(r.doneDate) + '</span>' : '') +
+          (r.notes ? '<span class="muted">' + esc(r.notes) + '</span>' : '') +
+        '</div></div><div class="acts">' + ibtn('del', 'Delete', 'removeRequest(' + i + ')', 'danger') + '</div></div>';
+    }).join('') + '</div>';
+  }).withFailureHandler(onError).getRequests(includeDone);
+}
+
+// ---------------- STAFF MANAGEMENT ----------------
+var stFilter = 'active';
+function renderStaffMgmt(staff) {
+  staffMgmtList = staff;
+  var wrap = document.getElementById('staffMgmtTableWrap');
+  var act = staff.filter(function(s) { return s.active; });
+  var cnt = function(d) { return act.filter(function(s) { return s.dept === d; }).length; };
+  var avg = act.length ? act.reduce(function(a, s) { return a + (Number(s.rate) || 0); }, 0) / act.length : 0;
+  document.getElementById('stKpis').innerHTML = [
+    kpiTile('Active staff', act.length, (staff.length - act.length) + ' inactive', 'hero'),
+    kpiTile('Floor', cnt('FOH'), 'FOH'), kpiTile('Kitchen', cnt('BOH'), 'BOH'), kpiTile('Cleaning', cnt('CLEANING'), 'Cleaning'),
+    kpiTile('Average rate', money(avg), 'per hour, active staff')].join('');
+  var html = '<table class="tbl st-t"><thead><tr><th>#</th><th>Name</th><th>Dept</th><th class="r">Rate £</th><th class="r">Tip wt</th><th class="r">Hol. days</th><th>Start</th><th>End</th><th>Status</th><th></th></tr></thead><tbody>';
+  var ac = 0, ic = 0;
+  staff.forEach(function(s, i) {
+    var pos = s.active ? (++ac) : (++ic);
+    html += '<tr data-i="' + i + '" data-active="' + (s.active ? 1 : 0) + '" data-name="' + esc(String(s.name).toLowerCase()) + '" class="' + (s.active ? '' : 'inactive-row') + '">' +
+      '<td class="nowrap"><span class="ord">' + pos + '</span><button type="button" class="mv" title="Move up" onclick="moveStaffDir(' + i + ',-1)">▲</button><button type="button" class="mv" title="Move down" onclick="moveStaffDir(' + i + ',1)">▼</button></td>' +
+      '<td><span class="ddot ' + esc(s.dept) + '"></span><input type="text" id="stName_' + i + '" value="' + esc(s.name) + '" style="width:130px"></td>' +
+      '<td><select id="stDept_' + i + '">' + ['FOH', 'BOH', 'CLEANING'].map(function(d) { return '<option value="' + d + '"' + (d === s.dept ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select></td>' +
+      '<td class="r"><input type="number" step="0.01" id="stRate_' + i + '" value="' + esc(s.rate) + '" style="width:72px"></td>' +
+      '<td class="r"><input type="number" step="0.05" id="stWeight_' + i + '" value="' + esc(s.tipWeight) + '" style="width:62px"></td>' +
+      '<td class="r"><input type="number" step="1" id="stHolEnt_' + i + '" value="' + esc(s.holidayEntitlement) + '" style="width:62px"></td>' +
+      '<td><input type="date" id="stStartDate_' + i + '" value="' + esc(s.startDate) + '"></td>' +
+      '<td><input type="date" id="stEndDate_' + i + '" value="' + esc(s.endDate) + '"></td>' +
+      '<td><button type="button" class="status-pill ' + (s.active ? 'on' : 'off') + '" title="' + (s.active ? 'Click to deactivate' : 'Click to activate') + '" onclick="toggleActive(' + i + ')">' + (s.active ? 'Active' : 'Inactive') + '</button></td>' +
+      '<td class="acts">' + ibtn('save', 'Save this row', 'saveStaffEdit(' + i + ')', 'go') + ibtn('del', 'Delete', 'deleteStaff(' + i + ')', 'danger') + '</td></tr>';
+  });
+  wrap.innerHTML = html + '</tbody></table>';
+  stApplyFilter_();
+  document.getElementById('stDirty').textContent = '';
+}
+function stApplyFilter_() {
+  var q = (document.getElementById('stSearch').value || '').trim().toLowerCase();
+  document.querySelectorAll('#staffMgmtTableWrap tbody tr').forEach(function(tr) {
+    var a = tr.getAttribute('data-active') === '1';
+    var ok = (stFilter === 'all' || (stFilter === 'active') === a) && (!q || tr.getAttribute('data-name').indexOf(q) >= 0);
+    tr.style.display = ok ? '' : 'none';
+  });
+}
+
+// ---------------- page wiring (runs once) ----------------
+(function() {
+  // Staff Hours tabs
+  document.querySelectorAll('#ppSeg button').forEach(function(b) {
+    b.addEventListener('click', function() {
+      var t = b.getAttribute('data-t');
+      document.querySelectorAll('#ppSeg button').forEach(function(x) { x.classList.toggle('mode-active', x === b); });
+      document.querySelectorAll('#view-payperiod .pp-sec').forEach(function(c) { c.style.display = c.getAttribute('data-sec') === t ? '' : 'none'; });
+    });
+  });
+  var _ppFoot = updatePpFooter;
+  updatePpFooter = function() {
+    _ppFoot();
+    if (!ppData) return;
+    var g = 0, pv = 0, adv = 0, worked = 0, advN = 0;
+    ppData.rows.forEach(function(r) {
+      g += Number(r.totalHours) || 0; pv += Number(r.previewHours) || 0;
+      if (Number(r.advances) > 0) { adv += Number(r.advances); advN++; }
+      if (Number(r.totalHours) > 0) worked++;
+    });
+    document.getElementById('ppKpis').innerHTML = [
+      kpiTile('Period hours', hrs(g) + ' h', worked + ' of ' + ppData.rows.length + ' staff entered', 'hero'),
+      kpiTile('Preview (from Hours)', hrs(pv) + ' h', 'Auto from daily entries'),
+      kpiTile('Difference', '<span class="' + (Math.abs(g - pv) > 0.01 ? 'amber' : 'pos') + '">' + (g - pv >= 0 ? '+' : '') + hrs(Math.round((g - pv) * 4) / 4) + ' h</span>', 'Typed − preview'),
+      kpiTile('Advances', money(adv), advN + ' people')].join('');
+  };
+  // Staff Management filter / search / dirty rows
+  document.querySelectorAll('#stSeg button').forEach(function(b) {
+    b.addEventListener('click', function() {
+      stFilter = b.getAttribute('data-f');
+      document.querySelectorAll('#stSeg button').forEach(function(x) { x.classList.toggle('mode-active', x === b); });
+      stApplyFilter_();
+    });
+  });
+  document.getElementById('stSearch').addEventListener('input', stApplyFilter_);
+  document.getElementById('staffMgmtTableWrap').addEventListener('input', function(e) {
+    var tr = e.target.closest('tr'); if (tr) tr.classList.add('dirty');
+    var n = document.querySelectorAll('#staffMgmtTableWrap tr.dirty').length;
+    document.getElementById('stDirty').textContent = n ? n + ' row' + (n > 1 ? 's' : '') + ' changed — not saved yet' : '';
+  });
+  // long explanations → "How it works" toggles
+  document.querySelectorAll('main .card > p.hint').forEach(function(p) {
+    if (p.id || p.closest('details') || p.textContent.trim().length < 170) return;
+    var d = document.createElement('details'); d.className = 'howto';
+    d.innerHTML = '<summary>How it works</summary>';
+    p.parentNode.insertBefore(d, p); d.appendChild(p);
+  });
 })();
 
 // ============================================================
