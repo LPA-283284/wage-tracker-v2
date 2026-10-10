@@ -71,7 +71,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TeamOS HR</title>
-  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -715,6 +715,16 @@
     .rpt-b span { font-size:20px; } .rpt-b:hover { background:#FBF1E0; border-color:#E7C48A; }
     .rpt-b.wa { background:#E9F8EE; border-color:#BFE6CC; color:#14692F; } .rpt-b.wa:hover { background:#D7F2E0; }
     .rpt-b.wide { grid-column:1/-1; justify-content:center; }
+    /* ===== v2.9 — headings & amounts in Playfair Display, like the phone app ===== */
+    .pg-title, .dash-hello, .card h2, .card h3, .rpt-t, .tu-modal h3, .modal h2,
+    .dk .v, .kpi .v, .sum-chip b, .dept-tot, .ec-h, .mbar span, .dow-v b, .foot-total, .al-r b, .hb-v, .tu-name {
+      font-family:'Playfair Display', Georgia, serif !important; letter-spacing:0 !important; }
+    .pg-title { font-size:30px; font-weight:700; }
+    .card h2, .card h3 { font-size:18px; font-weight:700; }
+    .dk .v, .kpi .v { font-weight:700; }
+    .tu-name { font-size:16px; }
+    .dk .v .pill, .kpi .v .pill, .tu-name .role-pill, .tu-name small { font-family:'Hanken Grotesk', sans-serif !important; }
+    .tbl td.r.b, .tbl td.b.r { font-family:'Playfair Display', Georgia, serif; font-size:15px; }
   </style>
 </head>
 <body>

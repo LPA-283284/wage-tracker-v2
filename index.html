@@ -299,6 +299,16 @@
   .due { font-weight:700; color:#9C4B00; } .due.od { color:#C62828; }
   .side-urole { text-transform:none; letter-spacing:.02em; font-size:11.5px; }
   @media (max-width:640px) { .pill-input { width:100%; } .seg { flex-wrap:wrap; } .pg-tools { width:100%; } .vform .two { grid-template-columns:1fr; } }
+    /* ===== v2.9 — headings & amounts in Playfair Display, like the phone app ===== */
+    .pg-title, .dash-hello, .card h2, .card h3, .rpt-t, .tu-modal h3, .modal h2,
+    .dk .v, .kpi .v, .sum-chip b, .dept-tot, .ec-h, .mbar span, .dow-v b, .foot-total, .al-r b, .hb-v, .tu-name {
+      font-family:'Playfair Display', Georgia, serif !important; letter-spacing:0 !important; }
+    .pg-title { font-size:30px; font-weight:700; }
+    .card h2, .card h3 { font-size:18px; font-weight:700; }
+    .dk .v, .kpi .v { font-weight:700; }
+    .tu-name { font-size:16px; }
+    .dk .v .pill, .kpi .v .pill, .tu-name .role-pill, .tu-name small { font-family:'Hanken Grotesk', sans-serif !important; }
+    .tbl td.r.b, .tbl td.b.r { font-family:'Playfair Display', Georgia, serif; font-size:15px; }
 </style>
 </head>
 <body>
