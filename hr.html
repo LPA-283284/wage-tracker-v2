@@ -4990,13 +4990,21 @@ function rptOpen(kind) {
   var r;
   try { r = REPORTS[kind](); } catch (e) { toast(e.message); return; }
   if (kind !== 'monthEnd' && kind !== 'holidays' && kind !== 'tips' && typeof ppDirty !== 'undefined' && Object.keys(ppDirty).length) toast('Note: unsaved changes are included — press SAVE CHANGES too.');
-  RPT_CUR = { r: r, blob: null };
+  r.listText = r.text;
+  r.pdfText = r.spec.title + '\n' + (r.spec.subtitle || '').split('  ·  ')[0].replace('Pay period ', '') + '\n(PDF attached)';
+  RPT_CUR = { r: r, blob: null, mode: 'pdf' };
+  rptMode('pdf');
   document.getElementById('rptTitle').textContent = r.spec.title;
   document.getElementById('rptSub').textContent = r.spec.subtitle || '';
-  document.getElementById('rptText').value = r.text;
   document.getElementById('rptMsg').textContent = '';
   document.getElementById('rptNative').style.display = (navigator.share && navigator.canShare) ? '' : 'none';
   document.getElementById('rptModal').classList.add('open');
+}
+function rptMode(m) {
+  RPT_CUR.mode = m;
+  document.querySelectorAll('#rptSeg button').forEach(function(b) { b.classList.toggle('mode-active', b.getAttribute('data-m') === m); });
+  document.getElementById('rptText').value = m === 'pdf' ? RPT_CUR.r.pdfText : RPT_CUR.r.listText;
+  document.getElementById('rptText').rows = m === 'pdf' ? 3 : 8;
 }
 function rptClose() { document.getElementById('rptModal').classList.remove('open'); }
 async function rptPdf() {
@@ -5016,7 +5024,7 @@ function rptDownload(blob) {
 }
 async function rptDo(action) {
   try {
-    var blob = await rptPdf();
+    var blob = (RPT_CUR.mode === 'text' && (action === 'whatsapp' || action === 'email')) ? null : await rptPdf();
     var text = document.getElementById('rptText').value;
     if (action === 'print') {
       var doc = rptBuild(RPT_CUR.r.spec); doc.autoPrint();
@@ -5028,14 +5036,18 @@ async function rptDo(action) {
       var file = new File([blob], rptFileName(), { type: 'application/pdf' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: RPT_CUR.r.spec.title, text: text });
       else await navigator.share({ title: RPT_CUR.r.spec.title, text: text });
+    } else if (action === 'whatsapp' && RPT_CUR.mode === 'text') {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    } else if (action === 'email' && RPT_CUR.mode === 'text') {
+      location.href = 'mailto:?subject=' + encodeURIComponent(RPT_CUR.r.spec.title) + '&body=' + encodeURIComponent(text);
     } else if (action === 'whatsapp') {
       var f2 = new File([blob], rptFileName(), { type: 'application/pdf' });
-      if (navigator.canShare && navigator.canShare({ files: [f2] }) && /iPad|iPhone|Android|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document) {
-        await navigator.share({ files: [f2], text: text });   // phone / iPad: pick WhatsApp, the PDF goes with it
+      if (navigator.canShare && navigator.canShare({ files: [f2] })) {
+        await navigator.share({ files: [f2], text: text });   // share sheet → choose WhatsApp, the PDF goes as the message
       } else {
         rptDownload(blob);
-        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-        document.getElementById('rptMsg').textContent = 'The PDF was downloaded — attach it in WhatsApp (📎) if you want to send the file too.';
+        window.open('https://web.whatsapp.com/', '_blank');
+        document.getElementById('rptMsg').textContent = 'PDF downloaded. In WhatsApp, open the chat and drag the PDF in (or 📎 → Document).';
       }
     } else if (action === 'email') {
       rptDownload(blob);
@@ -5059,10 +5071,11 @@ async function rptDo(action) {
       '<button type="button" class="rpt-b" onclick="rptDo(\'email\')"><span>✉️</span>Email</button>' +
       '<button type="button" class="rpt-b wide" id="rptNative" onclick="rptDo(\'native\')"><span>📤</span>Share… (other apps, with the PDF)</button>' +
     '</div>' +
-    '<label style="margin-top:14px;display:block">Message text (WhatsApp / email)</label>' +
-    '<textarea id="rptText" rows="6" style="width:100%;border:1px solid #E3D8CB;border-radius:10px;padding:10px;font:inherit;font-size:13px;background:#FFFDFa"></textarea>' +
+    '<div style="display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap"><label style="margin:0">WhatsApp / email send as</label>' +
+      '<div class="seg small" id="rptSeg"><button type="button" data-m="pdf" onclick="rptMode(\'pdf\')">PDF</button><button type="button" data-m="text" onclick="rptMode(\'text\')">Text list</button></div></div>' +
+    '<textarea id="rptText" rows="3" style="margin-top:8px;width:100%;border:1px solid #E3D8CB;border-radius:10px;padding:10px;font:inherit;font-size:13px;background:#FFFDFa"></textarea>' +
     '<div class="hint" id="rptMsg" style="min-height:18px;margin-top:6px;color:#6D1B2F;font-weight:600"></div>' +
-    '<div class="hint" style="margin:0">On iPad / phone, WhatsApp gets the PDF itself. On a computer the PDF is downloaded and WhatsApp/email opens with the message — attach the file with 📎.</div>' +
+    '<div class="hint" style="margin:0">PDF: pick WhatsApp in the share window that opens (if there is none, the PDF is downloaded — drag it into the chat). Text list: the names and hours go as a normal message.</div>' +
     '</div>';
   document.body.appendChild(m);
   m.addEventListener('click', function(e) { if (e.target === m) rptClose(); });
