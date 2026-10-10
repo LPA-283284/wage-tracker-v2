@@ -757,6 +757,10 @@
     #sbnav > * { flex-shrink:0; }
     #sbnav button { padding-top:8px !important; padding-bottom:8px !important; }
     #sbnav .sb-group { margin-top:12px !important; margin-bottom:4px !important; }
+    .hours-tools { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .hours-tools .entry-top { padding:0 !important; margin:0; background:none; border:0; box-shadow:none; gap:10px; }
+    .hours-tabs { gap:12px; }
+    .hours-tabs details.howto { margin:0; }
   </style>
 </head>
 <body>
@@ -5274,6 +5278,39 @@ async function rrApply() {
     b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>Import from Right Reservation';
     b.onclick = rrOpen; t.appendChild(b);
   }
+})();
+
+
+// ---------------- v2.10 Hours: date controls live in the tab bar (no separate cards) ----------------
+(function() {
+  var tabs = document.querySelector('#view-hours .hours-tabs'); if (!tabs) return;
+  var tools = document.createElement('div'); tools.className = 'hours-tools'; tools.id = 'hoursModeTools';
+  tabs.insertBefore(tools, tabs.querySelector('.howto'));
+  var MODES = { daily: 'hoursDailySection', weekly: 'hoursWeeklySection', view: 'hoursViewSection', grid: 'hoursGridSection' };
+  var gridHelp = null;
+  Object.keys(MODES).forEach(function(m) {
+    var sec = document.getElementById(MODES[m]); if (!sec) return;
+    var et = sec.querySelector('.entry-top'); if (!et) return;
+    var holder = et.classList.contains('card') ? null : et.closest('.card');
+    et.classList.remove('card'); et.removeAttribute('style'); et.setAttribute('data-mode', m);
+    et.querySelectorAll('.et-hint').forEach(function(h) { h.remove(); });
+    tools.appendChild(et);
+    if (holder) {
+      if (m === 'grid') { gridHelp = holder.querySelector('details.howto'); if (gridHelp) { gridHelp.querySelector('summary').textContent = 'How the weekly grid works'; tabs.appendChild(gridHelp); } }
+      holder.style.display = 'none';
+    }
+  });
+  // View & fix: load as soon as a date changes
+  ['veFrom', 'veTo'].forEach(function(id) { var el = document.getElementById(id); if (el) el.addEventListener('change', function() { if (document.getElementById('veFrom').value && document.getElementById('veTo').value) loadHoursEntries(); }); });
+  var lb = tools.querySelector('[data-mode="view"] .btn'); if (lb) { lb.textContent = 'Show'; lb.className = 'tool-btn'; }
+  var _sw = switchHoursMode;
+  switchHoursMode = function(mode) {
+    _sw(mode);
+    tools.querySelectorAll('[data-mode]').forEach(function(x) { x.style.display = x.getAttribute('data-mode') === mode ? '' : 'none'; });
+    if (gridHelp) gridHelp.style.display = mode === 'grid' ? '' : 'none';
+    tabs.querySelector('details.howto').style.display = (mode === 'view') ? 'none' : '';
+    if (mode === 'view' && !document.getElementById('viewEntriesWrap').querySelector('table')) loadHoursEntries();
+  };
 })();
 
 // ============================================================
