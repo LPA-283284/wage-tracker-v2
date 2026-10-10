@@ -208,6 +208,88 @@
   .sig-img { max-width:220px; max-height:90px; border:1px solid var(--line); border-radius:8px; background:#fff; }
   .thumb { max-width:120px; max-height:80px; border-radius:8px; cursor:pointer; border:1px solid var(--line); }
   @media (max-width:700px) { .wrap { padding:12px; } .kpi .v { font-size:20px; } }
+  /* ===================== v2.7 — same look as TeamOS HR ===================== */
+  .wrap { max-width:1500px; margin:0; padding:24px 28px 40px; }
+  @media (max-width:1100px) { .wrap { padding:14px; } }
+  .pg-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:0 60px 18px 0; }
+  @media (max-width:1100px) { .pg-head { margin-right:0; } }
+  .pg-title { font-size:26px; font-weight:700; color:#6D1B2F; letter-spacing:-.01em; line-height:1.15; }
+  .pg-sub { font-size:13px; color:#8A7D74; margin-top:4px; }
+  .pg-tools { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .card { border-radius:16px; padding:20px 22px; margin-bottom:18px; border:1px solid #F0E6DA; box-shadow:0 2px 10px rgba(78,15,32,.06); }
+  .card h2, .card h3 { font-family:inherit; font-size:16px; font-weight:700; color:#4A0817; margin:0 0 14px; display:flex; align-items:center; gap:10px; }
+  .card h2::before, .card h3::before { content:''; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,#E7C48A,#C99A55); flex:none; }
+  .modal h2 { font-family:inherit; font-size:19px; color:#4A0817; }
+  label { font-size:11px; font-weight:700; color:#8A7D74; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
+  input, select, textarea { border:1px solid #E3D8CB; border-radius:10px; padding:9px 12px; background:#FFFDFA; transition:border-color .15s, box-shadow .15s; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#C99A55; box-shadow:0 0 0 3px rgba(201,154,85,.2); background:#fff; }
+  input[type=checkbox] { box-shadow:none; }
+  .btn { background:linear-gradient(135deg,#7A1430,#5A0A1F); border-radius:10px; padding:11px 20px; box-shadow:0 3px 10px rgba(90,10,31,.18); }
+  .btn:hover { background:linear-gradient(135deg,#8A1D3B,#6A0F26); }
+  .btn.ghost { background:#fff; color:#6D1B2F; border:1px solid #EADFCF; box-shadow:none; }
+  .btn.ghost:hover { background:#FBF1E0; }
+  .btn.danger { background:#fff; color:#C62828; border:1px solid #F0D0D0; box-shadow:none; }
+  .btn.danger:hover { background:#FDE3E3; }
+  .btn.small { padding:7px 12px; font-size:12.5px; border-radius:9px; }
+  .seg { background:#EFE6DB; border-radius:12px; margin-bottom:0; gap:2px; flex-wrap:nowrap; }
+  .seg button { padding:9px 16px; border-radius:9px; font-size:14px; }
+  .seg button:hover { color:#4A0817; }
+  .seg button.active { background:#fff; color:#4A0817; box-shadow:0 2px 8px rgba(78,15,32,.12); }
+  .modal .seg { margin-bottom:14px; }
+  .kpis { grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:18px; }
+  .kpis:empty { display:none; }
+  .pg-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:18px; }
+  .pg-kpis:empty { display:none; }
+  .hint { color:#8A7D74; font-size:12.5px; } .loading { text-align:center; padding:30px; color:#8A7D74; }
+  #cashTable td:first-child, #whTable td:first-child, #depTable td:first-child, #depUsedTable td:first-child, #advTable td:first-child, #sigTable td:first-child { white-space:nowrap; }
+  .kpi { text-align:left; border-radius:16px; padding:16px 18px; border:1px solid #F0E6DA; box-shadow:0 2px 10px rgba(78,15,32,.06); }
+  .kpi .l { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#8A7D74; font-weight:700; }
+  .kpi .v { font-size:25px; margin-top:8px; line-height:1.15; }
+  .kpi .s { font-size:12px; color:#8A7D74; margin-top:6px; }
+  .kpi.hero { background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%); border:0; }
+  .kpi.hero .l { color:#E7C48A; } .kpi.hero .v { color:#FFF4E0; } .kpi.hero .s { color:#EAD7B5; }
+  .kpi .v.pos { color:#2E7D32; } .kpi .v.neg { color:#C62828; }
+  table { border-collapse:separate; border-spacing:0; }
+  th { background:#FBF5EC; color:#7A5B3A; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:10px 10px; border-bottom:1px solid #EADFCF; }
+  tr:first-child th:first-child { border-top-left-radius:10px; } tr:first-child th:last-child { border-top-right-radius:10px; }
+  td { border-bottom:1px solid #F2ECE4; padding:10px 10px; }
+  tr:hover td { background:#FFF8EE; }
+  td.num { font-variant-numeric:tabular-nums; }
+  .tag { font-size:10.5px; font-weight:700; padding:2px 8px; }
+  .bell-wrap { position:absolute; }
+  @media (max-width:1100px) { .bell-wrap { position:fixed; } }
+  .side-grid { display:grid; grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr); gap:18px; align-items:start; }
+  .side-grid > .card.hidden + .card, .side-grid:has(> .card.hidden) { grid-template-columns:1fr; }
+  @media (max-width:1100px) { .side-grid { grid-template-columns:1fr; } }
+  .vform { display:flex; flex-direction:column; gap:12px; }
+  .vform .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .vform .btn { align-self:flex-start; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; } .form-grid .span2 { grid-column:1/-1; }
+  @media (max-width:640px) { .form-grid { grid-template-columns:1fr; } }
+  .file-in { padding:10px; background:#FBF7F1; border-style:dashed; }
+  .list-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .pill-input, .pill-select { height:42px; width:190px; border-radius:999px; padding:0 16px; border:1px solid #E6D6C2; background:#fff; font-weight:600; color:#4A0817; box-shadow:0 4px 14px rgba(78,15,32,.08); }
+  .pill-select { width:auto; }
+  .tool-btn { display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 16px; border-radius:999px; border:1px solid #E6D6C2; background:#fff;
+              color:#6D1B2F; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(78,15,32,.08); }
+  .tool-btn:hover { background:#FFF8EE; }
+  .period.range { padding:4px 12px; gap:4px; } .period .pl { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#8A7D74; }
+  .period input[type=date] { width:auto; }
+  .sum-line:empty { display:none; }
+  .sum-line { display:inline-block; background:#FBF1E0; color:#6D1B2F; font-weight:700; font-size:13px; padding:7px 14px; border-radius:999px; margin-bottom:12px; }
+  .empty { color:#8A7D74; padding:18px 0; text-align:center; }
+  .card.editing { border-color:#E7C48A; box-shadow:0 0 0 3px rgba(231,196,138,.35); }
+  .entry-foot { position:sticky; bottom:0; z-index:15; display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:#fff; margin:14px -22px -20px; padding:12px 22px;
+                border-top:1px solid #F0E6DA; border-radius:0 0 16px 16px; box-shadow:0 -8px 16px rgba(78,15,32,.05), 0 14px 0 0 #fff; }
+  .foot-total { font-weight:700; color:#4A0817; background:#FBF1E0; padding:7px 14px; border-radius:999px; }
+  .foot-total:empty { display:none; }
+  .modal { border-radius:18px; padding:22px; box-shadow:0 20px 60px rgba(46,3,12,.35); }
+  .thumb { max-width:64px; max-height:48px; border-radius:8px; }
+  .sig-img { max-width:160px; max-height:60px; }
+  .dk .l, .kpi .l { white-space:normal; }
+  .side-urole { text-transform:none; letter-spacing:.02em; font-size:11.5px; }
+  @media (max-width:640px) { .pill-input { width:100%; } .seg { flex-wrap:wrap; } .pg-tools { width:100%; } .vform .two { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -260,7 +342,8 @@
     <nav class="side-nav" id="tabs"></nav>
     <div class="side-foot">
       <div class="side-user"><div class="side-av" id="whoAv">·</div><div><div class="side-uname" id="whoName"></div><div class="side-urole" id="whoSub"></div></div></div>
-      <button class="side-btn" id="logoutBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Log out</button>
+      <button class="side-btn hidden" id="toHrBtn" onclick="location.href='hr.html'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 5 7 7-7 7M5 12h14"/></svg>TeamOS HR</button>
+      <button class="side-btn" id="logoutBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button>
     </div>
   </div>
 
@@ -293,18 +376,24 @@
     </section>
 
     <section class="page" id="page-wages">
-      <div class="seg" id="wagesSeg">
-        <button data-sub="status" class="active">Status</button>
-        <button data-sub="history" data-perm="wages_view">History</button>
-        <button data-sub="sigs" data-perm="signatures_view">Signatures</button>
+      <div class="pg-head">
+        <div><div class="pg-title">Wages</div><div class="pg-sub">What each person is owed — every payment is signed</div></div>
+        <div class="pg-tools"><div class="seg" id="wagesSeg">
+          <button data-sub="status" class="active">Status</button>
+          <button data-sub="history" data-perm="wages_view">History</button>
+          <button data-sub="sigs" data-perm="signatures_view">Signatures</button>
+        </div></div>
       </div>
 
       <div id="wages-status">
         <div class="kpis" id="wageKpis"></div>
         <div class="card">
-          <div class="row" style="align-items:center;margin-bottom:8px">
-            <h2 style="margin:0">Staff Status</h2>
-            <div style="flex:0;min-width:auto"><button class="btn ghost small" onclick="loadWages()">Refresh</button></div>
+          <div class="list-head">
+            <h2 style="margin:0">Staff status</h2>
+            <div class="pg-tools">
+              <input type="text" class="pill-input" placeholder="Search name…" oninput="filterRows('statusTable', this.value)">
+              <button class="tool-btn" onclick="loadWages()">Refresh</button>
+            </div>
           </div>
           <div class="scroll"><table id="statusTable"></table></div>
         </div>
@@ -312,159 +401,155 @@
 
       <div id="wages-history" class="hidden">
         <div class="card">
-          <h2>Payment History</h2>
-          <div class="row">
-            <div><label>From</label><input type="date" id="whFrom"></div>
-            <div><label>To</label><input type="date" id="whTo"></div>
-            <div><label>Person</label><input id="whPerson" placeholder="All"></div>
-            <div style="flex:0;min-width:auto"><button class="btn" onclick="loadWageHistory()">Show</button></div>
+          <div class="filter-bar">
+            <div class="period range"><span class="pl">From</span><input type="date" id="whFrom"><span class="pl">to</span><input type="date" id="whTo"></div>
+            <input id="whPerson" class="pill-input" placeholder="Person (all)">
+            <button class="btn" onclick="loadWageHistory()">Show</button>
           </div>
-          <div class="muted" id="whSum" style="margin-top:10px"></div>
-          <div class="scroll" style="margin-top:8px"><table id="whTable"></table></div>
+          <div class="sum-line" id="whSum"></div>
+          <div class="scroll"><table id="whTable"></table></div>
         </div>
       </div>
 
       <div id="wages-sigs" class="hidden">
         <div class="card">
-          <h2>Signatures</h2>
-          <div class="row">
-            <div><label>Type</label><select id="sigType"><option value="">All</option><option value="payment">Payment</option><option value="advance">Advance</option><option value="debt">Collect debt</option></select></div>
-            <div><label>Person</label><input id="sigPerson" placeholder="All"></div>
-            <div style="flex:0;min-width:auto"><button class="btn" onclick="loadSigs()">Show</button></div>
+          <div class="filter-bar">
+            <select id="sigType" class="pill-select"><option value="">All types</option><option value="payment">Payment</option><option value="advance">Advance</option><option value="debt">Collect debt</option></select>
+            <input id="sigPerson" class="pill-input" placeholder="Person (all)">
+            <button class="btn" onclick="loadSigs()">Show</button>
           </div>
-          <div class="scroll" style="margin-top:8px"><table id="sigTable"></table></div>
+          <div class="scroll"><table id="sigTable"></table></div>
         </div>
       </div>
     </section>
 
     <!-- ADVANCES -->
     <section class="page" id="page-advances">
-      <div class="card" data-perm-card="advance_add">
-        <h2>Give an Advance</h2>
-        <div class="row">
-          <div><label>Person</label><select id="advPerson"></select></div>
-          <div><label>Amount (£)</label><input id="advAmount" type="number" step="0.01" min="0"></div>
-          <div><label>Method</label><select id="advMethod"><option>CASH</option><option>BANK</option></select></div>
+      <div class="pg-head"><div><div class="pg-title">Advances</div><div class="pg-sub">Give an advance with a signature, and see who got what</div></div></div>
+      <div class="side-grid">
+        <div class="card">
+          <h2>Advance history</h2>
+          <div class="scroll"><table id="advTable"></table></div>
         </div>
-        <div class="row" style="margin-top:10px">
-          <div><label>Given by</label><input id="advBy"></div>
-          <div><label>Note</label><input id="advNote"></div>
-          <div style="flex:0;min-width:auto"><button class="btn" onclick="startAdvance()">Sign &amp; save</button></div>
+        <div class="card" data-perm-card="advance_add">
+          <h2>Give an advance</h2>
+          <div class="vform">
+            <div><label>Person</label><select id="advPerson"></select></div>
+            <div class="two"><div><label>Amount (£)</label><input id="advAmount" type="number" step="0.01" min="0"></div><div><label>Method</label><select id="advMethod"><option>CASH</option><option>BANK</option></select></div></div>
+            <div><label>Given by</label><input id="advBy"></div>
+            <div><label>Note</label><input id="advNote"></div>
+            <button class="btn" onclick="startAdvance()">Sign &amp; save</button>
+            <div class="msg" id="advMsg"></div>
+          </div>
         </div>
-        <div class="msg" id="advMsg"></div>
-      </div>
-      <div class="card">
-        <h2>Advance History</h2>
-        <div class="scroll"><table id="advTable"></table></div>
       </div>
     </section>
 
     <!-- DEPOSITS -->
     <section class="page" id="page-deposits">
-      <div class="seg" id="depSeg">
-        <button data-sub="add" data-perm="deposits">+ Add</button>
-        <button data-sub="list" class="active">List</button>
-        <button data-sub="used">History</button>
+      <div class="pg-head">
+        <div><div class="pg-title">Deposits</div><div class="pg-sub">Reservation deposits — add, share with the customer, mark as used</div></div>
+        <div class="pg-tools"><div class="seg" id="depSeg">
+          <button data-sub="add" data-perm="deposits">+ Add</button>
+          <button data-sub="list" class="active">Open</button>
+          <button data-sub="used">History</button>
+        </div></div>
       </div>
+      <div class="kpis" id="depKpis"></div>
       <div id="deposits-list" class="card">
-        <h2>Deposits</h2>
-        <div class="row">
-          <div><label>Reservation from</label><input type="date" id="depFrom"></div>
-          <div><label>to</label><input type="date" id="depTo"></div>
-          <div style="flex:0;min-width:auto"><button class="btn" onclick="loadDeposits()">Show</button></div>
+        <div class="list-head">
+          <h2 style="margin:0">Open deposits</h2>
+          <div class="pg-tools">
+            <div class="period range"><span class="pl">From</span><input type="date" id="depFrom"><span class="pl">to</span><input type="date" id="depTo"></div>
+            <button class="btn" onclick="loadDeposits()">Show</button>
+          </div>
         </div>
-        <div class="muted" id="depSum" style="margin-top:10px"></div>
-        <div class="scroll" style="margin-top:8px"><table id="depTable"></table></div>
+        <div class="sum-line" id="depSum"></div>
+        <div class="scroll"><table id="depTable"></table></div>
       </div>
       <div id="deposits-used" class="card hidden">
         <h2>Used deposits <span class="muted" style="font-weight:400;font-size:13px">kept as proof</span></h2>
         <div class="scroll"><table id="depUsedTable"></table></div>
       </div>
-      <div id="deposits-add" class="card hidden">
-        <h2>New Deposit</h2>
-        <div class="row">
-          <div><label>Customer name</label><input id="depName"></div>
+      <div id="deposits-add" class="card hidden" style="max-width:760px">
+        <h2>New deposit</h2>
+        <div class="form-grid">
+          <div class="span2"><label>Customer name</label><input id="depName"></div>
           <div><label>Reservation date</label><input type="date" id="depDate"></div>
           <div><label>Covers</label><input type="number" id="depCovers" min="0"></div>
-        </div>
-        <div class="row" style="margin-top:10px">
           <div><label>Amount (£)</label><input type="number" id="depAmount" step="0.01" min="0"></div>
           <div><label>Method</label><select id="depMethod"><option value="CASH">Cash</option><option value="CC">Card</option><option value="BANK">Bank</option></select></div>
-          <div><label>Photo (optional)</label><input type="file" id="depPhoto" accept="image/*"></div>
+          <div class="span2"><label>Note</label><input id="depNote"></div>
+          <div class="span2"><label>Photo of the receipt (optional)</label><input type="file" id="depPhoto" accept="image/*" class="file-in"></div>
         </div>
-        <div style="margin-top:10px"><label>Note</label><input id="depNote"></div>
-        <button class="btn" style="margin-top:12px" onclick="saveDeposit()">Save deposit</button>
+        <button class="btn" style="margin-top:16px" onclick="saveDeposit()">Save deposit</button>
         <div class="msg" id="depMsg"></div>
       </div>
     </section>
 
     <!-- CASH -->
     <section class="page" id="page-cash">
-      <div class="pbar"><div class="period">
-        <button type="button" title="Previous month" onclick="shiftMonth('cashMonth',-1);loadCash()">&#8249;</button>
-        <input type="month" id="cashMonth" onchange="loadCash()">
-        <button type="button" title="Next month" onclick="shiftMonth('cashMonth',1);loadCash()">&#8250;</button>
-      </div></div>
+      <div class="pg-head">
+        <div><div class="pg-title">Cash List</div><div class="pg-sub">Cash in hand, money in and out</div></div>
+        <div class="pg-tools"><div class="period">
+          <button type="button" title="Previous month" onclick="shiftMonth('cashMonth',-1);loadCash()">&#8249;</button>
+          <input type="month" id="cashMonth" onchange="loadCash()">
+          <button type="button" title="Next month" onclick="shiftMonth('cashMonth',1);loadCash()">&#8250;</button>
+        </div></div>
+      </div>
       <div class="kpis" id="cashKpis"></div>
-      <div class="card">
-        <h3 id="cashFormTitle">Add entry</h3>
-        <div class="row">
-          <div><label>Date</label><input type="date" id="cashDate"></div>
-          <div><label>Description</label><input id="cashDesc"></div>
-          <div><label>Type</label><select id="cashType"><option value="out">Expense (out)</option><option value="in">Income (in)</option></select></div>
-          <div><label>Amount (£)</label><input type="number" id="cashAmount" step="0.01" min="0"></div>
-          <div style="flex:0;min-width:auto;display:flex;gap:6px">
-            <button class="btn" onclick="saveCash()">Save</button>
-            <button class="btn ghost hidden" id="cashCancel" onclick="resetCashForm()">Cancel</button>
+      <div class="side-grid">
+        <div class="card">
+          <h2>Ledger</h2>
+          <div class="scroll"><table id="cashTable"></table></div>
+          <div class="muted" style="margin-top:10px;font-size:12px">Only rows entered from TeamOS can be edited here. Automatic (LPA Banking) and HR rows are read-only.</div>
+        </div>
+        <div class="card" id="cashFormCard">
+          <h2 id="cashFormTitle">Add entry</h2>
+          <div class="vform">
+            <div><label>Type</label><select id="cashType"><option value="out">Expense (money out)</option><option value="in">Income (money in)</option></select></div>
+            <div><label>Date</label><input type="date" id="cashDate"></div>
+            <div><label>Description</label><input id="cashDesc"></div>
+            <div><label>Amount (£)</label><input type="number" id="cashAmount" step="0.01" min="0"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" onclick="saveCash()">Save</button>
+              <button class="btn ghost hidden" id="cashCancel" onclick="resetCashForm()">Cancel</button>
+            </div>
+            <div class="msg" id="cashMsg"></div>
           </div>
         </div>
-        <div class="msg" id="cashMsg"></div>
-      </div>
-      <div class="card">
-        <div class="scroll"><table id="cashTable"></table></div>
-        <div class="muted" style="margin-top:8px;font-size:12px">Only rows entered from TeamOS can be edited here. Automatic (LPA Banking) and HR rows are read-only.</div>
       </div>
     </section>
 
     <!-- PAYROLL (new month) -->
     <section class="page" id="page-payroll">
-      <div class="card">
-        <h2>New Month Wages</h2>
-        <div class="muted" style="margin-bottom:12px">Enter each person's wage for the new month and press Submit. The current month is closed and archived; any unpaid balance appears as a separate “- Geçen ay” line in Staff Status.</div>
-        <div class="pbar" style="justify-content:flex-start;margin-bottom:14px"><span class="pbar-l">Wages for</span><div class="period">
+      <div class="pg-head">
+        <div><div class="pg-title">New Month</div><div class="pg-sub">Enter each person's wage for the new month — the current month is closed and archived</div></div>
+        <div class="pg-tools"><span class="pbar-l">Wages for</span><div class="period">
           <button type="button" title="Previous month" onclick="shiftMonth('payMonth',-1)">&#8249;</button>
           <input type="month" id="payMonth">
           <button type="button" title="Next month" onclick="shiftMonth('payMonth',1)">&#8250;</button>
         </div></div>
+      </div>
+      <div class="card">
+        <div class="list-head">
+          <h2 style="margin:0">Wages</h2>
+          <div class="pg-tools"><input id="newStaffName" class="pill-input" placeholder="Add a person…"><button class="tool-btn" onclick="addStaff()">+ Add</button></div>
+        </div>
+        <div class="muted" style="margin:-4px 0 12px;font-size:12.5px">Any unpaid balance from the current month appears as a separate “- Last month” line in Wages → Status.</div>
         <div class="scroll"><table id="payTable"></table></div>
-        <div class="row" style="margin-top:12px">
-          <div><label>Add staff to the list</label><input id="newStaffName" placeholder="Name"></div>
-          <div style="flex:0;min-width:auto"><button class="btn ghost" onclick="addStaff()">Add</button></div>
-        </div>
-        <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div class="entry-foot">
           <button class="btn" onclick="submitPayroll()">Submit new month</button>
-          <span class="muted" id="payTotal"></span>
+          <span class="foot-total" id="payTotal"></span>
+          <div class="msg" id="payMsg" style="margin:0"></div>
         </div>
-        <div class="msg" id="payMsg"></div>
       </div>
     </section>
 
     <!-- USERS -->
     <section class="page" id="page-users">
-      <div class="card">
-        <h2>Users &amp; Permissions</h2>
-        <div class="scroll"><table id="usersTable"></table></div>
-      </div>
-      <div class="card">
-        <h2>Add User</h2>
-        <div class="row">
-          <div><label>Name</label><input id="nuName"></div>
-          <div><label>Sign-in email</label><input id="nuEmail" type="email" placeholder="name@gmail.com"></div>
-          <div><label>Role</label><select id="nuRole"><option>VIEWER</option><option>PAYER</option><option>EDITOR</option><option>ADMIN</option></select></div>
-          <div style="flex:0;min-width:auto"><button class="btn" onclick="addUser()">Create</button></div>
-        </div>
-        <div class="msg" id="nuMsg"></div>
-      </div>
+      <div class="pg-head"><div><div class="pg-title">Users</div><div class="pg-sub">Who can sign in to TeamOS, their roles and permissions</div></div></div>
+      <div id="usersRoot"></div>
     </section>
 
   </div>
@@ -622,7 +707,9 @@ async function boot() {
 async function finishBoot(data) {
   ME = data.me;
   $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
-  $('whoName').textContent = ME.name; $('whoSub').textContent = ME.role; $('whoAv').textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
+  $('whoName').textContent = ME.name; $('whoSub').textContent = ME.role === 'ADMIN' ? 'Admin' : ME.role.charAt(0) + ME.role.slice(1).toLowerCase(); $('whoAv').textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
+  $('toHrBtn').classList.toggle('hidden', !(isAdmin() || can('hr')));
+  if (isAdmin()) TeamOSUsers.mount($('usersRoot'), sb, ME);
   buildTabs();
 }
 
@@ -712,13 +799,6 @@ function buildTabs() {
     b.onclick = () => showPage(p.key);
     tabs.appendChild(b);
   });
-  if (isAdmin() || can('hr')) {
-    const g = document.createElement('div'); g.className = 'sb-group'; g.textContent = 'Switch to'; tabs.appendChild(g);
-    const hr = document.createElement('button');
-    hr.className = 'tab'; hr.innerHTML = NAV_ICONS.hr + '<span>TeamOS HR</span>';
-    hr.onclick = () => { location.href = 'hr.html'; };
-    tabs.appendChild(hr);
-  }
   // sub-tabs that need extra permission
   document.querySelectorAll('[data-perm]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.perm)));
   document.querySelectorAll('[data-perm-card]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.permCard)));
@@ -731,7 +811,7 @@ function showPage(key) {
   document.body.classList.remove('sb-open');
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
-  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: loadUsers })[key]?.();
+  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, users: () => TeamOSUsers.load() })[key]?.();
 }
 function wireSeg(segId, prefix) {
   $(segId).querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -921,6 +1001,14 @@ async function loadDeposits() {
   const open = data.filter(d => !d.used_at), used = data.filter(d => d.used_at).sort((x, y) => x.used_at < y.used_at ? 1 : -1);
   const imgCell = d => { const img = d.image_path ? signed[d.image_path] : d.image_url; return img ? `<img class="thumb" src="${img}" onclick="showImg('${img}')">` : ''; };
   $('depSum').textContent = `${open.length} open deposits · ${gbp(open.reduce((a,d) => a + Number(d.amount), 0))} · ${open.reduce((a,d) => a + Number(d.covers), 0)} covers`;
+  const td = today(), next = open.filter(d => d.res_date >= td)[0], wk = new Date(); wk.setDate(wk.getDate() + 7); const wkS = wk.toISOString().slice(0,10);
+  const thisWeek = open.filter(d => d.res_date >= td && d.res_date <= wkS);
+  const past = open.filter(d => d.res_date < td);
+  $('depKpis').innerHTML = `
+    <div class="kpi hero"><div class="l">Open deposits</div><div class="v">${gbp(open.reduce((a,d) => a + Number(d.amount), 0))}</div><div class="s">${open.length} bookings · ${open.reduce((a,d) => a + Number(d.covers), 0)} covers</div></div>
+    <div class="kpi"><div class="l">Next booking</div><div class="v">${next ? dmy(next.res_date).slice(0,5) : '–'}</div><div class="s">${next ? esc(next.customer_name) + ' · ' + gbp(next.amount) : 'Nothing booked'}</div></div>
+    <div class="kpi"><div class="l">Next 7 days</div><div class="v">${thisWeek.length}</div><div class="s">${gbp(thisWeek.reduce((a,d) => a + Number(d.amount), 0))}</div></div>
+    <div class="kpi"><div class="l">Date passed, not used</div><div class="v ${past.length ? 'neg' : ''}">${past.length}</div><div class="s">${past.length ? 'Mark them as used' : 'All tidy'}</div></div>`;
   $('depTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Note</th><th>Photo</th><th></th></tr>` +
     (open.length ? open.map(d => `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${METHOD[d.method] || esc(d.method)}</td>
       <td>${esc(d.added_by)}</td><td class="muted">${esc(d.note)}</td><td>${imgCell(d)}</td>
@@ -1035,11 +1123,11 @@ function editCash(r) {
   $('cashType').value = r.income_pence > 0 ? 'in' : 'out';
   $('cashAmount').value = ((r.income_pence || r.expense_pence) / 100).toFixed(2);
   $('cashFormTitle').textContent = 'Edit entry'; $('cashCancel').classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('cashFormCard').classList.add('editing'); $('cashFormCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 function resetCashForm() {
   CASH_EDIT = null; $('cashDesc').value = ''; $('cashAmount').value = ''; $('cashDate').value = today();
-  $('cashFormTitle').textContent = 'Add entry'; $('cashCancel').classList.add('hidden');
+  $('cashFormTitle').textContent = 'Add entry'; $('cashCancel').classList.add('hidden'); $('cashFormCard').classList.remove('editing');
 }
 async function saveCash() {
   const amount = Number($('cashAmount').value), desc = $('cashDesc').value.trim(), date = $('cashDate').value;
@@ -1162,6 +1250,176 @@ async function addUser() {
   setMsg('nuMsg', '✅ User created' + (email ? ' — they can sign in with ' + email : ''), true);
   loadUsers();
 }
+
+function filterRows(tableId, q) {
+  q = String(q || '').trim().toLowerCase();
+  $(tableId).querySelectorAll('tr').forEach(tr => { if (tr.querySelector('th')) return; tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+}
+// ===== TeamOS Users & Permissions (shared by TeamOS App and TeamOS HR) =====
+window.TeamOSUsers = (function () {
+  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'hr', 'notify_payments'];
+  var INFO = {
+    wages_pay: ['Pay wages', 'Pay wages — sees only what is due'], wages_view: ['Wages view', 'All wage amounts, history and signatures'],
+    advance_add: ['Give advance', 'Give advances only (cannot see the list)'], deposits: ['Deposits', 'Add deposits and see the list'],
+    deposits_view: ['Deposits view', 'See deposits only'], cash: ['Cash', 'Cash list and cash in hand'], takein: ['Take-in', 'Take-in and staff cost %'],
+    signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'], hr: ['HR', 'TeamOS HR screens'],
+    notify_payments: ['Payment alerts', 'Phone notification (app) when a wage payment is made']
+  };
+  var ROLES = ['VIEWER', 'PAYER', 'EDITOR', 'ADMIN'];
+  var S = { sb: null, me: null, root: null, users: [], permI: -1, q: '' };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  var ICD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+  var CSS = '' +
+    '.tu-list{display:flex;flex-direction:column;gap:10px}' +
+    '.tu-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;border:1px solid #F0E6DA;border-radius:14px;padding:12px 14px;background:#fff}' +
+    '.tu-row.off{opacity:.55;background:#FAF8F5}' +
+    '.tu-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#4A0817;background:linear-gradient(135deg,#F3D9A4,#C99A55)}' +
+    '.tu-row.admin .tu-av{background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%);color:#F3D9A4}' +
+    '.tu-name{font-weight:700;color:#2A1F1C;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.tu-name small{font-weight:600;color:#8A7D74;font-size:12px}' +
+    '.tu-mail{margin-top:5px;width:100%;max-width:320px;border:1px dashed transparent !important;background:transparent !important;padding:3px 6px !important;margin-left:-6px;border-radius:7px !important;color:#6F625A;font-size:13px;box-shadow:none !important}' +
+    '.tu-mail:hover{border-color:#E3D8CB !important}.tu-mail:focus{border-style:solid !important;border-color:#C99A55 !important;background:#fff !important}' +
+    '.tu-mail.none{color:#C62828}' +
+    '.tu-perms{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}' +
+    '.tu-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#F3ECE3;color:#6F625A}' +
+    '.tu-chip.all{background:#FBF1E0;color:#7A1430}.tu-chip.tu-bell{background:#E6EEF8;color:#0B3A9A}' +
+    '.tu-side{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}' +
+    '.tu-side select{width:auto !important;padding:7px 10px !important;border-radius:9px !important;font-weight:700;font-size:12.5px}' +
+    '.tu-btn{height:34px;padding:0 12px;border-radius:9px;border:1px solid #EADFCF;background:#fff;color:#6D1B2F;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}' +
+    '.tu-btn:hover{background:#FBF1E0}' +
+    '.tu-st{border:0;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.tu-st.on{background:#E3F4E5;color:#2E7D32}.tu-st.off{background:#EEE;color:#777}' +
+    '.tu-del{width:34px;height:34px;border-radius:9px;border:1px solid #EADFCF;background:#fff;color:#C62828;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}.tu-del svg{width:15px;height:15px}.tu-del:hover{background:#FDE3E3}' +
+    '.role-pill{font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:#F3ECE3;color:#6F625A}' +
+    '.role-pill.ADMIN{background:#4A0817;color:#F3D9A4}.role-pill.EDITOR{background:#FBE7D0;color:#9C4B00}.role-pill.PAYER{background:#E3F4E5;color:#2E7D32}' +
+    '.tu-mbg{position:fixed;inset:0;background:rgba(30,10,15,.45);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}.tu-mbg.open{display:flex}' +
+    '.tu-modal{background:#fff;border-radius:18px;width:100%;max-width:480px;max-height:92vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(46,3,12,.35)}' +
+    '.tu-modal h3{margin:0;color:#4A0817;font-size:19px}' +
+    '.tu-pi{display:flex;gap:12px;align-items:flex-start;padding:10px 2px;border-bottom:1px solid #F2ECE4;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:#2A1F1C;font-weight:400;margin:0}' +
+    '.tu-pi input{width:20px !important;height:20px;margin-top:2px;accent-color:#6D1B2F;flex:none}' +
+    '.tu-pi b{display:block;font-size:14px}.tu-pi small{color:#8A7D74;font-size:12px}.tu-pi.off{opacity:.5;cursor:default}' +
+    '.vform input[type=email]{width:100%;border:1px solid #E3D8CB;border-radius:10px;padding:9px 12px;background:#FFFDFa}' +
+    '.tu-msg{margin-top:8px;font-weight:600;font-size:13px}.tu-msg.ok{color:#2E7D32}.tu-msg.err{color:#C62828}' +
+    '@media(max-width:700px){.tu-row{grid-template-columns:40px minmax(0,1fr)}.tu-side{grid-column:1/-1;justify-content:flex-start}}';
+
+  function mount(root, sb, me) {
+    S.root = root; S.sb = sb; S.me = me || {};
+    if (!document.getElementById('tuCss')) { var st = document.createElement('style'); st.id = 'tuCss'; st.textContent = CSS; document.head.appendChild(st); }
+    root.innerHTML =
+      '<div class="pg-kpis" id="tuKpis"></div>' +
+      '<div class="side-grid">' +
+        '<div class="card"><div class="list-head"><h2 style="margin:0">Users</h2><input type="text" id="tuSearch" class="pill-input" placeholder="Search name or email…"></div>' +
+          '<div id="tuList"><div class="loading">Loading…</div></div></div>' +
+        '<div class="card"><h2>Add user</h2><div class="vform">' +
+          '<div><label>Name</label><input type="text" id="tuName"></div>' +
+          '<div><label>Sign-in email</label><input type="email" id="tuEmail" placeholder="name@gmail.com"></div>' +
+          '<div><label>Role</label><select id="tuRole">' + ROLES.map(function (r) { return '<option>' + r + '</option>'; }).join('') + '</select></div>' +
+          '<button class="btn" type="button" id="tuAdd">CREATE USER</button><div class="tu-msg" id="tuMsg"></div>' +
+          '<p class="hint" style="margin:0">They sign in with Google or email using exactly this address. Give permissions with <b>Edit permissions</b> after creating.</p>' +
+        '</div></div>' +
+      '</div>' +
+      '<div class="tu-mbg" id="tuPermModal"><div class="tu-modal">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h3 id="tuPermTitle"></h3><div class="hint" id="tuPermNote" style="margin:4px 0 0"></div></div>' +
+        '<button type="button" class="tu-btn" data-close>✕</button></div>' +
+        '<div id="tuPermList" style="margin-top:12px"></div>' +
+        '<button type="button" class="btn" style="width:100%;margin-top:14px" data-close>Done</button></div></div>';
+    $('tuAdd').onclick = add;
+    $('tuSearch').oninput = function () { S.q = this.value.trim().toLowerCase(); render(); };
+    $('tuPermModal').addEventListener('click', function (e) { if (e.target === this || e.target.hasAttribute('data-close')) { S.permI = -1; this.classList.remove('open'); } });
+  }
+  async function load() {
+    if (!S.sb) return;
+    var r = await S.sb.from('app_users').select('id,name,email,role,active,permissions').order('legacy_user_id', { nullsFirst: false }).order('created_at');
+    if (r.error) { $('tuList').innerHTML = '<p class="neg">' + esc(r.error.message) + '</p>'; return; }
+    S.users = r.data || [];
+    render();
+    if (S.permI >= 0 && $('tuPermModal').classList.contains('open')) renderPerms();
+  }
+  function render() {
+    var U = S.users, act = U.filter(function (u) { return u.active; });
+    var noMail = act.filter(function (u) { return !u.email; });
+    var alerts = U.filter(function (u) { return (u.permissions || []).indexOf('notify_payments') >= 0; });
+    $('tuKpis').innerHTML =
+      tile('Users', U.length, act.length + ' active', 'hero') +
+      tile('Admins', U.filter(function (u) { return u.role === 'ADMIN'; }).length, 'Can do everything') +
+      tile('No sign-in email', '<span class="' + (noMail.length ? 'neg' : '') + '">' + noMail.length + '</span>', noMail.length ? noMail.map(function (u) { return esc(u.name); }).join(', ') : 'Everyone can sign in') +
+      tile('Payment alerts', alerts.length, alerts.length ? alerts.map(function (u) { return esc(u.name); }).join(', ') : 'Nobody gets alerts');
+    var list = U.map(function (u, i) { return { u: u, i: i }; }).filter(function (x) {
+      return !S.q || (x.u.name + ' ' + (x.u.email || '')).toLowerCase().indexOf(S.q) >= 0;
+    });
+    if (!list.length) { $('tuList').innerHTML = '<div class="empty">No users.</div>'; return; }
+    $('tuList').innerHTML = '<div class="tu-list">' + list.map(function (x) {
+      var u = x.u, i = x.i, admin = u.role === 'ADMIN', p = u.permissions || [], self = S.me && u.id === S.me.id;
+      var chips = admin ? '<span class="tu-chip all">Everything</span>' : (p.filter(function (k) { return k !== 'notify_payments'; }).map(function (k) { return '<span class="tu-chip">' + esc((INFO[k] || [k])[0]) + '</span>'; }).join('') || '<span class="tu-chip">No permissions yet</span>');
+      if (p.indexOf('notify_payments') >= 0) chips += '<span class="tu-chip tu-bell">🔔 Payment alerts</span>';
+      return '<div class="tu-row' + (u.active ? '' : ' off') + (admin ? ' admin' : '') + '">' +
+        '<div class="tu-av">' + esc((u.name || '?').trim().charAt(0).toUpperCase()) + '</div>' +
+        '<div style="min-width:0"><div class="tu-name">' + esc(u.name) + ' <span class="role-pill ' + esc(u.role) + '">' + esc(u.role) + '</span>' + (self ? ' <small>(you)</small>' : '') + '</div>' +
+          '<input type="email" class="tu-mail' + (u.email ? '' : ' none') + '" value="' + esc(u.email || '') + '" placeholder="⚠ add sign-in email" data-i="' + i + '" data-f="email">' +
+          '<div class="tu-perms">' + chips + '</div></div>' +
+        '<div class="tu-side">' +
+          '<select data-i="' + i + '" data-f="role">' + ROLES.map(function (r) { return '<option' + (u.role === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
+          '<button type="button" class="tu-btn" data-perm="' + i + '">Edit permissions</button>' +
+          '<button type="button" class="tu-st ' + (u.active ? 'on' : 'off') + '" data-act="' + i + '" title="Click to ' + (u.active ? 'deactivate' : 'activate') + '">' + (u.active ? 'Active' : 'Inactive') + '</button>' +
+          '<button type="button" class="tu-del" data-del="' + i + '" title="Delete user">' + ICD + '</button>' +
+        '</div></div>';
+    }).join('') + '</div>';
+    var box = $('tuList');
+    box.querySelectorAll('[data-f]').forEach(function (el) {
+      el.onchange = function () {
+        var i = +el.getAttribute('data-i'), f = el.getAttribute('data-f'), patch = {};
+        patch[f] = f === 'email' ? (el.value.trim().toLowerCase() || null) : el.value;
+        set(i, patch);
+      };
+    });
+    box.querySelectorAll('[data-perm]').forEach(function (b) { b.onclick = function () { S.permI = +b.getAttribute('data-perm'); renderPerms(); $('tuPermModal').classList.add('open'); }; });
+    box.querySelectorAll('[data-act]').forEach(function (b) { b.onclick = function () { var i = +b.getAttribute('data-act'); set(i, { active: !S.users[i].active }); }; });
+    box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { del(+b.getAttribute('data-del')); }; });
+  }
+  function tile(l, v, s, cls) { return '<div class="dk' + (cls ? ' ' + cls : '') + '"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>'; }
+  async function set(i, patch) {
+    var r = await S.sb.from('app_users').update(patch).eq('id', S.users[i].id);
+    if (r.error) alert(r.error.message.indexOf('duplicate') >= 0 ? 'This email is already used by another user' : r.error.message);
+    await load();
+  }
+  function renderPerms() {
+    var u = S.users[S.permI]; if (!u) return;
+    var admin = u.role === 'ADMIN', cur = u.permissions || [];
+    $('tuPermTitle').textContent = u.name;
+    $('tuPermNote').textContent = admin ? 'Admin can do everything — only “Payment alerts” needs ticking.' : 'Tick what this person can do. Changes save straight away.';
+    $('tuPermList').innerHTML = PERMS.map(function (p) {
+      var off = admin && p !== 'notify_payments';
+      return '<label class="tu-pi' + (off ? ' off' : '') + '"><input type="checkbox" data-p="' + p + '"' + (cur.indexOf(p) >= 0 ? ' checked' : '') + (off ? ' disabled' : '') + '>' +
+        '<span><b>' + INFO[p][0] + '</b><small>' + INFO[p][1] + '</small></span></label>';
+    }).join('');
+    $('tuPermList').querySelectorAll('input').forEach(function (cb) {
+      cb.onchange = function () {
+        var set1 = (S.users[S.permI].permissions || []).slice(), p = cb.getAttribute('data-p'), k = set1.indexOf(p);
+        if (cb.checked && k < 0) set1.push(p); if (!cb.checked && k >= 0) set1.splice(k, 1);
+        set(S.permI, { permissions: set1 });
+      };
+    });
+  }
+  async function del(i) {
+    var u = S.users[i];
+    if (S.me && u.id === S.me.id) return alert('You cannot delete yourself');
+    if (!confirm('Delete user ' + u.name + '?\n\nTip: switching them to Inactive keeps the record.')) return;
+    var r = await S.sb.from('app_users').delete().eq('id', u.id);
+    if (r.error) return alert(r.error.message);
+    load();
+  }
+  async function add() {
+    var name = $('tuName').value.trim(), msg = $('tuMsg');
+    if (!name) { msg.className = 'tu-msg err'; msg.textContent = 'Name required'; return; }
+    var email = $('tuEmail').value.trim().toLowerCase() || null;
+    var r = await S.sb.from('app_users').insert({ name: name, email: email, role: $('tuRole').value });
+    if (r.error) { msg.className = 'tu-msg err'; msg.textContent = r.error.message.indexOf('duplicate') >= 0 ? 'This email is already used' : r.error.message; return; }
+    $('tuName').value = ''; $('tuEmail').value = '';
+    msg.className = 'tu-msg ok'; msg.textContent = '✅ User created' + (email ? ' — they can sign in with ' + email : '');
+    load();
+  }
+  return { mount: mount, load: load };
+})();
 
 // ═════════════ START ═════════════
 // After Google redirects back, supabase-js reads the session from the URL during

@@ -730,9 +730,11 @@
     <div class="sb-group">People</div>
     <button id="nav-staff" onclick="showView('staff')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><circle cx="18" cy="16" r="3"/><path d="M18 11.5v1.5M18 19v1.5M22.5 16H21M15 16h-1.5"/></svg><span>Staff Management</span></button>
     <button id="nav-requests" onclick="showView('requests')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Requests</span></button>
+    <div class="sb-group" id="sbg-settings" style="display:none">Settings</div>
+    <button id="nav-users" style="display:none" onclick="showView('users')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Users</span></button>
   </nav>
   <div class="side-foot no-print">
-    <div class="side-user"><div class="side-av" id="hrAv">·</div><div><div class="side-uname" id="hrWho"></div><div class="side-urole">HR</div></div></div>
+    <div class="side-user"><div class="side-av" id="hrAv">·</div><div><div class="side-uname" id="hrWho"></div><div class="side-urole" id="hrRole">HR</div></div></div>
     <button class="side-btn" onclick="location.href='index.html'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M19 12H5"/></svg>TeamOS App</button>
     <button class="side-btn" onclick="HRSHIM_signOut()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button>
   </div>
@@ -1194,6 +1196,9 @@
     </div>
   </div>
 
+  <!-- ================= USERS ================= -->
+  <div id="view-users" class="view"><div id="usersRoot"></div></div>
+
 </main>
 
 <div class="toast" id="toast"></div>
@@ -1219,7 +1224,7 @@ function esc(s) {
 
 function showView(name) {
   document.body.classList.remove('sb-open');
-  ['home','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff'].forEach(function(v) {
+  ['home','monthly','hours','revenue','staffsummary','tips','cashlist','holidays','payperiod','requests','staff','users'].forEach(function(v) {
     document.getElementById('view-' + v).classList.toggle('active', v === name);
     document.getElementById('nav-' + v).classList.toggle('active', v === name);
   });
@@ -1232,6 +1237,7 @@ function showView(name) {
   if (name === 'tips') loadWeeklyTips();
   if (name === 'cashlist') loadCashList();
   if (name === 'holidays') loadHolidaysView();
+  if (name === 'users' && window.TeamOSUsers) TeamOSUsers.load();
   if (name === 'payperiod') { loadPayPeriodReport(); loadMonthEndDetail(); }
   if (name === 'requests') loadRequests();
   if (name === 'staff') loadStaffMgmt();
@@ -3942,7 +3948,8 @@ monthly: 'Month by month performance and cost exclusions',
     hours: 'Enter, check and correct staff hours', staffsummary: 'Monthly hours per person',
     payperiod: 'Pay period hours (26th → 25th), advances and PDFs', holidays: 'Holidays, days off and sick days',
     revenue: 'Daily take-in from LPA Banking', tips: 'Daily tip pool and weekly distribution',
-    cashlist: 'Cash ledger and physical count', staff: 'Staff, rates, tip weights and order', requests: 'Staff requests and follow-ups'
+    cashlist: 'Cash ledger and physical count', staff: 'Staff, rates, tip weights and order', requests: 'Staff requests and follow-ups',
+    users: 'Who can sign in to TeamOS, their roles and permissions'
   };
   Object.keys(SUB).forEach(function (k) {
     var v = document.getElementById('view-' + k), nav = document.getElementById('nav-' + k);
@@ -4507,6 +4514,183 @@ function stApplyFilter_() {
     p.parentNode.insertBefore(d, p); d.appendChild(p);
   });
 })();
+
+// ===== TeamOS Users & Permissions (shared by TeamOS App and TeamOS HR) =====
+window.TeamOSUsers = (function () {
+  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'hr', 'notify_payments'];
+  var INFO = {
+    wages_pay: ['Pay wages', 'Pay wages — sees only what is due'], wages_view: ['Wages view', 'All wage amounts, history and signatures'],
+    advance_add: ['Give advance', 'Give advances only (cannot see the list)'], deposits: ['Deposits', 'Add deposits and see the list'],
+    deposits_view: ['Deposits view', 'See deposits only'], cash: ['Cash', 'Cash list and cash in hand'], takein: ['Take-in', 'Take-in and staff cost %'],
+    signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'], hr: ['HR', 'TeamOS HR screens'],
+    notify_payments: ['Payment alerts', 'Phone notification (app) when a wage payment is made']
+  };
+  var ROLES = ['VIEWER', 'PAYER', 'EDITOR', 'ADMIN'];
+  var S = { sb: null, me: null, root: null, users: [], permI: -1, q: '' };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  var ICD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+  var CSS = '' +
+    '.tu-list{display:flex;flex-direction:column;gap:10px}' +
+    '.tu-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;border:1px solid #F0E6DA;border-radius:14px;padding:12px 14px;background:#fff}' +
+    '.tu-row.off{opacity:.55;background:#FAF8F5}' +
+    '.tu-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#4A0817;background:linear-gradient(135deg,#F3D9A4,#C99A55)}' +
+    '.tu-row.admin .tu-av{background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%);color:#F3D9A4}' +
+    '.tu-name{font-weight:700;color:#2A1F1C;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.tu-name small{font-weight:600;color:#8A7D74;font-size:12px}' +
+    '.tu-mail{margin-top:5px;width:100%;max-width:320px;border:1px dashed transparent !important;background:transparent !important;padding:3px 6px !important;margin-left:-6px;border-radius:7px !important;color:#6F625A;font-size:13px;box-shadow:none !important}' +
+    '.tu-mail:hover{border-color:#E3D8CB !important}.tu-mail:focus{border-style:solid !important;border-color:#C99A55 !important;background:#fff !important}' +
+    '.tu-mail.none{color:#C62828}' +
+    '.tu-perms{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}' +
+    '.tu-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#F3ECE3;color:#6F625A}' +
+    '.tu-chip.all{background:#FBF1E0;color:#7A1430}.tu-chip.tu-bell{background:#E6EEF8;color:#0B3A9A}' +
+    '.tu-side{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}' +
+    '.tu-side select{width:auto !important;padding:7px 10px !important;border-radius:9px !important;font-weight:700;font-size:12.5px}' +
+    '.tu-btn{height:34px;padding:0 12px;border-radius:9px;border:1px solid #EADFCF;background:#fff;color:#6D1B2F;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}' +
+    '.tu-btn:hover{background:#FBF1E0}' +
+    '.tu-st{border:0;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.tu-st.on{background:#E3F4E5;color:#2E7D32}.tu-st.off{background:#EEE;color:#777}' +
+    '.tu-del{width:34px;height:34px;border-radius:9px;border:1px solid #EADFCF;background:#fff;color:#C62828;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}.tu-del svg{width:15px;height:15px}.tu-del:hover{background:#FDE3E3}' +
+    '.role-pill{font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:#F3ECE3;color:#6F625A}' +
+    '.role-pill.ADMIN{background:#4A0817;color:#F3D9A4}.role-pill.EDITOR{background:#FBE7D0;color:#9C4B00}.role-pill.PAYER{background:#E3F4E5;color:#2E7D32}' +
+    '.tu-mbg{position:fixed;inset:0;background:rgba(30,10,15,.45);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}.tu-mbg.open{display:flex}' +
+    '.tu-modal{background:#fff;border-radius:18px;width:100%;max-width:480px;max-height:92vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(46,3,12,.35)}' +
+    '.tu-modal h3{margin:0;color:#4A0817;font-size:19px}' +
+    '.tu-pi{display:flex;gap:12px;align-items:flex-start;padding:10px 2px;border-bottom:1px solid #F2ECE4;cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:#2A1F1C;font-weight:400;margin:0}' +
+    '.tu-pi input{width:20px !important;height:20px;margin-top:2px;accent-color:#6D1B2F;flex:none}' +
+    '.tu-pi b{display:block;font-size:14px}.tu-pi small{color:#8A7D74;font-size:12px}.tu-pi.off{opacity:.5;cursor:default}' +
+    '.vform input[type=email]{width:100%;border:1px solid #E3D8CB;border-radius:10px;padding:9px 12px;background:#FFFDFa}' +
+    '.tu-msg{margin-top:8px;font-weight:600;font-size:13px}.tu-msg.ok{color:#2E7D32}.tu-msg.err{color:#C62828}' +
+    '@media(max-width:700px){.tu-row{grid-template-columns:40px minmax(0,1fr)}.tu-side{grid-column:1/-1;justify-content:flex-start}}';
+
+  function mount(root, sb, me) {
+    S.root = root; S.sb = sb; S.me = me || {};
+    if (!document.getElementById('tuCss')) { var st = document.createElement('style'); st.id = 'tuCss'; st.textContent = CSS; document.head.appendChild(st); }
+    root.innerHTML =
+      '<div class="pg-kpis" id="tuKpis"></div>' +
+      '<div class="side-grid">' +
+        '<div class="card"><div class="list-head"><h2 style="margin:0">Users</h2><input type="text" id="tuSearch" class="pill-input" placeholder="Search name or email…"></div>' +
+          '<div id="tuList"><div class="loading">Loading…</div></div></div>' +
+        '<div class="card"><h2>Add user</h2><div class="vform">' +
+          '<div><label>Name</label><input type="text" id="tuName"></div>' +
+          '<div><label>Sign-in email</label><input type="email" id="tuEmail" placeholder="name@gmail.com"></div>' +
+          '<div><label>Role</label><select id="tuRole">' + ROLES.map(function (r) { return '<option>' + r + '</option>'; }).join('') + '</select></div>' +
+          '<button class="btn" type="button" id="tuAdd">CREATE USER</button><div class="tu-msg" id="tuMsg"></div>' +
+          '<p class="hint" style="margin:0">They sign in with Google or email using exactly this address. Give permissions with <b>Edit permissions</b> after creating.</p>' +
+        '</div></div>' +
+      '</div>' +
+      '<div class="tu-mbg" id="tuPermModal"><div class="tu-modal">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h3 id="tuPermTitle"></h3><div class="hint" id="tuPermNote" style="margin:4px 0 0"></div></div>' +
+        '<button type="button" class="tu-btn" data-close>✕</button></div>' +
+        '<div id="tuPermList" style="margin-top:12px"></div>' +
+        '<button type="button" class="btn" style="width:100%;margin-top:14px" data-close>Done</button></div></div>';
+    $('tuAdd').onclick = add;
+    $('tuSearch').oninput = function () { S.q = this.value.trim().toLowerCase(); render(); };
+    $('tuPermModal').addEventListener('click', function (e) { if (e.target === this || e.target.hasAttribute('data-close')) { S.permI = -1; this.classList.remove('open'); } });
+  }
+  async function load() {
+    if (!S.sb) return;
+    var r = await S.sb.from('app_users').select('id,name,email,role,active,permissions').order('legacy_user_id', { nullsFirst: false }).order('created_at');
+    if (r.error) { $('tuList').innerHTML = '<p class="neg">' + esc(r.error.message) + '</p>'; return; }
+    S.users = r.data || [];
+    render();
+    if (S.permI >= 0 && $('tuPermModal').classList.contains('open')) renderPerms();
+  }
+  function render() {
+    var U = S.users, act = U.filter(function (u) { return u.active; });
+    var noMail = act.filter(function (u) { return !u.email; });
+    var alerts = U.filter(function (u) { return (u.permissions || []).indexOf('notify_payments') >= 0; });
+    $('tuKpis').innerHTML =
+      tile('Users', U.length, act.length + ' active', 'hero') +
+      tile('Admins', U.filter(function (u) { return u.role === 'ADMIN'; }).length, 'Can do everything') +
+      tile('No sign-in email', '<span class="' + (noMail.length ? 'neg' : '') + '">' + noMail.length + '</span>', noMail.length ? noMail.map(function (u) { return esc(u.name); }).join(', ') : 'Everyone can sign in') +
+      tile('Payment alerts', alerts.length, alerts.length ? alerts.map(function (u) { return esc(u.name); }).join(', ') : 'Nobody gets alerts');
+    var list = U.map(function (u, i) { return { u: u, i: i }; }).filter(function (x) {
+      return !S.q || (x.u.name + ' ' + (x.u.email || '')).toLowerCase().indexOf(S.q) >= 0;
+    });
+    if (!list.length) { $('tuList').innerHTML = '<div class="empty">No users.</div>'; return; }
+    $('tuList').innerHTML = '<div class="tu-list">' + list.map(function (x) {
+      var u = x.u, i = x.i, admin = u.role === 'ADMIN', p = u.permissions || [], self = S.me && u.id === S.me.id;
+      var chips = admin ? '<span class="tu-chip all">Everything</span>' : (p.filter(function (k) { return k !== 'notify_payments'; }).map(function (k) { return '<span class="tu-chip">' + esc((INFO[k] || [k])[0]) + '</span>'; }).join('') || '<span class="tu-chip">No permissions yet</span>');
+      if (p.indexOf('notify_payments') >= 0) chips += '<span class="tu-chip tu-bell">🔔 Payment alerts</span>';
+      return '<div class="tu-row' + (u.active ? '' : ' off') + (admin ? ' admin' : '') + '">' +
+        '<div class="tu-av">' + esc((u.name || '?').trim().charAt(0).toUpperCase()) + '</div>' +
+        '<div style="min-width:0"><div class="tu-name">' + esc(u.name) + ' <span class="role-pill ' + esc(u.role) + '">' + esc(u.role) + '</span>' + (self ? ' <small>(you)</small>' : '') + '</div>' +
+          '<input type="email" class="tu-mail' + (u.email ? '' : ' none') + '" value="' + esc(u.email || '') + '" placeholder="⚠ add sign-in email" data-i="' + i + '" data-f="email">' +
+          '<div class="tu-perms">' + chips + '</div></div>' +
+        '<div class="tu-side">' +
+          '<select data-i="' + i + '" data-f="role">' + ROLES.map(function (r) { return '<option' + (u.role === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
+          '<button type="button" class="tu-btn" data-perm="' + i + '">Edit permissions</button>' +
+          '<button type="button" class="tu-st ' + (u.active ? 'on' : 'off') + '" data-act="' + i + '" title="Click to ' + (u.active ? 'deactivate' : 'activate') + '">' + (u.active ? 'Active' : 'Inactive') + '</button>' +
+          '<button type="button" class="tu-del" data-del="' + i + '" title="Delete user">' + ICD + '</button>' +
+        '</div></div>';
+    }).join('') + '</div>';
+    var box = $('tuList');
+    box.querySelectorAll('[data-f]').forEach(function (el) {
+      el.onchange = function () {
+        var i = +el.getAttribute('data-i'), f = el.getAttribute('data-f'), patch = {};
+        patch[f] = f === 'email' ? (el.value.trim().toLowerCase() || null) : el.value;
+        set(i, patch);
+      };
+    });
+    box.querySelectorAll('[data-perm]').forEach(function (b) { b.onclick = function () { S.permI = +b.getAttribute('data-perm'); renderPerms(); $('tuPermModal').classList.add('open'); }; });
+    box.querySelectorAll('[data-act]').forEach(function (b) { b.onclick = function () { var i = +b.getAttribute('data-act'); set(i, { active: !S.users[i].active }); }; });
+    box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { del(+b.getAttribute('data-del')); }; });
+  }
+  function tile(l, v, s, cls) { return '<div class="dk' + (cls ? ' ' + cls : '') + '"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>'; }
+  async function set(i, patch) {
+    var r = await S.sb.from('app_users').update(patch).eq('id', S.users[i].id);
+    if (r.error) alert(r.error.message.indexOf('duplicate') >= 0 ? 'This email is already used by another user' : r.error.message);
+    await load();
+  }
+  function renderPerms() {
+    var u = S.users[S.permI]; if (!u) return;
+    var admin = u.role === 'ADMIN', cur = u.permissions || [];
+    $('tuPermTitle').textContent = u.name;
+    $('tuPermNote').textContent = admin ? 'Admin can do everything — only “Payment alerts” needs ticking.' : 'Tick what this person can do. Changes save straight away.';
+    $('tuPermList').innerHTML = PERMS.map(function (p) {
+      var off = admin && p !== 'notify_payments';
+      return '<label class="tu-pi' + (off ? ' off' : '') + '"><input type="checkbox" data-p="' + p + '"' + (cur.indexOf(p) >= 0 ? ' checked' : '') + (off ? ' disabled' : '') + '>' +
+        '<span><b>' + INFO[p][0] + '</b><small>' + INFO[p][1] + '</small></span></label>';
+    }).join('');
+    $('tuPermList').querySelectorAll('input').forEach(function (cb) {
+      cb.onchange = function () {
+        var set1 = (S.users[S.permI].permissions || []).slice(), p = cb.getAttribute('data-p'), k = set1.indexOf(p);
+        if (cb.checked && k < 0) set1.push(p); if (!cb.checked && k >= 0) set1.splice(k, 1);
+        set(S.permI, { permissions: set1 });
+      };
+    });
+  }
+  async function del(i) {
+    var u = S.users[i];
+    if (S.me && u.id === S.me.id) return alert('You cannot delete yourself');
+    if (!confirm('Delete user ' + u.name + '?\n\nTip: switching them to Inactive keeps the record.')) return;
+    var r = await S.sb.from('app_users').delete().eq('id', u.id);
+    if (r.error) return alert(r.error.message);
+    load();
+  }
+  async function add() {
+    var name = $('tuName').value.trim(), msg = $('tuMsg');
+    if (!name) { msg.className = 'tu-msg err'; msg.textContent = 'Name required'; return; }
+    var email = $('tuEmail').value.trim().toLowerCase() || null;
+    var r = await S.sb.from('app_users').insert({ name: name, email: email, role: $('tuRole').value });
+    if (r.error) { msg.className = 'tu-msg err'; msg.textContent = r.error.message.indexOf('duplicate') >= 0 ? 'This email is already used' : r.error.message; return; }
+    $('tuName').value = ''; $('tuEmail').value = '';
+    msg.className = 'tu-msg ok'; msg.textContent = '✅ User created' + (email ? ' — they can sign in with ' + email : '');
+    load();
+  }
+  return { mount: mount, load: load };
+})();
+
+window.HRSHIM_ready.then(function(ok) {
+  var me = window.HR_ME || null;
+  if (me) { document.getElementById('hrWho').textContent = me.name || ''; document.getElementById('hrAv').textContent = (me.name || '?').trim().charAt(0).toUpperCase(); }
+  if (me && me.role) document.getElementById('hrRole').textContent = me.role === 'ADMIN' ? 'Admin' : me.role.charAt(0) + me.role.slice(1).toLowerCase();
+  if (ok && me && me.role === 'ADMIN') {
+    document.getElementById('sbg-settings').style.display = '';
+    document.getElementById('nav-users').style.display = '';
+    TeamOSUsers.mount(document.getElementById('usersRoot'), window.HR_SB, me);
+  }
+});
 
 // ============================================================
 // INIT
