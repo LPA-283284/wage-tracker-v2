@@ -308,6 +308,7 @@
     SHEETS.PayPeriod_Manual_Log.load(d.pay_period_manual_log);
     SHEETS.Requests_Log.load(d.requests_log);
     SHEETS.Cost_Exclusions_Log.load(d.cost_exclusions);
+    try { var lk = await sb.from('pay_period_locks').select('period_start,locked,locked_at,locked_by,log'); window.HRSHIM_locks = lk.data || []; } catch (e) { window.HRSHIM_locks = []; }
     lastLoad = Date.now();
   }
 
@@ -373,6 +374,36 @@
   var chain = Promise.resolve();
   var OVERRIDES = {};
   window.HRSHIM_override = function (name, fn) { OVERRIDES[name] = fn; };
+  window.HRSHIM_invalidate = function () { lastLoad = 0; };
+
+  // Staff Hours: an OPEN period is filled live from Hours (week by week);
+  // a LOCKED period shows the frozen boxes (snapshot taken when it was locked).
+  OVERRIDES.getPayPeriodReport = function (month, year) {
+    var d = HRCORE.getPayPeriodReport(month, year);
+    var lock = (window.HRSHIM_locks || []).filter(function (l) { return l.period_start === d.periodStart; })[0] || null;
+    d.lock = lock;
+    d.locked = !!(lock && lock.locked);
+    if (d.locked) return d;
+    var pp = HRCORE.buildPayPeriodWeeks_(Number(year), Number(month));
+    var sums = {};
+    SHEETS.Hours_Log.rows.forEach(function (r) {
+      var dt = toDateObj(r.v[0]); if (!dt) return;
+      var sid = String(r.v[4]);
+      for (var w = 0; w < pp.weeks.length; w++) {
+        if (dt >= pp.weeks[w].start && dt <= pp.weeks[w].end) { (sums[sid] = sums[sid] || {})[w] = (sums[sid][w] || 0) + (Number(r.v[3]) || 0); break; }
+      }
+    });
+    d.rows.forEach(function (r) {
+      var s = sums[String(r.id)] || {};
+      r.weeklyHours = r.weeklyHours.map(function (old, w) {
+        var h = Math.round((s[w] || 0) * 100) / 100;
+        if (h > 0) return h;
+        return (old === 'H' || old === 'S') ? old : '';
+      });
+      r.totalHours = r.weeklyHours.reduce(function (a, v) { return a + (Number(v) || 0); }, 0);
+    });
+    return d;
+  };
 
   function plain(x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
 

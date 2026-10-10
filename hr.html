@@ -725,6 +725,33 @@
     .tu-name { font-size:16px; }
     .dk .v .pill, .kpi .v .pill, .tu-name .role-pill, .tu-name small { font-family:'Hanken Grotesk', sans-serif !important; }
     .tbl td.r.b, .tbl td.b.r { font-family:'Playfair Display', Georgia, serif; font-size:15px; }
+    /* v2.10 — lock bar, RR import, finer holiday marks */
+    .pp-lock { display:flex; align-items:center; justify-content:space-between; gap:12px; border-radius:12px; padding:10px 14px; margin-bottom:12px; font-size:13.5px; }
+    .pp-lock small { display:block; color:#8A7D74; font-size:12px; margin-top:2px; }
+    .pp-lock.live { background:#F1F8F2; border:1px solid #CFEBD3; } .pp-lock.live b { color:#2E7D32; }
+    .pp-lock.locked { background:#FBF1E0; border:1px solid #E7C48A; } .pp-lock.locked b { color:#6D1B2F; }
+    .pp-ro { background:#FAF7F2 !important; cursor:default; color:#2A1F1C; }
+    .rr-box { max-width:900px !important; }
+    .rr-drop { border:2px dashed #E3D2BC; border-radius:16px; padding:28px; text-align:center; display:flex; flex-direction:column; gap:8px; align-items:center; background:#FFFDFA; }
+    .rr-drop small { color:#8A7D74; max-width:460px; } .rr-drop input { margin-top:8px; }
+    .rr-file { font-weight:700; color:#4A0817; margin-bottom:10px; }
+    .rr-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+    .rr-chip { font-size:12px; padding:4px 10px; border-radius:999px; background:#F3ECE3; color:#6F625A; }
+    .rr-chip.new, .rr-st.new { background:#E3F4E5; color:#2E7D32; } .rr-chip.rr_changed, .rr-st.rr_changed { background:#E6EEF8; color:#0B3A9A; }
+    .rr-chip.manual, .rr-st.manual { background:#FFF0D9; color:#B26A00; } .rr-chip.open, .rr-st.open, .rr-chip.locked, .rr-st.locked { background:#EEE; color:#777; }
+    .rr-chip.unmapped, .rr-st.unmapped { background:#FDE3E3; color:#C62828; } .rr-chip.dayoff_new, .rr-st.dayoff_new { background:#FBE7D0; color:#9C4B00; }
+    .rr-st { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; background:#F3ECE3; color:#8A7D74; }
+    .rr-map { border:1px solid #F6CACA; background:#FFF8F8; border-radius:12px; padding:12px 14px; margin-bottom:12px; }
+    .rr-map h4 { margin:0 0 8px; color:#9C0006; font-size:13.5px; }
+    .rr-map-row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:5px 0; } .rr-map-row select { max-width:260px; }
+    .rr-tbl { max-height:52vh; overflow:auto; border:1px solid #F0E6DA; border-radius:12px; }
+    .rr-tbl tr.rr-same td, .rr-tbl tr.rr-open td, .rr-tbl tr.rr-locked td { color:#A89C91; }
+    .rr-acc { font-size:12px; font-weight:700; color:#B26A00; text-transform:none; letter-spacing:0; margin:0 0 0 6px; display:inline-flex; gap:4px; align-items:center; }
+    .rr-acc input { width:auto; }
+    .rr-foot { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+    .rr-foot:empty { display:none; }
+    .hol-table td.hol-cell { font-size:10px !important; font-weight:700 !important; letter-spacing:.02em; }
+    .hol-table td.hol-cell.hol-OFF { font-size:9.5px !important; font-weight:600 !important; font-style:italic; color:#B26A00 !important; }
   </style>
 </head>
 <body>
@@ -1110,7 +1137,7 @@
     </div>
     <div class="card pp-sec" data-sec="report">
       <div class="list-head"><h2 style="margin:0">Weekly hours &amp; advances</h2><button type="button" class="tool-btn" onclick="rptOpen('weekly')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Send</button></div>
-      <p class="hint">Weekly hours are entered by hand; the Preview column fills automatically from Hours entries. Former staff appear only if they have data in this period. Type <b>H</b> in a week box for holiday (green) or <b>S</b> for sick (orange) — they count as 0 hours and show in the Period Summary notes. Nothing is written while you type: changed boxes turn yellow and totals update live; ONE press of <b>SAVE CHANGES</b> writes everything in a single fast call — no more lock timeouts, and a failed save never wipes what you typed.</p>
+      <p class="hint">The weekly boxes fill <b>automatically from Hours</b> (including what you import from Right Reservation). To correct a number, fix that day in Hours. On the 27th at 12:00 the period locks by itself and the numbers are frozen — an admin can unlock it if something has to change. Holidays and sick days are marked in the Holidays calendar.</p>
       <div id="ppSaveBar" style="display:none;background:#FFF3CD;border-left:6px solid #C99700;border-radius:8px;padding:10px 14px;margin-bottom:10px">
         <b><span id="ppPendCnt">0</span> unsaved change(s)</b>
         <button class="btn" id="ppSaveBtn" onclick="ppSaveChanges()">SAVE CHANGES</button>
@@ -2938,7 +2965,7 @@ function loadHolidaysView() {
 }
 
 var HOL_LBL = { H: 'Holiday', OFF: 'Day off', S: 'Sick' };
-var HOL_LETTER = { H: 'H', OFF: 'O', S: 'S' };
+var HOL_LETTER = { H: 'H', OFF: 'off', S: 'S' };
 var HOL_DEPT = { FOH: 'Floor', BOH: 'Kitchen', CLEANING: 'Cleaning' };
 var holBrush = 'cycle', holDrag = null, holLastPtr = '', holRaf = 0;
 
@@ -3402,6 +3429,7 @@ function loadPayPeriodReport() {
 
 function renderPayPeriodReport(data) {
   var wrap = document.getElementById('ppReportWrap');
+  ppRenderLock_(data);
   var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Start Date</th><th>End Date</th>';
   data.weekLabels.forEach(function(label) { html += '<th>' + label + '</th>'; });
   html += '<th>Total</th><th>Preview (auto)</th><th>Advances</th></tr></thead><tbody>';
@@ -3412,7 +3440,7 @@ function renderPayPeriodReport(data) {
       '<td>' + dmy(r.startDate) + '</td>' +
       '<td>' + dmy(r.endDate) + '</td>';
     r.weeklyHours.forEach(function(v, wi) {
-      html += '<td><input type="text" class="hours-input" value="' + esc(v) + '" ' +
+      html += '<td><input type="text" readonly tabindex="-1" class="hours-input pp-ro" title="' + (data.locked ? 'Locked period' : 'Live from Hours — correct a day in Hours') + '" value="' + esc(v) + '" ' +
         'data-pp-staff="' + esc(r.id) + '" data-pp-week="' + wi + '" data-pp-row="' + ri + '" ' +
         'onchange="savePayPeriodWeek(this)"></td>';
     });
@@ -4538,8 +4566,8 @@ function stApplyFilter_() {
     });
     document.getElementById('ppKpis').innerHTML = [
       kpiTile('Period hours', hrs(g) + ' h', worked + ' of ' + ppData.rows.length + ' staff entered', 'hero'),
-      kpiTile('Preview (from Hours)', hrs(pv) + ' h', 'Auto from daily entries'),
-      kpiTile('Difference', '<span class="' + (Math.abs(g - pv) > 0.01 ? 'amber' : 'pos') + '">' + (g - pv >= 0 ? '+' : '') + hrs(Math.round((g - pv) * 4) / 4) + ' h</span>', 'Typed − preview'),
+      kpiTile('Next period so far', hrs(pv) + ' h', '26th → end of month'),
+      kpiTile('Status', ppData.locked ? '🔒 Locked' : 'Live', ppData.locked ? ('since ' + (ppData.lock && ppData.lock.locked_at ? dmy(String(ppData.lock.locked_at).slice(0, 10)) : '')) : 'Auto from Hours · locks ' + dmy(ppAutoLockDate_(ppData.periodEnd)) + ' 12:00'),
       kpiTile('Advances', money(adv), advN + ' people')].join('');
   };
   // Staff Management filter / search / dirty rows
@@ -5089,6 +5117,158 @@ async function rptDo(action) {
     '</div>';
   document.body.appendChild(m);
   m.addEventListener('click', function(e) { if (e.target === m) rptClose(); });
+})();
+
+
+// ---------------- v2.10 Staff Hours lock bar ----------------
+function ppAutoLockDate_(periodEnd) { var d = new Date(periodEnd + 'T00:00:00'); d.setDate(d.getDate() + 2); return fmtDate(d); }
+function ppRenderLock_(data) {
+  var bar = document.getElementById('ppLockBar');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'ppLockBar'; var wrap = document.getElementById('ppReportWrap'); wrap.parentNode.insertBefore(bar, wrap); }
+  var isAdmin = window.HR_ME && window.HR_ME.role === 'ADMIN';
+  var lk = data.lock, last = lk && lk.log && lk.log.length ? lk.log[lk.log.length - 1] : null;
+  if (data.locked) {
+    bar.className = 'pp-lock locked';
+    bar.innerHTML = '<div><b>🔒 Locked</b> · ' + (lk.locked_by === 'auto' ? 'automatically' : 'by ' + esc(lk.locked_by || '')) + ' on ' + dmy(String(lk.locked_at).slice(0, 10)) + ' ' + String(lk.locked_at).slice(11, 16) +
+      '<small>These numbers are frozen. Later changes in Hours do not change them.</small></div>' +
+      (isAdmin ? '<button type="button" class="tool-btn" onclick="ppLock(false)">Unlock</button>' : '');
+  } else {
+    var ended = fmtDate(new Date()) > data.periodEnd;
+    bar.className = 'pp-lock live';
+    bar.innerHTML = '<div><b>● Live from Hours</b>' + (lk && last && last.action === 'unlock' ? ' · unlocked by ' + esc(last.by || '') + ' on ' + dmy(String(last.at).slice(0, 10)) : '') +
+      '<small>' + (ended ? 'Period ended — ' : '') + 'Locks automatically on ' + dmy(ppAutoLockDate_(data.periodEnd)) + ' at 12:00. To correct a number, fix the day in Hours.</small></div>' +
+      '<button type="button" class="tool-btn" onclick="ppLock(true)">🔒 Lock now</button>';
+  }
+}
+async function ppLock(lock) {
+  if (!ppData) return;
+  if (!confirm(lock ? 'Lock this pay period now?\n\nThe numbers are frozen as they are.' : 'Unlock this pay period?\n\nThe table goes back to live numbers from Hours. Lock it again when you are done.')) return;
+  var r = await window.HR_SB.rpc('pp_lock', { p_period_start: ppData.periodStart, p_lock: lock });
+  if (r.error || !r.data || !r.data.ok) { toast((r.error && r.error.message) || (r.data && r.data.error) || 'Could not save'); return; }
+  toast(lock ? 'Period locked.' : 'Period unlocked — live from Hours again.');
+  window.HRSHIM_invalidate(); loadPayPeriodReport(); loadMonthEndDetail();
+}
+
+// ---------------- v2.10 Import from Right Reservation (Excel) ----------------
+var RR = { rows: [], staff: [], file: '' };
+function rrOpen() {
+  document.getElementById('rrModal').classList.add('open');
+  document.getElementById('rrBody').innerHTML = '<div class="rr-drop"><div style="font-size:30px">📄</div><b>Choose the Registers Excel file</b><small>Right Reservation → Registers → Weekly → Excel. You can upload the same week again — only new or changed days are taken.</small>' +
+    '<input type="file" id="rrFile" accept=".xlsx,.xls"></div>';
+  document.getElementById('rrFoot').innerHTML = '';
+  document.getElementById('rrFile').addEventListener('change', rrRead);
+}
+function rrClose() { document.getElementById('rrModal').classList.remove('open'); }
+function rrLoadXlsx() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise(function(ok, bad) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = ok; s.onerror = function() { bad(new Error('Could not load the Excel reader.')); }; document.head.appendChild(s); });
+}
+function rrKeyDate(v) { var d = v instanceof Date ? v : new Date(v); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+async function rrRead(e) {
+  var f = e.target.files[0]; if (!f) return;
+  RR.file = f.name;
+  document.getElementById('rrBody').innerHTML = '<div class="loading">Reading ' + esc(f.name) + '…</div>';
+  try {
+    await rrLoadXlsx();
+    var wb = XLSX.read(await f.arrayBuffer(), { cellDates: true });
+    if (!wb.Sheets.Registers || !wb.Sheets.Employees) throw new Error('This is not a Right Reservation Registers file (no "Registers" / "Employees" sheet).');
+    var emps = {};
+    XLSX.utils.sheet_to_json(wb.Sheets.Employees, { header: 1, raw: true }).slice(1).forEach(function(r) { if (r[0] != null && r[0] !== '') emps[String(r[0]).trim()] = String(r[2] || '').trim(); });
+    var days = {};
+    XLSX.utils.sheet_to_json(wb.Sheets.Registers, { header: 1, raw: true }).slice(1).forEach(function(r) {
+      if (r[0] == null || r[0] === '' || !r[3]) return;
+      var id = String(r[0]).trim(), date = rrKeyDate(r[3]), k = id + '|' + date;
+      (days[k] = days[k] || { rr_id: id, rr_name: emps[id] || ('#' + id), date: date, ev: [] }).ev.push({ st: String(r[1] || '').toUpperCase().trim(), t: r[2] ? new Date(r[2]) : null });
+    });
+    var rows = Object.keys(days).map(function(k) {
+      var d = days[k], work = 0, brk = 0, inT = null, bT = null, any = false, off = false;
+      d.ev.filter(function(x) { return x.t; }).sort(function(a, b) { return a.t - b.t; }).forEach(function(x) {
+        if (x.st === 'CLOCK IN') { inT = x.t; any = true; }
+        else if (x.st === 'CLOCK OUT' && inT) { work += (x.t - inT) / 60000; inT = null; }
+        else if (x.st === 'START BREAK') bT = x.t;
+        else if (x.st === 'FINISH BREAK' && bT) { brk += (x.t - bT) / 60000; bT = null; }
+      });
+      d.ev.forEach(function(x) { if (x.st === 'DAY OFF') off = true; });
+      if (off && !any) return { rr_id: d.rr_id, rr_name: d.rr_name, date: d.date, minutes: null, dayoff: true };
+      var done = any && inT === null && bT === null;
+      return { rr_id: d.rr_id, rr_name: d.rr_name, date: d.date, minutes: done ? Math.round(work - brk) : null, dayoff: false };
+    }).filter(Boolean).sort(function(a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.rr_name.localeCompare(b.rr_name); });
+    RR.rows = rows;
+    if (!RR.staff.length) { var st = await window.HR_SB.from('staff').select('id,name,department,is_active').eq('is_deleted', false).order('display_order'); RR.staff = st.data || []; }
+    await rrPreview();
+  } catch (err) { document.getElementById('rrBody').innerHTML = '<p class="neg">' + esc(err.message || err) + '</p>'; }
+}
+var RR_ST = {
+  new: ['New', 'Will be added'], rr_changed: ['Changed in RR', 'Will be updated'], manual: ['Edited by hand', 'Kept — tick to replace'],
+  same: ['Already in', 'Nothing to do'], open: ['No clock-out', 'Skipped until the shift is closed'], locked: ['Locked period', 'Skipped'],
+  dayoff_new: ['Day off', 'Will be marked Off in Holidays'], dayoff_skip: ['Day off', 'Already marked / has hours'], unmapped: ['Who is this?', 'Match the name first']
+};
+async function rrPreview() {
+  document.getElementById('rrBody').innerHTML = '<div class="loading">Checking ' + RR.rows.length + ' days…</div>';
+  var r = await window.HR_SB.rpc('rr_import', { p_rows: RR.rows, p_apply: false });
+  if (r.error || !r.data || !r.data.ok) { document.getElementById('rrBody').innerHTML = '<p class="neg">' + esc((r.error && r.error.message) || (r.data && r.data.error)) + '</p>'; return; }
+  var rows = r.data.rows, cnt = {};
+  rows.forEach(function(x) { cnt[x.status] = (cnt[x.status] || 0) + 1; });
+  var unm = {}; rows.filter(function(x) { return x.status === 'unmapped'; }).forEach(function(x) { unm[x.rr_id] = x; });
+  var html = '<div class="rr-file">📄 ' + esc(RR.file) + ' · ' + rows.length + ' days</div><div class="rr-chips">' +
+    ['new', 'rr_changed', 'manual', 'dayoff_new', 'same', 'open', 'locked', 'unmapped'].filter(function(k) { return cnt[k]; }).map(function(k) { return '<span class="rr-chip ' + k + '"><b>' + cnt[k] + '</b> ' + RR_ST[k][0] + '</span>'; }).join('') + '</div>';
+  var ids = Object.keys(unm);
+  if (ids.length) {
+    html += '<div class="rr-map"><h4>Match these Right Reservation names to your staff (only once)</h4>' + ids.map(function(id) {
+      var x = unm[id];
+      return '<div class="rr-map-row"><span><b>' + esc(x.rr_name) + '</b> <small>RR #' + esc(id) + '</small></span><select data-rr="' + esc(id) + '" data-name="' + esc(x.rr_name) + '"><option value="">— not on our list / skip —</option>' +
+        RR.staff.map(function(s) { return '<option value="' + s.id + '"' + (String(x.suggest) === String(s.id) ? ' selected' : '') + '>' + esc(s.name) + ' (' + esc(s.department) + ')' + (s.is_active ? '' : ' — inactive') + '</option>'; }).join('') + '</select></div>';
+    }).join('') + '<button type="button" class="btn" onclick="rrSaveMap()">Save matches & check again</button></div>';
+  }
+  var show = rows.filter(function(x) { return x.status !== 'unmapped' && x.status !== 'dayoff_skip'; });
+  html += '<div class="rr-tbl"><table class="tbl"><thead><tr><th>Date</th><th>Staff</th><th class="r">Worked</th><th class="r">Hours</th><th class="r">Now in Hours</th><th>Status</th></tr></thead><tbody>' +
+    show.map(function(x) {
+      var m = x.minutes != null ? Number(x.minutes) : null;
+      return '<tr class="rr-' + x.status + '"><td class="nowrap b">' + dmy(x.date) + ' <small class="muted">' + dowShort(x.date) + '</small></td><td>' + esc(x.staff_name || x.rr_name) + '</td>' +
+        '<td class="r">' + (m != null ? Math.floor(m / 60) + 'h ' + ('0' + (m % 60)).slice(-2) + 'm' : '') + '</td><td class="r b">' + (x.hours != null ? hrs(x.hours) : '') + '</td>' +
+        '<td class="r">' + (x.existing != null ? hrs(x.existing) : '') + '</td>' +
+        '<td><span class="rr-st ' + x.status + '">' + RR_ST[x.status][0] + '</span> <small class="muted">' + RR_ST[x.status][1] + '</small>' +
+        (x.status === 'manual' && x.rows === 1 ? ' <label class="rr-acc"><input type="checkbox" data-acc="' + esc(x.key) + '"> replace</label>' : '') + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  document.getElementById('rrBody').innerHTML = html;
+  var todo = (cnt.new || 0) + (cnt.rr_changed || 0) + (cnt.dayoff_new || 0);
+  document.getElementById('rrFoot').innerHTML = '<span class="hint" style="margin:0">Rounded fairly to the quarter hour (up to 7 min down, 8 min and more up). Breaks are taken off.</span>' +
+    '<button type="button" class="btn" id="rrGo" onclick="rrApply()"' + (todo || cnt.manual ? '' : ' disabled') + '>Import ' + todo + ' ' + (todo === 1 ? 'day' : 'days') + '</button>';
+}
+async function rrSaveMap() {
+  var sels = document.querySelectorAll('.rr-map select');
+  for (var i = 0; i < sels.length; i++) {
+    var v = sels[i].value; if (!v) continue;
+    var r = await window.HR_SB.rpc('rr_map_set', { p_rr_id: sels[i].getAttribute('data-rr'), p_rr_name: sels[i].getAttribute('data-name'), p_staff_id: Number(v) });
+    if (r.error || !r.data || !r.data.ok) { toast((r.error && r.error.message) || 'Could not save'); return; }
+  }
+  rrPreview();
+}
+async function rrApply() {
+  var acc = Array.prototype.slice.call(document.querySelectorAll('[data-acc]:checked')).map(function(c) { return c.getAttribute('data-acc'); });
+  var b = document.getElementById('rrGo'); b.disabled = true; b.textContent = 'Importing…';
+  var r = await window.HR_SB.rpc('rr_import', { p_rows: RR.rows, p_apply: true, p_accept: acc });
+  if (r.error || !r.data || !r.data.ok) { toast((r.error && r.error.message) || (r.data && r.data.error) || 'Import failed'); b.disabled = false; return; }
+  toast('Imported: ' + r.data.inserted + ' new, ' + r.data.updated + ' updated, ' + r.data.dayoff + ' days off.');
+  window.HRSHIM_invalidate();
+  rrClose();
+  var cur = (document.querySelector('.view.active') || {}).id || '';
+  showView(cur.replace('view-', '') || 'hours');
+}
+(function() {
+  var m = document.createElement('div'); m.id = 'rrModal'; m.className = 'rpt-bg no-print';
+  m.innerHTML = '<div class="rpt-box rr-box"><div class="rpt-top"><div><div class="rpt-t">Import from Right Reservation</div><div class="rpt-s">Registers (clock-in / clock-out) → Hours</div></div>' +
+    '<button type="button" class="ibtn" onclick="rrClose()" title="Close">' + IC.x + '</button></div><div id="rrBody"></div><div id="rrFoot" class="rr-foot"></div></div>';
+  document.body.appendChild(m);
+  m.addEventListener('click', function(e) { if (e.target === m) rrClose(); });
+  // button in the Hours page header
+  var h = document.querySelector('#view-hours > .pg-head');
+  if (h) {
+    var t = h.querySelector(':scope > .pg-tools'); if (!t) { t = document.createElement('div'); t.className = 'pg-tools no-print'; h.appendChild(t); }
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tool-btn';
+    b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>Import from Right Reservation';
+    b.onclick = rrOpen; t.appendChild(b);
+  }
 })();
 
 // ============================================================
