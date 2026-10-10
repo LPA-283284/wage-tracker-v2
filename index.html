@@ -1336,7 +1336,7 @@ async function addReq() {
   setMsg('rqMsg', '✅ Request saved', true); loadReqs();
 }
 async function settleAdv(id, done) {
-  if (done && !confirm('Mark this advance as done (paid back / taken from wages)?')) return;
+  if (done && !confirm('Mark this advance as done?\n\nThis only ticks it off — nothing is taken from wages or the cash list.')) return;
   const { data, error } = await sb.rpc('advance_settle', { p_id: id, p_done: done });
   if (error || !data?.ok) return alert(error?.message || data?.error || 'Could not update');
   loadAdvances();

@@ -3242,12 +3242,7 @@ function renderPeriodSummary(data) {
     rows.forEach(function(r) {
       var adv = Number(r.advances) || 0;
       th += Number(r.totalHours) || 0; ta += adv;
-      var tags = [];
-      var sWeeks = 0;
-      (r.weeklyHours || []).forEach(function(w) { if (w === 'S') sWeeks++; });
-      // v2.5.8: Holiday is NOT shown in the report notes; the week mark wins over the day count for Sick.
-      if (sWeeks > 0) tags.push('<span class="tag sick">Sick ' + sWeeks + 'wk</span>');
-      else if (Number(r.sickDays) > 0) tags.push('<span class="tag sick">Sick ' + r.sickDays + 'd</span>');
+      var tags = [];   // notes: only starts and leavers (no holiday / sick / day off)
       if (r.startDate) tags.push('<span class="tag in">Started ' + dmy(r.startDate) + '</span>');
       if (r.endDate) tags.push('<span class="tag out">Left ' + dmy(r.endDate) + '</span>');
       var zero = !(Number(r.totalHours) > 0);
@@ -4908,8 +4903,7 @@ var REPORTS = {
       var th = 0, ta = 0;
       var rows = g.rows.map(function(r) {
         th += Number(r.totalHours) || 0; ta += Number(r.advances) || 0;
-        var sW = (r.weeklyHours || []).filter(function(w) { return w === 'S'; }).length;
-        var notes = [sW ? 'Sick ' + sW + 'wk' : (Number(r.sickDays) > 0 ? 'Sick ' + r.sickDays + 'd' : ''), r.startDate ? 'In ' + dmy(r.startDate) : '', r.endDate ? 'Out ' + dmy(r.endDate) : ''].filter(Boolean).join(', ');
+        var notes = [r.startDate ? 'Started ' + dmy(r.startDate) : '', r.endDate ? 'Left ' + dmy(r.endDate) : ''].filter(Boolean).join(', ');
         if (Number(r.totalHours) > 0) lines.push(r.name + ': ' + hrs(r.totalHours) + 'h' + (Number(r.advances) > 0 ? ' (adv ' + money(r.advances) + ')' : ''));
         return [r.name, hrs(r.totalHours), rptMoney(r.advances), notes];
       });
