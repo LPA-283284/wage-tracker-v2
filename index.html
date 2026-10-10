@@ -355,8 +355,9 @@
     <!-- DEPOSITS -->
     <section class="page" id="page-deposits">
       <div class="seg" id="depSeg">
-        <button data-sub="list" class="active">List</button>
         <button data-sub="add" data-perm="deposits">+ Add</button>
+        <button data-sub="list" class="active">List</button>
+        <button data-sub="used">History</button>
       </div>
       <div id="deposits-list" class="card">
         <h2>Deposits</h2>
@@ -368,6 +369,10 @@
         <div class="muted" id="depSum" style="margin-top:10px"></div>
         <div class="scroll" style="margin-top:8px"><table id="depTable"></table></div>
       </div>
+      <div id="deposits-used" class="card hidden">
+        <h2>Used deposits <span class="muted" style="font-weight:400;font-size:13px">kept as proof</span></h2>
+        <div class="scroll"><table id="depUsedTable"></table></div>
+      </div>
       <div id="deposits-add" class="card hidden">
         <h2>New Deposit</h2>
         <div class="row">
@@ -377,7 +382,7 @@
         </div>
         <div class="row" style="margin-top:10px">
           <div><label>Amount (£)</label><input type="number" id="depAmount" step="0.01" min="0"></div>
-          <div><label>Method</label><select id="depMethod"><option>CASH</option><option>CC</option><option>BANK</option></select></div>
+          <div><label>Method</label><select id="depMethod"><option value="CASH">Cash</option><option value="CC">Card</option><option value="BANK">Bank</option></select></div>
           <div><label>Photo (optional)</label><input type="file" id="depPhoto" accept="image/*"></div>
         </div>
         <div style="margin-top:10px"><label>Note</label><input id="depNote"></div>
@@ -454,6 +459,24 @@
       </div>
     </section>
 
+  </div>
+</div>
+
+<!-- Share deposit modal -->
+<div class="modal-bg" id="shareModal">
+  <div class="modal" style="max-width:460px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <h2 style="margin:0">Share deposit</h2>
+      <button class="btn ghost small" onclick="closeModal('shareModal')">✕</button>
+    </div>
+    <textarea id="shareText" rows="6" style="width:100%;margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit"></textarea>
+    <div class="muted" id="shareImgNote" style="font-size:12px;margin-top:6px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <button class="btn" id="shareNative" onclick="shareNative()" style="grid-column:1/-1">Share… (with photo)</button>
+      <button class="btn" onclick="shareWhatsApp()" style="background:#1FA855">WhatsApp</button>
+      <button class="btn" onclick="shareEmail()">Email</button>
+      <button class="btn ghost" id="shareSaveImg" onclick="shareSaveImg()" style="grid-column:1/-1">Save photo</button>
+    </div>
   </div>
 </div>
 
@@ -708,7 +731,7 @@ function wireSeg(segId, prefix) {
     $(segId).querySelectorAll('button').forEach(x => $(prefix + x.dataset.sub)?.classList.toggle('hidden', x !== b));
     if (b.dataset.sub === 'history') loadWageHistory();
     if (b.dataset.sub === 'sigs') loadSigs();
-    if (b.dataset.sub === 'list') loadDeposits();
+    if (b.dataset.sub === 'list' || b.dataset.sub === 'used') loadDeposits();
   });
 }
 wireSeg('wagesSeg', 'wages-');
@@ -876,7 +899,8 @@ async function loadAdvances() {
 
 // ═════════════ DEPOSITS ═════════════
 async function loadDeposits() {
-  let q = sb.from('deposits').select('id,created_at,added_by,customer_name,res_date,covers,amount,method,note,image_url,image_path').eq('is_deleted', false).order('res_date', { ascending:true });
+  if (!window.DEP_INIT) { window.DEP_INIT = true; if (can('deposits')) { $('depSeg').querySelector('[data-sub=add]').click(); return; } }
+  let q = sb.from('deposits').select('id,created_at,added_by,customer_name,res_date,covers,amount,method,note,image_url,image_path,used_at,used_by').eq('is_deleted', false).order('res_date', { ascending:true });
   if ($('depFrom').value) q = q.gte('res_date', $('depFrom').value);
   if ($('depTo').value) q = q.lte('res_date', $('depTo').value);
   const { data, error } = await q;
@@ -884,12 +908,56 @@ async function loadDeposits() {
   const paths = data.filter(d => d.image_path).map(d => d.image_path);
   const signed = {};
   if (paths.length) { const { data: u } = await sb.storage.from('deposit-photos').createSignedUrls(paths, 3600); (u || []).forEach(x => signed[x.path] = x.signedUrl); }
-  $('depSum').textContent = `${data.length} deposits · ${gbp(data.reduce((a,d) => a + Number(d.amount), 0))} · ${data.reduce((a,d) => a + Number(d.covers), 0)} covers`;
-  $('depTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Note</th><th>Photo</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
-    data.map(d => { const img = d.image_path ? signed[d.image_path] : d.image_url;
-      return `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${esc(d.method)}</td>
-      <td>${esc(d.added_by)}</td><td class="muted">${esc(d.note)}</td><td>${img ? `<img class="thumb" src="${img}" onclick="showImg('${img}')">` : ''}</td>
-      ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="delDeposit('${d.id}')">Delete</button></td>` : ''}</tr>`; }).join('');
+  const METHOD = { CASH:'Cash', CC:'Card', BANK:'Bank' };
+  window._deps = {}; data.forEach(d => { window._deps[d.id] = { ...d, img: d.image_path ? signed[d.image_path] : d.image_url }; });
+  const open = data.filter(d => !d.used_at), used = data.filter(d => d.used_at).sort((x, y) => x.used_at < y.used_at ? 1 : -1);
+  const imgCell = d => { const img = d.image_path ? signed[d.image_path] : d.image_url; return img ? `<img class="thumb" src="${img}" onclick="showImg('${img}')">` : ''; };
+  $('depSum').textContent = `${open.length} open deposits · ${gbp(open.reduce((a,d) => a + Number(d.amount), 0))} · ${open.reduce((a,d) => a + Number(d.covers), 0)} covers`;
+  $('depTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Note</th><th>Photo</th><th></th></tr>` +
+    (open.length ? open.map(d => `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${METHOD[d.method] || esc(d.method)}</td>
+      <td>${esc(d.added_by)}</td><td class="muted">${esc(d.note)}</td><td>${imgCell(d)}</td>
+      <td class="num" style="white-space:nowrap"><button class="btn ghost small" onclick="depShare('${d.id}')">Share</button> ${can('deposits') ? `<button class="btn small" onclick="depUsed('${d.id}',true)">✓ Mark as used</button>` : ''}
+      ${isAdmin() ? ` <button class="btn danger small" onclick="delDeposit('${d.id}')">Delete</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="9" class="muted">No open deposits.</td></tr>');
+  $('depUsedTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Used</th><th>Note</th><th>Photo</th><th></th></tr>` +
+    (used.length ? used.map(d => `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${METHOD[d.method] || esc(d.method)}</td>
+      <td>${esc(d.added_by)}</td><td><span class="pos">✓ ${dmy(String(d.used_at).slice(0,10))}</span>${d.used_by ? ' · ' + esc(d.used_by) : ''}</td><td class="muted">${esc(d.note)}</td><td>${imgCell(d)}</td>
+      <td class="num" style="white-space:nowrap"><button class="btn ghost small" onclick="depShare('${d.id}')">Share</button>${isAdmin() ? ` <button class="btn ghost small" onclick="depUsed('${d.id}',false)">Undo</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="10" class="muted">No used deposits yet.</td></tr>');
+}
+function depText(d) {
+  const M = { CASH:'Cash', CC:'Card', BANK:'Bank' };
+  return ['Deposit received', 'Name: ' + d.customer_name,
+    'Reservation: ' + dmy(d.res_date) + (d.covers ? ' · ' + d.covers + ' guests' : ''),
+    'Deposit: ' + gbp(d.amount) + ' (' + (M[d.method] || d.method) + ')',
+    d.used_at ? 'Used: ' + dmy(String(d.used_at).slice(0, 10)) : 'Thank you — we look forward to seeing you.'].join('\n');
+}
+function depShare(id) {
+  const d = window._deps[id]; if (!d) return;
+  $('shareText').value = depText(d); window._shareDep = d;
+  $('shareImgNote').textContent = d.img ? 'The receipt photo is attached when your device supports it (phone / iPad). On a computer, use “Save photo” and attach it.' : '';
+  $('shareSaveImg').classList.toggle('hidden', !d.img);
+  $('shareNative').classList.toggle('hidden', !navigator.share);
+  openModal('shareModal');
+}
+async function shareNative() {
+  const d = window._shareDep, text = $('shareText').value;
+  try {
+    if (d.img && navigator.canShare) {
+      const blob = await (await fetch(d.img)).blob();
+      const file = new File([blob], 'deposit-' + d.customer_name.replace(/\W+/g, '-') + '.jpg', { type: blob.type || 'image/jpeg' });
+      if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+    }
+    await navigator.share({ text });
+  } catch (e) { if (e.name !== 'AbortError') alert(e.message); }
+}
+function shareWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent($('shareText').value), '_blank'); }
+function shareEmail() { location.href = 'mailto:?subject=' + encodeURIComponent('Your deposit') + '&body=' + encodeURIComponent($('shareText').value); }
+function shareSaveImg() { const d = window._shareDep; if (d?.img) window.open(d.img, '_blank'); }
+async function depUsed(id, used) {
+  if (used && !confirm('Mark this deposit as used? It moves to History.')) return;
+  if (!used && !confirm('Move this deposit back to the open list?')) return;
+  const { data, error } = await sb.rpc('mark_deposit_used', { p_id: id, p_used: used });
+  if (error || !data?.ok) return alert(error?.message || data?.error);
+  loadDeposits();
 }
 function showImg(u) { $('imgBig').src = u; openModal('imgModal'); }
 async function delDeposit(id) {
