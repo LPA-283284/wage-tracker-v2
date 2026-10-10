@@ -4315,16 +4315,50 @@ function renderWeeklyTips(data) {
   if (data.warnings && data.warnings.length) data.warnings.forEach(function(w) { html += '<p class="hint no-print neg">⚠️ ' + esc(w) + '</p>'; });
   wrap.innerHTML = html;
 }
+var tipEditing = -1;
 function renderRecentTipPool(rows) {
+  if (rows !== undefined) { tipPoolEntriesList = rows || []; tipEditing = -1; }
   var wrap = document.getElementById('recentTipPoolWrap');
-  tipPoolEntriesList = rows || [];
-  if (!rows || !rows.length) { wrap.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
-  wrap.innerHTML = '<table class="tbl"><thead><tr><th>Date</th><th class="r">Tips (£)</th><th>Note</th><th></th></tr></thead><tbody>' + rows.map(function(r, i) {
-    return '<tr><td class="b nowrap">' + dmy(r.date) + ' <small class="muted">' + dowShort(r.date) + '</small></td>' +
-      '<td class="r"><input class="hours-input" style="width:90px;text-align:right" type="number" min="0" step="0.01" id="tpAmount_' + i + '" value="' + r.amount + '"></td>' +
-      '<td><input type="text" id="tpNotes_' + i + '" value="' + esc(r.notes) + '" style="width:100%"></td>' +
-      '<td class="acts">' + ibtn('save', 'Save', 'saveTipPoolEntry(' + i + ')', 'go') + ibtn('del', 'Delete', 'removeTipPoolEntry(' + i + ')', 'danger') + '</td></tr>';
+  var list = tipPoolEntriesList;
+  if (!list.length) { wrap.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
+  wrap.innerHTML = '<table class="tbl"><thead><tr><th>Date</th><th class="r">Tips</th><th>Note</th><th></th></tr></thead><tbody>' + list.map(function(r, i) {
+    var ed = (i === tipEditing);
+    return '<tr class="' + (ed ? 'editing' : '') + '"><td class="b nowrap">' + dmy(r.date) + ' <small class="muted">' + dowShort(r.date) + '</small></td>' +
+      (ed ? '<td class="r"><input class="hours-input" style="width:90px;text-align:right" type="number" min="0" step="0.01" id="tpAmount_' + i + '" value="' + r.amount + '"></td>' +
+            '<td><input type="text" id="tpNotes_' + i + '" value="' + esc(r.notes) + '" style="width:100%"></td>' +
+            '<td class="acts">' + ibtn('save', 'Save', 'saveTipPoolEntry(' + i + ')', 'go') + ibtn('x', 'Cancel', 'tipEditing=-1;renderRecentTipPool()') + '</td>'
+          : '<td class="r b">' + money(r.amount) + '</td><td class="muted">' + esc(r.notes) + '</td>' +
+            '<td class="acts">' + ibtn('edit', 'Edit', 'tipEditing=' + i + ';renderRecentTipPool()') + ibtn('del', 'Delete', 'removeTipPoolEntry(' + i + ')', 'danger') + '</td>') + '</tr>';
   }).join('') + '</tbody></table>';
+}
+
+// Hours › View & fix entries — read-only rows, Edit opens one row
+var veEditing = -1;
+function loadHoursEntries() {
+  var wrap = document.getElementById('viewEntriesWrap');
+  var from = document.getElementById('veFrom').value, to = document.getElementById('veTo').value;
+  if (!from || !to) { toast('Please pick both dates.'); return; }
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  google.script.run.withSuccessHandler(function(rows) { viewEntriesList = rows; veEditing = -1; renderViewEntries_(); })
+    .withFailureHandler(onError).getHoursEntries(from, to);
+}
+function renderViewEntries_() {
+  var wrap = document.getElementById('viewEntriesWrap'), rows = viewEntriesList || [];
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No hours logged in this range.</div>'; return; }
+  var total = 0, lastDate = '';
+  var html = '<table class="tbl"><thead><tr><th>Date</th><th>Staff</th><th>Dept</th><th class="r">Hours</th><th></th></tr></thead><tbody>';
+  rows.forEach(function(r, i) {
+    total += r.hours;
+    var ed = (i === veEditing), first = r.date !== lastDate; lastDate = r.date;
+    html += '<tr class="' + (ed ? 'editing' : '') + '"><td class="b nowrap">' + (first ? dmy(r.date) + ' <small class="muted">' + dowShort(r.date) + '</small>' : '') + '</td>' +
+      '<td>' + esc(r.name) + '</td><td class="' + deptClass(r.dept) + '">' + esc(r.dept) + '</td>' +
+      (ed ? '<td class="r"><input class="hours-input" style="width:80px;text-align:right" type="number" min="0" max="24" step="0.25" id="veHours_' + i + '" value="' + r.hours + '"></td>' +
+            '<td class="acts">' + ibtn('save', 'Save', 'saveHoursEntry(' + i + ')', 'go') + ibtn('x', 'Cancel', 'veEditing=-1;renderViewEntries_()') + '</td>'
+          : '<td class="r b">' + hrs(r.hours) + '</td>' +
+            '<td class="acts">' + ibtn('edit', 'Edit', 'veEditing=' + i + ';renderViewEntries_()') + ibtn('del', 'Delete', 'removeHoursEntry(' + i + ')', 'danger') + '</td>') + '</tr>';
+  });
+  html += '<tr class="total-row"><td colspan="3">Total</td><td class="r">' + hrs(total) + '</td><td></td></tr></tbody></table>';
+  wrap.innerHTML = html;
 }
 
 // ---------------- CASH LIST ----------------
