@@ -90,6 +90,17 @@
   })();
   </script>
   <style>
+    .bell-panel .al-btn { flex:none; align-self:flex-start; border:1px solid #E6D6C3; background:#fff; color:#7A5C43; border-radius:999px; padding:3px 10px; font-size:11.5px; cursor:pointer; }
+    .bell-panel .al-btn:hover { background:#F7EEE3; }
+    .bell-panel .al-hid { opacity:.6; }
+    .bell-panel .al-more { display:block; width:100%; margin-top:8px; border:0; background:#F7EEE3; color:#6D1B2F; border-radius:10px; padding:7px 10px; font-size:12px; font-weight:600; cursor:pointer; }
+    .tips-t td.tc { position:relative; }
+    .tips-t .tx-btn { position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; border:1px solid #E6D6C3; background:#fff; color:#8A6A4F;
+      font-size:12px; line-height:1; cursor:pointer; opacity:0; transition:opacity .15s; padding:0; }
+    .tips-t td.tc:hover .tx-btn, .tips-t td.tx-off .tx-btn { opacity:1; }
+    @media (hover:none) { .tips-t .tx-btn { opacity:.7; } }
+    .tips-t td.tx-off { background:repeating-linear-gradient(135deg,#FBF6EF 0 6px,#F4ECE1 6px 12px); }
+    .tips-t td.tx-off b { color:#9A8571; font-weight:600; font-size:12px; }
     html.embed #sidebar { display:none !important; }
     html.embed body { padding-left:0 !important; }
   </style>
@@ -825,11 +836,11 @@
     <div class="dash-head">
       <div><div class="dash-hello" id="dashHello">Good day</div><div class="hint" id="dashDate"></div></div>
       <div class="dash-tabs">
-        <button id="dtab-now" class="active" onclick="dashTab('now')">This month</button>
-        <button id="dtab-year" onclick="dashTab('year')">Year in detail</button>
+        <button id="dtab-year" class="active" onclick="dashTab('year')">Year in detail</button>
+        <button id="dtab-now" onclick="dashTab('now')">This month</button>
       </div>
     </div>
-    <div id="dashNow">
+    <div id="dashNow" style="display:none">
     <div class="dash-kpis" id="dashKpis"><div class="loading">Loading…</div></div>
     <div class="dash-grid">
       <div class="card"><h2>Last 30 days</h2><div class="chart-box"><canvas id="chDaily"></canvas></div></div>
@@ -841,7 +852,7 @@
     </div>
 
     </div>
-    <div id="dashYearSec" style="display:none">
+    <div id="dashYearSec">
     <div class="pg-head" style="margin-top:4px">
       <div><div class="pg-title" style="font-size:22px">Year in detail</div><div class="pg-sub">Totals, departments and day-of-week averages for any year</div></div>
       <div class="row" style="margin:0">
@@ -1169,6 +1180,11 @@
     </div>
 
     <div class="card pp-sec" data-sec="report">
+      <div class="list-head" style="margin:0"><div><h2 style="margin:0">Give an advance</h2>
+        <p class="hint" style="margin:4px 0 0">Advances are now given in one place: the <b>Advances</b> page (signature, "Paid from" and Done). They show up here automatically.</p></div>
+        <button type="button" class="btn" onclick="try{parent.showPage('advances')}catch(e){}">Go to Advances</button></div>
+    </div>
+    <div style="display:none"><!-- v3.1: old form kept hidden (its fields are still read by older code) -->
       <h2>Add Advance</h2>
       <div class="row">
         <div><label>Date</label><input type="date" id="advDate"></div>
@@ -3934,7 +3950,7 @@ function toggleActive(i) {
 // ============================================================
 // NEW DASHBOARD (home) + ALERTS BELL — reads Supabase directly
 // ============================================================
-var HOME = null, chD = null, chM = null, DASH_TAB = 'now';
+var HOME = null, chD = null, chM = null, DASH_TAB = 'year';
 function dashTab(t) {
   DASH_TAB = t;
   document.getElementById('dashNow').style.display = t === 'now' ? '' : 'none';
@@ -3946,14 +3962,47 @@ function dashTab(t) {
 var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function pctT(v) { return v == null ? '–' : (Number(v) * 100).toFixed(1) + '%'; }
 function alertDot(k) { return (k === 'no_takein' || k === 'request') ? 'red' : (k === 'no_hours' || k === 'data') ? 'amber' : k === 'deposit' ? 'blue' : ''; }
+// v3.1: alerts can be hidden (for everyone). A hidden alert comes back by itself
+// as soon as its text changes (e.g. more hours or a new day) — so nothing new is ever missed.
+var ALERT_HIDDEN = null, BELL_ITEMS = [], BELL_SHOW_HIDDEN = false;
+function alertSig(t) { var h = 5381; t = String(t || ''); for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return 'a' + (h >>> 0).toString(36); }
+function loadHiddenAlerts() {
+  if (!window.HR_SB) return;
+  window.HR_SB.from('alert_dismissals').select('sig,alert_text,dismissed_by,dismissed_at').then(function(r) {
+    ALERT_HIDDEN = {}; (r.data || []).forEach(function(x) { ALERT_HIDDEN[x.sig] = x; }); renderBell();
+  });
+}
+async function alertHide(i, hide) {
+  var a = BELL_ITEMS[i]; if (!a) return;
+  var sig = alertSig(a.text);
+  var r = await window.HR_SB.rpc('alert_dismiss', { p_sig: sig, p_text: a.text, p_hide: hide });
+  if (r.error || !(r.data && r.data.ok)) { toast('Error: ' + ((r.error && r.error.message) || (r.data && r.data.error) || 'could not save')); return; }
+  ALERT_HIDDEN = ALERT_HIDDEN || {};
+  if (hide) ALERT_HIDDEN[sig] = { sig: sig, dismissed_by: (window.HR_ME && window.HR_ME.name) || '' }; else delete ALERT_HIDDEN[sig];
+  renderBell();
+}
 function renderBell() {
-  var list = ((HOME && HOME.alerts) || []).concat(YEAR_ALERTS || []);
+  if (ALERT_HIDDEN === null) { ALERT_HIDDEN = {}; loadHiddenAlerts(); }
+  var all = ((HOME && HOME.alerts) || []).concat(YEAR_ALERTS || []);
+  var shown = all.filter(function(a) { return !ALERT_HIDDEN[alertSig(a.text)]; });
+  var hidden = all.filter(function(a) { return ALERT_HIDDEN[alertSig(a.text)]; });
+  if (!hidden.length) BELL_SHOW_HIDDEN = false;
+  BELL_ITEMS = shown.concat(hidden);
   var b = document.getElementById('bellBadge');
-  b.textContent = list.length > 99 ? '99+' : list.length;
-  b.style.display = list.length ? 'flex' : 'none';
-  document.getElementById('bellList').innerHTML = list.length
-    ? list.map(function(a) { return '<div class="dash-list"><div class="it"><span class="dot ' + alertDot(a.kind) + '"></span><div>' + esc(a.text) + '</div></div></div>'; }).join('')
+  b.textContent = shown.length > 99 ? '99+' : shown.length;
+  b.style.display = shown.length ? 'flex' : 'none';
+  function item(a, i, isHidden) {
+    return '<div class="dash-list"><div class="it' + (isHidden ? ' al-hid' : '') + '"><span class="dot ' + alertDot(a.kind) + '"></span><div style="flex:1">' + esc(a.text) + '</div>' +
+      '<button type="button" class="al-btn" onclick="event.stopPropagation();alertHide(' + i + ',' + (!isHidden) + ')">' + (isHidden ? 'Show again' : 'Hide') + '</button></div></div>';
+  }
+  var html = shown.length ? shown.map(function(a, i) { return item(a, i, false); }).join('')
     : '<div class="hint" style="padding:12px 0">All clear — nothing needs attention.</div>';
+  if (hidden.length) {
+    html += '<button type="button" class="al-more" onclick="event.stopPropagation();BELL_SHOW_HIDDEN=!BELL_SHOW_HIDDEN;renderBell()">' +
+      (BELL_SHOW_HIDDEN ? 'Close hidden alerts' : hidden.length + ' hidden alert' + (hidden.length > 1 ? 's' : '') + ' — show') + '</button>';
+    if (BELL_SHOW_HIDDEN) html += hidden.map(function(a, j) { return item(a, shown.length + j, true); }).join('');
+  }
+  document.getElementById('bellList').innerHTML = html;
 }
 function toggleBell(e) {
   e.stopPropagation();
@@ -4370,7 +4419,12 @@ function renderWeeklyTips(data) {
     var weightTag = (s.tipWeight !== 1) ? ' <span class="pill soft">×' + esc(s.tipWeight) + '</span>' : '';
     html += '<tr><td class="b">' + esc(s.name) + weightTag + '</td>';
     for (var d = 0; d < 7; d++) {
-      html += (s.hours[d] > 0) ? '<td class="c tc"><b>' + money(s.tips[d]) + '</b><small>' + hrs(s.hours[d]) + 'h</small></td>' : '<td class="c muted">–</td>';
+      var ex = s.excluded && s.excluded[d];
+      html += (s.hours[d] > 0)
+        ? '<td class="c tc' + (ex ? ' tx-off' : '') + '">' + (ex ? '<b>Left out</b>' : '<b>' + money(s.tips[d]) + '</b>') + '<small>' + hrs(s.hours[d]) + 'h</small>' +
+          '<button type="button" class="tx-btn no-print" title="' + (ex ? 'Put back into this day\'s tips' : 'Leave out of this day\'s tips') + '" ' +
+          'onclick="tipToggle(\'' + data.days[d] + '\',' + Number(s.id) + ',' + (!ex) + ',\'' + esc(s.name).replace(/'/g, '') + '\')">' + (ex ? '↺' : '⊘') + '</button></td>'
+        : '<td class="c muted">–</td>';
     }
     html += '<td class="r b big">' + money(s.weekTips) + '</td></tr>';
   });
@@ -4379,8 +4433,21 @@ function renderWeeklyTips(data) {
   html += '<td class="r">' + hrs(totH) + '</td></tr><tr class="total-row"><td>Tip pool</td>';
   data.dailyPool.forEach(function(p) { html += '<td class="c">' + (p ? money(p) : '–') + '</td>'; });
   html += '<td class="r">' + money(data.weekTotalPool) + '</td></tr></tbody></table>';
+  html += '<p class="hint no-print" style="margin-top:10px">To leave someone out of one day\'s tips (for example working from home), press <b>⊘</b> in that day. Their share goes to the others who worked that day. Press <b>↺</b> to put them back.</p>';
   if (data.warnings && data.warnings.length) data.warnings.forEach(function(w) { html += '<p class="hint no-print neg">⚠️ ' + esc(w) + '</p>'; });
   wrap.innerHTML = html;
+}
+// v3.1: leave someone out of one day's tip pool
+async function tipToggle(day, staffId, exclude, name) {
+  var msg = exclude ? 'Leave ' + name + ' out of the tips on ' + dmy(day) + '?\nTheir share goes to the others who worked that day.'
+                    : 'Put ' + name + ' back into the tips on ' + dmy(day) + '?';
+  if (!confirm(msg)) return;
+  var r = await window.HR_SB.rpc('tip_exclude_set', { p_date: day, p_staff_id: staffId, p_exclude: exclude });
+  if (r.error || !(r.data && r.data.ok)) { toast('Error: ' + ((r.error && r.error.message) || (r.data && r.data.error) || 'could not save')); return; }
+  window.HRSHIM_tipEx = window.HRSHIM_tipEx || {};
+  if (exclude) window.HRSHIM_tipEx[day + '|' + staffId] = true; else delete window.HRSHIM_tipEx[day + '|' + staffId];
+  toast(exclude ? name + ' left out of ' + dmy(day) + ' tips' : name + ' is back in ' + dmy(day) + ' tips');
+  loadWeeklyTips();
 }
 var tipEditing = -1;
 function renderRecentTipPool(rows) {
@@ -5351,7 +5418,8 @@ initDashboard();
 window.HRSHIM_ready.then(function(ok) {
   if (!ok) return;
   var v = window.HR_EMBED ? location.hash.slice(1) : '';
-  if (v && v !== 'home' && document.getElementById('view-' + v)) showView(v); else loadHome();
+  loadHome();   // feeds the alerts bell
+  if (v && v !== 'home' && document.getElementById('view-' + v)) showView(v);
 });
 // v3.0: tell TeamOS which page is open (keeps its menu in step)
 if (window.HR_EMBED) {

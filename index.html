@@ -30,6 +30,7 @@
 
   #appView { padding-left:252px; }
   /* v3.0 one site: HR pages run in a frame next to the App pages */
+  .bell-panel .al-btn { flex:none; align-self:flex-start; border:1px solid #E6D6C3; background:#fff; color:#7A5C43; border-radius:999px; padding:3px 10px; font-size:11.5px; cursor:pointer; }
   #page-hr { display:none; }
   body.hr-on #page-hr { display:block; }
   body.hr-on #appView > .wrap, body.hr-on #bellWrap { display:none !important; }
@@ -775,11 +776,26 @@ let DASH = null, chDaily = null, chMonthly = null;
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const pctTxt = v => v == null ? '–' : (Number(v) * 100).toFixed(1) + '%';
 function alertDot(k) { return k === 'no_takein' || (k === 'request') ? 'red' : k === 'no_hours' ? 'amber' : k === 'deposit' ? 'blue' : ''; }
+// v3.1: same hidden-alerts list as the HR pages (a hidden alert returns when its text changes)
+let ALERT_HIDDEN = null, BELL_ITEMS = [];
+const alertSig = t => { let h = 5381; t = String(t || ''); for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return 'a' + (h >>> 0).toString(36); };
+async function alertHide(i) {
+  const a = BELL_ITEMS[i]; if (!a) return;
+  const { data, error } = await sb.rpc('alert_dismiss', { p_sig: alertSig(a.text), p_text: a.text, p_hide: true });
+  if (error || !data?.ok) return alert(error?.message || data?.error || 'Could not save');
+  ALERT_HIDDEN[alertSig(a.text)] = true; renderBell();
+}
 function renderBell() {
-  const list = (DASH && DASH.alerts) || [];
+  if (ALERT_HIDDEN === null) {
+    ALERT_HIDDEN = {};
+    if (isAdmin() || can('hr')) sb.from('alert_dismissals').select('sig').then(r => { (r.data || []).forEach(x => ALERT_HIDDEN[x.sig] = true); renderBell(); });
+  }
+  const list = ((DASH && DASH.alerts) || []).filter(a => !ALERT_HIDDEN[alertSig(a.text)]);
+  BELL_ITEMS = list;
+  const canHide = isAdmin() || can('hr');
   $('bellBadge').textContent = list.length > 99 ? '99+' : list.length;
   $('bellBadge').classList.toggle('hidden', list.length === 0);
-  $('bellList').innerHTML = list.length ? list.map(a => `<div class="dash-list"><div class="it"><span class="dot ${alertDot(a.kind)}"></span><div>${esc(a.text)}</div></div></div>`).join('')
+  $('bellList').innerHTML = list.length ? list.map((a, i) => `<div class="dash-list"><div class="it"><span class="dot ${alertDot(a.kind)}"></span><div style="flex:1">${esc(a.text)}</div>${canHide ? `<button type="button" class="al-btn" onclick="event.stopPropagation();alertHide(${i})">Hide</button>` : ''}</div></div>`).join('')
     : '<div class="muted" style="padding:12px 0">All clear — nothing needs attention.</div>';
 }
 function toggleBell(e) { e.stopPropagation(); $('bellPanel').classList.toggle('hidden'); }
@@ -850,7 +866,6 @@ const PAGES = [
   { key:'hr:revenue',      group:'Money',    label:'Take-in',          show:isHR },
   { key:'hr:tips',         group:'Money',    label:'Tips',             show:isHR },
   { key:'hr:cashlist',     group:'Money',    label:'Cash List',        show:isHR },
-  { key:'cash',     group:'Money',    label:'Cash List', show:() => !isHR() && isCashRole() },
   { key:'deposits', group:'Money',    label:'Deposits',  show:() => can('deposits_view') },
   { key:'hr:staff',        group:'People',   label:'Staff Management', show:isHR },
   { key:'hr:requests',     group:'People',   label:'Requests',         show:isHR },

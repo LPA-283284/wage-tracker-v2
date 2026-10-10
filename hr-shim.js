@@ -309,6 +309,11 @@
     SHEETS.Requests_Log.load(d.requests_log);
     SHEETS.Cost_Exclusions_Log.load(d.cost_exclusions);
     try { var lk = await sb.from('pay_period_locks').select('period_start,locked,locked_at,locked_by,log'); window.HRSHIM_locks = lk.data || []; } catch (e) { window.HRSHIM_locks = []; }
+    try {
+      var tx = await sb.from('tip_exclusions').select('work_date,staff_id');
+      var m = {}; (tx.data || []).forEach(function (r) { m[String(r.work_date).slice(0, 10) + '|' + r.staff_id] = true; });
+      window.HRSHIM_tipEx = m;
+    } catch (e) { window.HRSHIM_tipEx = {}; }
     lastLoad = Date.now();
   }
 

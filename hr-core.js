@@ -1887,6 +1887,13 @@ function distributeDailyTipsPence_(poolPence, entries) {
   return { shares: shares, undistributed: 0 };
 }
 
+// Web: days someone is left out of the tip pool (e.g. worked from home).
+// Filled by hr-shim.js from the tip_exclusions table: { 'yyyy-mm-dd|staffId': true }
+function isTipExcluded_(day, staffId) {
+  var m = (typeof window !== 'undefined' && window.HRSHIM_tipEx) || {};
+  return !!m[day + '|' + String(staffId)];
+}
+
 function getTipsViewData(weekStartStr) {
   var weekStart = parseDateStr(weekStartStr);
   var days = [];
@@ -1980,8 +1987,12 @@ function getTipsViewData(weekStartStr) {
   var dailyUndistributedPence = [0, 0, 0, 0, 0, 0, 0];
   for (var di = 0; di < 7; di++) {
     var poolPence = Math.round(dailyPool[di] * 100);
+    var exDay = fmtDate_(days[di]);
     var entries = list.map(function (p) {
-      return { weightedHours: p.hours[di] * p.weights[di] };
+      var ex = isTipExcluded_(exDay, p.id);
+      p.excluded = p.excluded || [false, false, false, false, false, false, false];
+      p.excluded[di] = ex && p.hours[di] > 0;
+      return { weightedHours: ex ? 0 : p.hours[di] * p.weights[di] };
     });
     var dist = distributeDailyTipsPence_(poolPence, entries);
     dist.shares.forEach(function (pence, li) { tipsPence[li][di] = pence; });
@@ -2000,7 +2011,7 @@ function getTipsViewData(weekStartStr) {
     }
     return {
       id: p.id, name: p.name, tipWeight: displayWeight,
-      hours: p.hours, tips: tips,
+      hours: p.hours, tips: tips, excluded: p.excluded || [false, false, false, false, false, false, false],
       weekHours: p.hours.reduce(function (a, b) { return a + b; }, 0),
       weekTips: tips.reduce(function (a, b) { return a + b; }, 0)
     };
