@@ -80,6 +80,19 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="TeamOS">
+  <script>
+  /* v3.0 one site: HR pages live inside TeamOS (index.html). Opened on its own -> go to TeamOS. */
+  (function () {
+    var emb = /[?&]embed=1/.test(location.search);
+    window.HR_EMBED = emb;
+    if (emb) document.documentElement.classList.add('embed');
+    else if (window.top === window) location.replace('index.html?p=hr:' + (location.hash.slice(1) || 'home'));
+  })();
+  </script>
+  <style>
+    html.embed #sidebar { display:none !important; }
+    html.embed body { padding-left:0 !important; }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="hr-shim.js"></script>
   <script src="hr-core.js"></script>
@@ -5335,7 +5348,19 @@ initRevenueEntry();
 initStaffSummary();
 initMonthlySummary();
 initDashboard();
-window.HRSHIM_ready.then(function(ok) { if (ok) loadHome(); });
+window.HRSHIM_ready.then(function(ok) {
+  if (!ok) return;
+  var v = window.HR_EMBED ? location.hash.slice(1) : '';
+  if (v && v !== 'home' && document.getElementById('view-' + v)) showView(v); else loadHome();
+});
+// v3.0: tell TeamOS which page is open (keeps its menu in step)
+if (window.HR_EMBED) {
+  var _hrShowView = showView;
+  showView = function (name) {
+    _hrShowView(name);
+    try { if (parent && parent.TeamOSNav) parent.TeamOSNav('hr:' + name); } catch (e) {}
+  };
+}
 initWeeklyTips();
 initCashList();
 initHolidays();

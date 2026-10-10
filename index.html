@@ -29,6 +29,12 @@
   a { color:var(--wine); }
 
   #appView { padding-left:252px; }
+  /* v3.0 one site: HR pages run in a frame next to the App pages */
+  #page-hr { display:none; }
+  body.hr-on #page-hr { display:block; }
+  body.hr-on #appView > .wrap, body.hr-on #bellWrap { display:none !important; }
+  #hrFrame { width:100%; height:100vh; height:100dvh; border:0; display:block; background:var(--bg); }
+  @media (max-width: 1100px) { #hrFrame { height:calc(100dvh - 58px); } }
   @media (max-width: 1100px) { #appView { padding-left:0; } }
 
   /* ===== TeamOS side menu (shared look: site + HR) ===== */
@@ -358,7 +364,7 @@
   <div class="side" id="sidebar">
     <div class="side-brand">
       <img src="logo.png" alt="">
-      <div><div class="side-name">TeamOS<span class="side-badge">APP</span></div><div class="side-tag">MANAGE · GROW · SUCCEED</div></div>
+      <div><div class="side-name">TeamOS</div><div class="side-tag">MANAGE · GROW · SUCCEED</div></div>
       <button class="side-burger no-print" onclick="document.body.classList.toggle('sb-open')" aria-label="Menu">☰</button>
     </div>
     <nav class="side-nav" id="tabs"></nav>
@@ -602,6 +608,7 @@
     </section>
 
   </div>
+  <section id="page-hr"><iframe id="hrFrame" title="TeamOS HR"></iframe></section>
 </div>
 
 <!-- Share deposit modal -->
@@ -759,7 +766,6 @@ async function finishBoot(data) {
   ME = data.me;
   $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
   $('whoName').textContent = ME.name; $('whoSub').textContent = ME.role === 'ADMIN' ? 'Admin' : ME.role.charAt(0) + ME.role.slice(1).toLowerCase(); $('whoAv').textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
-  $('toHrBtn').classList.toggle('hidden', !(isAdmin() || can('hr')));
   if (isAdmin()) TeamOSUsers.mount($('usersRoot'), sb, ME);
   buildTabs();
 }
@@ -830,16 +836,29 @@ async function loadDashboard() {
 }
 
 // ═════════════ TABS ═════════════
+const isHR = () => isAdmin() || can('hr');
 const PAGES = [
+  { key:'hr:home',         group:'Overview', label:'Dashboard',        show:isHR },
+  { key:'hr:monthly',      group:'Overview', label:'Monthly Summary',  show:isHR },
+  { key:'hr:hours',        group:'Hours',    label:'Hours',            show:isHR },
+  { key:'hr:staffsummary', group:'Hours',    label:'Hours Report',     show:isHR },
+  { key:'hr:payperiod',    group:'Hours',    label:'Staff Hours',      show:isHR },
+  { key:'hr:holidays',     group:'Hours',    label:'Holidays',         show:isHR },
   { key:'wages',    group:'Payroll',  label:'Wages',     show:() => can('wages') },
   { key:'advances', group:'Payroll',  label:'Advances',  show:() => can('wages_view') || can('advance_add') },
   { key:'payroll',  group:'Payroll',  label:'New Month', show:() => can('payroll_entry') },
-  { key:'cash',     group:'Money',    label:'Cash List', show:() => isCashRole() },
+  { key:'hr:revenue',      group:'Money',    label:'Take-in',          show:isHR },
+  { key:'hr:tips',         group:'Money',    label:'Tips',             show:isHR },
+  { key:'hr:cashlist',     group:'Money',    label:'Cash List',        show:isHR },
+  { key:'cash',     group:'Money',    label:'Cash List', show:() => !isHR() && isCashRole() },
   { key:'deposits', group:'Money',    label:'Deposits',  show:() => can('deposits_view') },
-  { key:'requests', group:'Team',     label:'Requests',  show:() => can('requests_add') },
+  { key:'hr:staff',        group:'People',   label:'Staff Management', show:isHR },
+  { key:'hr:requests',     group:'People',   label:'Requests',         show:isHR },
+  { key:'requests', group:'People',   label:'Requests',  show:() => !isHR() && can('requests_add') },
   { key:'users',    group:'Settings', label:'Users',     show:() => isAdmin() },
 ];
 const NAV_ICONS = {"dashboard": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "requests": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
+Object.assign(NAV_ICONS, {"hr:home": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "hr:monthly": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"M18 17V9M13 17V5M8 17v-3\"/></svg>", "hr:hours": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></svg>", "hr:staffsummary": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8\"/></svg>", "hr:payperiod": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01\"/></svg>", "hr:holidays": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></svg>", "hr:revenue": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 7l-8.5 8.5-5-5L2 17\"/><path d=\"M16 7h6v6\"/></svg>", "hr:tips": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"8\" r=\"6\"/><path d=\"M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82\"/></svg>", "hr:cashlist": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "hr:staff": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M10 15H6a4 4 0 0 0-4 4v2\"/><circle cx=\"18\" cy=\"16\" r=\"3\"/><path d=\"M18 11.5v1.5M18 19v1.5M22.5 16H21M15 16h-1.5\"/></svg>", "hr:requests": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></svg>", "hr:users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>"});
 function buildTabs() {
   const tabs = $('tabs'); tabs.innerHTML = '';
   const visible = PAGES.filter(p => p.show());
@@ -854,14 +873,40 @@ function buildTabs() {
   // sub-tabs that need extra permission
   document.querySelectorAll('[data-perm]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.perm)));
   document.querySelectorAll('[data-perm-card]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.permCard)));
+  const urlP = new URLSearchParams(location.search).get('p');
+  if (urlP) history.replaceState(null, '', location.pathname);
   const saved = (() => { try { return localStorage.getItem('lpa_tab'); } catch { return null; } })();
-  showPage(visible.find(p => p.key === saved) ? saved : (visible[0]?.key));
+  const pick = [urlP, saved].find(k => k && visible.some(p => p.key === k));
+  showPage(pick || visible[0]?.key);
+}
+// v3.0: HR pages (key 'hr:<view>') open inside #hrFrame; the frame is loaded once and kept.
+let HR_ON = false, HR_PENDING = null;
+function markTab(key) {
+  try { localStorage.setItem('lpa_tab', key); } catch {}
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
+}
+window.TeamOSNav = key => markTab(key);          // called by the HR frame when it changes page itself
+function showHr(view) {
+  const f = $('hrFrame'), fromApp = !HR_ON;
+  HR_ON = true; document.body.classList.add('hr-on');
+  const w = f.contentWindow;
+  if (!f.getAttribute('src')) {
+    f.onload = () => { const v = HR_PENDING; HR_PENDING = null; if (v) f.contentWindow.HRSHIM_ready?.then(ok => ok && f.contentWindow.showView(v)); };
+    f.src = 'hr.html?embed=1#' + view; return;
+  }
+  if (!w || !w.HRSHIM_ready || !w.showView) { HR_PENDING = view; return; }   // frame still loading
+  w.HRSHIM_ready.then(ok => {
+    if (!ok) return;
+    if (fromApp && w.HRSHIM_invalidate) w.HRSHIM_invalidate();   // pick up what was changed on the App pages
+    w.showView(view);
+  });
 }
 function showPage(key) {
   if (!key) return;
-  try { localStorage.setItem('lpa_tab', key); } catch {}
   document.body.classList.remove('sb-open');
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
+  markTab(key);
+  if (key.startsWith('hr:')) { showHr(key.slice(3)); window.scrollTo(0, 0); return; }
+  HR_ON = false; document.body.classList.remove('hr-on');
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
   ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, requests: loadReqs, users: () => TeamOSUsers.load() })[key]?.();
 }

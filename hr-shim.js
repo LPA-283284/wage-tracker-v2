@@ -495,18 +495,18 @@
   // ---------------- sign-in gate ----------------
   var BOOT = (async function () {
     var s = await sb.auth.getSession();
-    if (!s.data.session) { location.href = 'index.html'; return false; }
+    if (!s.data.session) { (window.HR_EMBED ? top : window).location.href = 'index.html'; return false; }
     var p = await sb.rpc('my_profile');
     if (p.data && p.data.ok) ME = p.data.me;
     window.HR_ME = ME;
     try { await loadAll(); } catch (e) {
       document.body.insertAdjacentHTML('afterbegin', '<div style="background:#9C0006;color:#fff;padding:12px 20px;font-weight:600">' +
-        escH(e.message || e) + ' — <a href="index.html" style="color:#fff">back to TeamOS</a></div>');
+        escH(e.message || e) + ' — <a href="index.html" target="_top" style="color:#fff">back to TeamOS</a></div>');
       return false;
     }
     var who = document.getElementById('hrWho'); if (who && ME) who.textContent = ME.name; var av = document.getElementById('hrAv'); if (av && ME) av.textContent = (ME.name || '?').trim().charAt(0).toUpperCase();
     return true;
   })();
   window.HRSHIM_ready = BOOT;
-  window.HRSHIM_signOut = async function () { await sb.auth.signOut(); location.href = 'index.html'; };
+  window.HRSHIM_signOut = async function () { await sb.auth.signOut(); (window.HR_EMBED ? top : window).location.href = 'index.html'; };
 })();
