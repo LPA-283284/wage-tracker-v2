@@ -180,14 +180,6 @@
     .hol-cell.hol-S { background: #FBD9D9; color: #9C0006; }
     .hol-cell:hover { outline: 2px solid #6D1B2F; }
     .hol-cell.pending { opacity: 0.45; }
-    #holidaysGridWrap tbody tr:hover td { background: #FFF3CD; }
-    #holidaysGridWrap tbody tr:hover td:first-child { font-weight: 700; color: #6D1B2F; }
-    #holidaysGridWrap { max-height: 85vh; overflow-y: auto; }
-    #holidaysGridWrap table { table-layout: fixed; }
-    #holidaysGridWrap th { position: sticky; top: 0; z-index: 2; }
-    #holidaysGridWrap th, #holidaysGridWrap td { width: auto; }
-    #holidaysGridWrap th:first-child, #holidaysGridWrap td:first-child { width: 44px; }
-    #holidaysGridWrap th { white-space: normal; word-break: break-word; line-height: 1.2; padding: 6px 3px; }
     .btn {
       background: #6D1B2F;
       color: #fff;
@@ -453,8 +445,6 @@
     .pg-head > div:first-child { min-width:0; }
     .bell-wrap { position:absolute; }                       /* scrolls with the page — no longer floats over tables */
     @media (max-width:1100px) { .bell-wrap { position:fixed; } }
-    #holidaysGridWrap table { table-layout:auto; width:100%; }
-    #holidaysGridWrap th { white-space:nowrap; word-break:normal; text-transform:none; letter-spacing:0; font-size:11.5px; padding:8px 6px; }
     #ppReportWrap td:nth-child(2), #ppReportWrap td:nth-child(3) { white-space:nowrap; }
     #staffMgmtTableWrap td { padding:8px 5px; }
     #staffMgmtTableWrap input[type=text] { width:130px; }
@@ -501,6 +491,87 @@
       .entry-foot .btn { width:auto; }
     }
     @media print { .pg-tools, .entry-foot .btn { display:none !important; } .entry-foot { position:static; box-shadow:none; } }
+    /* Staff Hours — department cards (v2.6) */
+    .sum-chips { display:flex; flex-wrap:wrap; gap:10px; margin:4px 0 16px; }
+    .sum-chip { display:flex; flex-direction:column; gap:2px; padding:10px 16px; border-radius:14px; background:#FBF5EC; border:1px solid #F0E6DA; min-width:110px; }
+    .sum-chip span { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#8A7D74; }
+    .sum-chip b { font-size:20px; color:#4A0817; }
+    .sum-chip.main { background:radial-gradient(120% 120% at 0% 0%,#7A1430 0%,#4A0817 70%); border:0; }
+    .sum-chip.main span { color:#E7C48A; } .sum-chip.main b { color:#FFF4E0; }
+    .sum-chip.adv b { color:#9C4B00; }
+    .dept-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:14px; align-items:start; }
+    .dept-card { border:1px solid #F0E6DA; border-radius:14px; overflow:hidden; background:#fff; }
+    .dept-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:#FBF5EC; border-bottom:1px solid #EADFCF; }
+    .dept-head b { color:#4A0817; font-size:15px; } .dept-head small { display:block; color:#8A7D74; font-size:12px; margin-top:2px; }
+    .dept-tot { font-size:18px; font-weight:800; color:#6D1B2F; }
+    #psWrap table.dept-table, #meWrap table.dept-table { width:100%; min-width:0 !important; }
+    .dept-table th { background:#fff; border-radius:0 !important; padding:8px 14px; }
+    .dept-table td { padding:8px 14px; vertical-align:top; }
+    .dept-table .r { text-align:right; white-space:nowrap; }
+    .dept-table td.r { font-variant-numeric:tabular-nums; font-weight:600; }
+    .dept-table tr.zero td { color:#B5A99E; } .dept-table tr.zero td.r { font-weight:400; }
+    .dept-table .nm { font-weight:600; }
+    .dept-table .tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+    .tag { font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:999px; }
+    .tag.sick { background:#FBE7D0; color:#9C4B00; } .tag.in { background:#E3F4E5; color:#2E7D32; } .tag.out { background:#FDE3E3; color:#9C0006; }
+    .dept-table .muted { color:#C9BDB0; }
+    /* Holidays (v2.6) */
+    .hol-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+    @media (max-width:900px) { .hol-kpis { grid-template-columns:1fr 1fr; } }
+    .dk .v.hk { display:flex; gap:14px; } .dk .v.hk span { display:flex; align-items:baseline; gap:3px; }
+    .dk .v.hk small { font-size:12px; font-weight:700; } .hk .H { color:#1F6FEB; } .hk .OFF { color:#9C4B00; } .hk .S { color:#9C0006; }
+    .hol-toolbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+    .brush { display:inline-flex; background:#F6EFE6; border-radius:12px; padding:4px; gap:2px; flex-wrap:wrap; }
+    .brush button { border:0; background:transparent; padding:8px 12px; border-radius:9px; font:inherit; font-size:13px; font-weight:600; color:#6F625A; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+    .brush button.on { background:#fff; color:#4A0817; box-shadow:0 2px 8px rgba(78,15,32,.12); }
+    .sw { width:12px; height:12px; border-radius:4px; display:inline-block; }
+    .sw.H { background:#BFD6F8; border:1px solid #1F6FEB; } .sw.OFF { background:#F7DAB6; border:1px solid #9C4B00; } .sw.S { background:#F6C5C5; border:1px solid #9C0006; } .sw.clr { background:#fff; border:1px dashed #B5A99E; }
+    #holidaysGridWrap { max-height:none; overflow-x:auto; }
+    #holidaysGridWrap table.hol-table { table-layout:auto; width:100%; min-width:0; border-collapse:separate; border-spacing:0; user-select:none; }
+    .hol-table th, .hol-table td { padding:0; text-align:center; font-size:12px; border-bottom:1px solid #F2ECE4; }
+    .hol-table th.d { min-width:24px; padding:6px 0; font-size:12px; color:#6F625A; letter-spacing:0; text-transform:none; position:static; }
+    .hol-table th.d small { display:block; font-size:9.5px; color:#B5A99E; font-weight:700; }
+    .hol-table .nm { position:sticky; left:0; z-index:3; background:#fff; text-align:left; padding:0 10px; white-space:nowrap; min-width:104px; font-weight:600; height:32px; }
+    .hol-table th.nm { background:#FBF5EC; }
+    .hol-table tr.grp td { background:#FBF5EC; height:26px; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#7A5B3A; }
+    .hol-table tr:nth-child(even) td { background:inherit; }
+    .hol-table .we { background:#FAF6F1 !important; } .hol-table th.we { background:#F3EADF !important; }
+    .hol-table .today { box-shadow:inset 0 0 0 9999px rgba(201,154,85,.12); } .hol-table th.today { background:#E7C48A !important; color:#4A0817; }
+    .hol-table th.today small { color:#4A0817; }
+    .hol-table td.hol-cell { cursor:pointer; height:32px; font-weight:800; font-size:12px; border-left:1px solid #F7F1EA; transition:background .08s; }
+    .hol-table td.hol-cell:hover { outline:2px solid #6D1B2F; outline-offset:-2px; }
+    .hol-table td.hol-cell.hol-H { background:#D9E8FB !important; color:#1F6FEB; }
+    .hol-table td.hol-cell.hol-OFF { background:#FBE7D0 !important; color:#9C4B00; }
+    .hol-table td.hol-cell.hol-S { background:#FBD9D9 !important; color:#9C0006; }
+    .hol-table .mcol { white-space:nowrap; padding:0 4px; } .hol-table .lcol { padding:0 8px 0 4px; }
+    .hol-table th.mcol, .hol-table th.lcol { font-size:10.5px; }
+    .mc { display:inline-block; font-size:10.5px; font-weight:800; padding:1px 5px; border-radius:6px; margin:0 1px; }
+    .mc.H { background:#D9E8FB; color:#1F6FEB; } .mc.OFF { background:#FBE7D0; color:#9C4B00; } .mc.S { background:#FBD9D9; color:#9C0006; }
+    .left { font-weight:800; color:#2E7D32; } .left.low { color:#C77700; } .left.neg { color:#C62828; }
+    .hol-table tfoot td { height:28px; background:#FBF5EC; font-weight:700; color:#8A7D74; font-size:11px; }
+    .hol-table tfoot td.nm { background:#FBF5EC; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+    .dc.some { color:#6D1B2F; } .dc.hot { display:inline-block; min-width:18px; border-radius:6px; background:#C62828; color:#fff; padding:1px 3px; }
+    .ddot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; vertical-align:middle; background:#B5A99E; }
+    .ddot.FOH { background:#6D1B2F; } .ddot.BOH { background:#C77700; } .ddot.CLEANING { background:#2E7D32; }
+    .hol-table .muted, .al-list .muted { color:#D2C6BA; }
+    .hm-list, .al-list { display:flex; flex-direction:column; }
+    .hm-it { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid #F2ECE4; }
+    .hm-it:last-child, .al-it:last-child { border-bottom:0; }
+    .hm-n { min-width:130px; font-weight:600; font-size:14px; }
+    .hm-t { display:flex; flex-wrap:wrap; gap:6px; }
+    .hm-chip { font-size:12px; padding:3px 9px; border-radius:999px; } .hm-chip em { font-style:normal; opacity:.7; }
+    .hm-chip.H { background:#D9E8FB; color:#1F6FEB; } .hm-chip.OFF { background:#FBE7D0; color:#9C4B00; } .hm-chip.S { background:#FBD9D9; color:#9C0006; }
+    .al-it { padding:10px 0; border-bottom:1px solid #F2ECE4; }
+    .al-top { display:flex; justify-content:space-between; align-items:baseline; }
+    .al-n { font-weight:600; font-size:14px; } .al-r { font-size:12px; color:#8A7D74; } .al-r b { font-size:16px; color:#2E7D32; }
+    .al-r.low b { color:#C77700; } .al-r.neg b { color:#C62828; }
+    .bar { height:7px; border-radius:7px; background:#F2ECE4; margin:6px 0 4px; overflow:hidden; }
+    .bar i { display:block; height:100%; border-radius:7px; background:linear-gradient(90deg,#C99A55,#7A1430); }
+    .bar i.low { background:#E09B2D; } .bar i.neg { background:#C62828; }
+    .al-sub { font-size:12px; color:#8A7D74; }
+    .empty { color:#8A7D74; padding:18px 0; text-align:center; }
+    #holidaysSummaryWrap { max-height:520px; overflow-y:auto; }
+    @media print { .hol-table .nm { position:static; } #holidaysGridWrap { overflow:visible; } .hol-table td.hol-cell { height:22px; } }
   </style>
 </head>
 <body>
@@ -849,28 +920,32 @@
 
   <!-- ================= HOLIDAYS ================= -->
   <div id="view-holidays" class="view">
-    <div class="card no-print">
-      <h2>Who's Off Today</h2>
-      <div id="holidaysTodayWrap" class="loading">Loading…</div>
-    </div>
-    <div class="card no-print">
-      <h2>This Month at a Glance</h2>
-      <div id="holidaysMonthWrap" class="loading">Loading…</div>
-    </div>
+    <div class="hol-kpis no-print" id="holKpis"></div>
     <div class="card">
       <div class="row no-print">
         <div><label>Month</label><select id="holMonth"></select></div>
         <div><label>Year</label><input type="number" id="holYear" style="width:100px"></div>
-        <button class="btn" onclick="window.print()">🖨️ Print</button>
+        <button class="btn" onclick="window.print()">Print</button>
       </div>
+      <h2 class="no-print">Team calendar</h2>
       <h2 id="holPrintTitle" style="display:none"></h2>
-      <p class="hint no-print">Click a cell to cycle: blank → <b style="color:#1F6FEB">H</b> (Holiday) → <b style="color:#9C4B00">OFF</b> (day off) → <b style="color:#9C0006">S</b> (Sick) → blank. Click as fast as you like — only the mark you stop on is saved, a moment later.</p>
+      <div class="hol-toolbar no-print">
+        <div class="brush" id="holBrush">
+          <button data-b="cycle" class="on" title="Each click: blank → H → Off → S → blank">Tap to cycle</button>
+          <button data-b="H"><i class="sw H"></i>Holiday</button>
+          <button data-b="OFF"><i class="sw OFF"></i>Day off</button>
+          <button data-b="S"><i class="sw S"></i>Sick</button>
+          <button data-b="clear"><i class="sw clr"></i>Clear</button>
+        </div>
+        <div class="hint" style="margin:0">Pick a mark, then click a day — or <b>click and drag</b> across days to mark a whole holiday at once. Saved automatically.</div>
+      </div>
       <div id="holidaysGridWrap"><div class="loading">Loading…</div></div>
     </div>
-    <div class="card no-print">
-      <h2>Yearly Summary</h2>
-      <div id="holidaysSummaryWrap"><div class="loading">Loading…</div></div>
+    <div class="dash-grid no-print">
+      <div class="card"><h2>This month</h2><div id="holidaysMonthWrap" class="loading">Loading…</div></div>
+      <div class="card"><h2>Holiday allowance <span class="hint" id="holYearLbl" style="font-weight:400;margin:0"></span></h2><div id="holidaysSummaryWrap"><div class="loading">Loading…</div></div></div>
     </div>
+    <div id="holidaysTodayWrap" style="display:none"></div>
   </div>
 
   <!-- ================= PAY PERIOD ================= -->
@@ -1063,6 +1138,7 @@ function dayNameOf(dateStr) {
   return DAYS[(d.getDay() + 6) % 7];
 }
 
+var DEPT_LABEL = { FLOOR: 'Floor', KITCHEN: 'Kitchen', CLEANING: 'Cleaning', OTHER: 'Other' };
 function deptClass(dept) { return 'dept-' + esc(dept); }
 function money(v) {
   var n = Number(v) || 0;
@@ -2698,64 +2774,163 @@ function loadHolidaysView() {
   }).withFailureHandler(onError).getHolidaysViewData(month, year);
 }
 
-function renderHolidaysMonth(data, month, year) {
-  var wrap = document.getElementById('holidaysMonthWrap');
-  var labels = { H: 'Holiday', OFF: 'Off', S: 'Sick' };
-  var colors = { H: '#1F6FEB', OFF: '#9C4B00', S: '#9C0006' };
+var HOL_LBL = { H: 'Holiday', OFF: 'Day off', S: 'Sick' };
+var HOL_LETTER = { H: 'H', OFF: 'O', S: 'S' };
+var HOL_DEPT = { FOH: 'Floor', BOH: 'Kitchen', CLEANING: 'Cleaning' };
+var holBrush = 'cycle', holDrag = null, holLastPtr = '', holRaf = 0;
 
-  var byStaff = {};
-  data.staff.forEach(function(s) { byStaff[s.id] = { name: s.name, dept: s.dept, H: [], OFF: [], S: [] }; });
+function holMonthCtx_() { return { m: Number(document.getElementById('holMonth').value), y: Number(document.getElementById('holYear').value) }; }
+function holDow_(y, m, d) { return new Date(y, m - 1, d).getDay(); }
+function holRanges_(days) {
+  days = days.slice().sort(function(a, b) { return a - b; });
+  var out = [], st = null, pv = null;
+  days.forEach(function(d) {
+    if (st === null) { st = pv = d; return; }
+    if (d === pv + 1) { pv = d; return; }
+    out.push(st === pv ? String(st) : st + '–' + pv); st = pv = d;
+  });
+  if (st !== null) out.push(st === pv ? String(st) : st + '–' + pv);
+  return out.join(', ');
+}
 
-  Object.keys(data.marks).forEach(function(key) {
-    var parts = key.split('|');
-    var staffId = parts[0], day = Number(parts[1]);
-    var type = data.marks[key];
-    if (byStaff[staffId] && byStaff[staffId][type]) byStaff[staffId][type].push(day);
+// Re-draws everything that depends on the marks (counts, side cards, KPIs) — throttled.
+function renderHolidaysMonth() {
+  if (holRaf) return;
+  holRaf = requestAnimationFrame(function() { holRaf = 0; holRenderPanels_(); });
+}
+function holRenderPanels_() {
+  var data = holidaysData; if (!data) return;
+  var c = holMonthCtx_();
+  var per = {}, perDay = {}, tot = { H: 0, OFF: 0, S: 0 };
+  data.staff.forEach(function(s) { per[s.id] = { H: [], OFF: [], S: [] }; });
+  Object.keys(data.marks).forEach(function(k) {
+    var p = k.split('|'), t = data.marks[k];
+    if (!per[p[0]] || !per[p[0]][t]) return;
+    per[p[0]][t].push(Number(p[1])); tot[t]++;
+    perDay[p[1]] = (perDay[p[1]] || 0) + 1;
+  });
+  // per-row month counts + per-day totals in the grid
+  data.staff.forEach(function(s) {
+    var el = document.getElementById('holM-' + s.id); if (!el) return;
+    var r = per[s.id], bits = [];
+    ['H', 'OFF', 'S'].forEach(function(t) { if (r[t].length) bits.push('<span class="mc ' + t + '">' + r[t].length + ({ H: 'H', OFF: ' off', S: 'S' })[t] + '</span>'); });
+    el.innerHTML = bits.join('') || '<span class="muted">–</span>';
+  });
+  for (var d = 1; d <= data.daysInMonth; d++) {
+    var dc = document.getElementById('holD-' + d); if (dc) { var n = perDay[d] || 0; dc.textContent = n || ''; dc.className = 'dc' + (n >= 3 ? ' hot' : n ? ' some' : ''); }
+  }
+  // allowance (year) per staff
+  var sum = {}; (data.summary || []).forEach(function(r) { sum[r.id] = r; });
+  data.staff.forEach(function(s) {
+    var el = document.getElementById('holL-' + s.id), r = sum[s.id]; if (!el || !r) return;
+    el.textContent = r.remaining; el.className = 'left' + (r.remaining < 0 ? ' neg' : r.remaining <= 3 ? ' low' : '');
   });
 
-  var rows = Object.keys(byStaff).map(function(id) { return byStaff[id]; })
-    .filter(function(r) { return r.H.length || r.OFF.length || r.S.length; });
+  // "This month" list
+  var rows = data.staff.filter(function(s) { var r = per[s.id]; return r.H.length || r.OFF.length || r.S.length; });
+  var mw = document.getElementById('holidaysMonthWrap'); mw.classList.remove('loading');
+  mw.innerHTML = rows.length ? '<div class="hm-list">' + rows.map(function(s) {
+    var r = per[s.id];
+    return '<div class="hm-it"><div class="hm-n"><span class="ddot ' + esc(s.dept) + '"></span>' + esc(s.name) + '</div><div class="hm-t">' +
+      ['H', 'OFF', 'S'].filter(function(t) { return r[t].length; }).map(function(t) {
+        return '<span class="hm-chip ' + t + '"><b>' + HOL_LBL[t] + '</b> ' + holRanges_(r[t]) + ' <em>(' + r[t].length + 'd)</em></span>';
+      }).join('') + '</div></div>';
+  }).join('') + '</div>' : '<div class="empty">Nothing logged for ' + MONTHS_EN[c.m - 1] + ' ' + c.y + ' yet.</div>';
 
-  if (!rows.length) { wrap.innerHTML = '<p style="color:#888">No holidays, days off, or sick days logged for ' + MONTHS_EN[month - 1] + ' ' + year + '.</p>'; return; }
+  // allowance card
+  document.getElementById('holYearLbl').textContent = c.y;
+  var sw = document.getElementById('holidaysSummaryWrap');
+  var list = (data.summary || []).filter(function(r) { return r.active; });
+  sw.innerHTML = list.length ? '<div class="al-list">' + list.map(function(r) {
+    var ent = Number(r.entitlement) || 0, used = Number(r.holidayDays) || 0;
+    var pctU = ent > 0 ? Math.min(100, used / ent * 100) : (used ? 100 : 0);
+    var cls = r.remaining < 0 ? 'neg' : r.remaining <= 3 ? 'low' : '';
+    return '<div class="al-it"><div class="al-top"><span class="al-n"><span class="ddot ' + esc(r.dept) + '"></span>' + esc(r.name) + '</span>' +
+      '<span class="al-r ' + cls + '"><b>' + r.remaining + '</b> left</span></div>' +
+      '<div class="bar"><i class="' + cls + '" style="width:' + pctU + '%"></i></div>' +
+      '<div class="al-sub">' + used + ' of ' + ent + ' used' + (r.offDays ? ' · ' + r.offDays + ' days off' : '') + (r.sickDays ? ' · <span style="color:#9C0006">' + r.sickDays + ' sick</span>' : '') + '</div></div>';
+  }).join('') + '</div>' : '<div class="empty">No staff.</div>';
 
-  var html = '<div class="row">';
-  rows.forEach(function(r) {
-    html += '<div class="kpi" style="flex:0 0 auto;min-width:180px;text-align:left;padding:12px">' +
-      '<div class="label" style="font-weight:700;margin-bottom:6px">' + esc(r.name) + ' (' + esc(r.dept) + ')</div>';
-    ['H','OFF','S'].forEach(function(type) {
-      if (r[type].length) {
-        html += '<div style="font-size:12px;color:' + colors[type] + '"><b>' + labels[type] + ':</b> ' + r[type].sort(function(a,b){return a-b;}).join(', ') + '</div>';
-      }
-    });
-    html += '</div>';
-  });
-  html += '</div>';
-  wrap.innerHTML = html;
+  // KPIs
+  var today = data.today || [];
+  var busiest = 0, busyDay = 0;
+  Object.keys(perDay).forEach(function(d) { if (perDay[d] > busiest) { busiest = perDay[d]; busyDay = Number(d); } });
+  var low = list.filter(function(r) { return r.remaining <= 3; });
+  var k = [];
+  k.push('<div class="dk hero"><div class="l">Off today</div><div class="v">' + (today.length || 'Nobody') + '</div><div class="s">' +
+    (today.length ? today.map(function(t) { return esc(t.name) + ' · ' + (HOL_LBL[t.type] || t.type); }).join(', ') : 'Everyone is in today') + '</div></div>');
+  k.push('<div class="dk"><div class="l">' + MONTHS_EN[c.m - 1] + '</div><div class="v hk"><span class="H">' + tot.H + '<small>H</small></span><span class="OFF">' + tot.OFF + '<small>Off</small></span><span class="S">' + tot.S + '<small>Sick</small></span></div><div class="s">Days logged this month</div></div>');
+  k.push('<div class="dk"><div class="l">Busiest day</div><div class="v">' + (busiest ? busiest + ' off' : '–') + '</div><div class="s">' +
+    (busiest ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][holDow_(c.y, c.m, busyDay)] + ' ' + busyDay + ' ' + MONTHS_EN[c.m - 1] : 'No one off this month') + '</div></div>');
+  k.push('<div class="dk"><div class="l">Low allowance</div><div class="v">' + low.length + '</div><div class="s">' +
+    (low.length ? low.slice(0, 4).map(function(r) { return esc(r.name) + ' (' + r.remaining + ')'; }).join(', ') + (low.length > 4 ? '…' : '') : 'Everyone has 4+ days left') + '</div></div>');
+  document.getElementById('holKpis').innerHTML = k.join('');
 }
 
 function renderHolidaysGrid(data, month, year) {
   var wrap = document.getElementById('holidaysGridWrap');
+  month = Number(month); year = Number(year);
   document.getElementById('holPrintTitle').textContent = 'Holiday Calendar: ' + MONTHS_EN[month - 1] + ' ' + year;
   if (!data.staff.length) { wrap.innerHTML = '<p style="color:#888">No active staff.</p>'; return; }
-
-  var minWidth = 50 + data.staff.length * 64;
-  var html = '<table style="width:' + minWidth + 'px;min-width:' + minWidth + 'px"><thead><tr><th style="width:50px">Day</th>';
-  data.staff.forEach(function(s) { html += '<th>' + esc(s.name) + '</th>'; });
-  html += '</tr></thead><tbody>';
-
-  for (var day = 1; day <= data.daysInMonth; day++) {
-    html += '<tr><td>' + day + '</td>';
-    data.staff.forEach(function(s) {
-      var key = s.id + '|' + day;
-      var mark = data.marks[key] || '';
-      var cls = mark ? ' hol-' + mark : '';
-      html += '<td class="hol-cell' + cls + '" data-staff="' + esc(s.id) + '" data-day="' + day + '" onclick="cycleHolidayMark(this)">' + esc(mark) + '</td>';
+  var now = new Date(), todayD = (now.getFullYear() === year && now.getMonth() + 1 === month) ? now.getDate() : 0;
+  var DL = ['S','M','T','W','T','F','S'];
+  var dayCls = function(d) { var w = holDow_(year, month, d); return (w === 0 || w === 6 ? ' we' : '') + (d === todayD ? ' today' : ''); };
+  var html = '<table class="hol-table"><thead><tr><th class="nm">Staff</th>';
+  for (var d = 1; d <= data.daysInMonth; d++) html += '<th class="d' + dayCls(d) + '"><small>' + DL[holDow_(year, month, d)] + '</small>' + d + '</th>';
+  html += '<th class="mcol">Month</th><th class="lcol" title="Holiday days left this year">Left</th></tr></thead><tbody>';
+  var order = ['FOH', 'BOH', 'CLEANING'], groups = {};
+  data.staff.forEach(function(s) { var g = order.indexOf(s.dept) >= 0 ? s.dept : 'OTHER'; (groups[g] = groups[g] || []).push(s); });
+  order.concat(['OTHER']).forEach(function(g) {
+    if (!groups[g]) return;
+    html += '<tr class="grp"><td class="nm">' + (HOL_DEPT[g] || 'Other') + '</td><td colspan="' + (data.daysInMonth + 2) + '"></td></tr>';
+    groups[g].forEach(function(s) {
+      html += '<tr><td class="nm"><span class="ddot ' + esc(s.dept) + '"></span>' + esc(s.name) + '</td>';
+      for (var d = 1; d <= data.daysInMonth; d++) {
+        var mark = data.marks[s.id + '|' + d] || '';
+        html += '<td class="hol-cell' + (mark ? ' hol-' + mark : '') + dayCls(d) + '" data-staff="' + esc(s.id) + '" data-day="' + d + '" data-mark="' + mark + '">' + (HOL_LETTER[mark] || '') + '</td>';
+      }
+      html += '<td class="mcol" id="holM-' + esc(s.id) + '"></td><td class="lcol"><span id="holL-' + esc(s.id) + '"></span></td></tr>';
     });
-    html += '</tr>';
-  }
-  html += '</tbody></table>';
+  });
+  html += '</tbody><tfoot><tr><td class="nm">Off that day</td>';
+  for (var d2 = 1; d2 <= data.daysInMonth; d2++) html += '<td class="' + dayCls(d2).trim() + '"><span id="holD-' + d2 + '"></span></td>';
+  html += '<td></td><td></td></tr></tfoot></table>';
   wrap.innerHTML = html;
+  holRenderPanels_();
 }
+
+// brush + click / drag painting
+function holNext_(cur) { return cur === '' ? 'H' : cur === 'H' ? 'OFF' : cur === 'OFF' ? 'S' : ''; }
+function holWanted_(cell) {
+  var cur = cell.getAttribute('data-mark') || '';
+  return holBrush === 'cycle' ? holNext_(cur) : holBrush === 'clear' ? '' : holBrush;
+}
+(function() {
+  document.addEventListener('click', function(e) {
+    var b = e.target.closest && e.target.closest('#holBrush button'); if (!b) return;
+    holBrush = b.getAttribute('data-b');
+    document.querySelectorAll('#holBrush button').forEach(function(x) { x.classList.toggle('on', x === b); });
+    document.getElementById('holidaysGridWrap').setAttribute('data-brush', holBrush);
+  });
+  var wrap = document.getElementById('holidaysGridWrap');
+  wrap.addEventListener('pointerdown', function(e) {
+    holLastPtr = e.pointerType;
+    var cell = e.target.closest('.hol-cell'); if (!cell || e.pointerType !== 'mouse' || e.button !== 0) return;
+    e.preventDefault();
+    holDrag = { mark: holWanted_(cell) };
+    cycleHolidayMark(cell, holDrag.mark);
+  });
+  wrap.addEventListener('pointerover', function(e) {
+    if (!holDrag) return;
+    var cell = e.target.closest('.hol-cell');
+    if (cell && (cell.getAttribute('data-mark') || '') !== holDrag.mark) cycleHolidayMark(cell, holDrag.mark);
+  });
+  document.addEventListener('pointerup', function() { holDrag = null; });
+  wrap.addEventListener('click', function(e) {           // touch / pen: plain tap
+    if (holLastPtr === 'mouse') return;
+    var cell = e.target.closest('.hol-cell'); if (cell) cycleHolidayMark(cell, holWanted_(cell));
+  });
+})();
 
 // v2.5.2: clicks cycle INSTANTLY (no waiting between clicks); the save is
 // debounced — 0.6s after the last click, only the FINAL mark is sent.
@@ -2768,16 +2943,34 @@ function renderHolidaysGrid(data, month, year) {
 var holPending = {}; // 'staffId|day' -> {timer, inFlight, want, confirmed, cell, month, year}
 
 function holPaintCell_(cell, mark) {
-  cell.textContent = mark;
+  cell.setAttribute('data-mark', mark || '');
+  cell.textContent = HOL_LETTER[mark] || '';
   cell.classList.remove('hol-H', 'hol-OFF', 'hol-S');
   if (mark) cell.classList.add('hol-' + mark);
 }
 
-function cycleHolidayMark(cell) {
+// Keep the in-memory month (counts, side cards) in step with what the screen shows.
+function holApplyData_(key, mark, month, year) {
+  if (!holidaysData) return;
+  var c = holMonthCtx_();
+  if (String(c.m) !== String(month) || String(c.y) !== String(year)) return;
+  var prev = holidaysData.marks[key] || '';
+  if (prev === mark) return;
+  if (mark) holidaysData.marks[key] = mark; else delete holidaysData.marks[key];
+  var id = key.split('|')[0], r = (holidaysData.summary || []).filter(function(x) { return String(x.id) === String(id); })[0];
+  if (r) {
+    var F = { H: 'holidayDays', OFF: 'offDays', S: 'sickDays' };
+    if (prev) r[F[prev]]--; if (mark) r[F[mark]]++;
+    r.remaining = r.entitlement - r.holidayDays;
+  }
+  renderHolidaysMonth();
+}
+
+function cycleHolidayMark(cell, forced) {
   var staffId = cell.getAttribute('data-staff');
   var day = cell.getAttribute('data-day');
   var key = staffId + '|' + day;
-  var current = cell.textContent.trim();
+  var current = cell.getAttribute('data-mark') || '';
 
   var st = holPending[key];
   if (!st) st = holPending[key] = { timer: null, inFlight: false, want: current, confirmed: current };
@@ -2785,9 +2978,11 @@ function cycleHolidayMark(cell) {
   st.month = document.getElementById('holMonth').value;
   st.year = document.getElementById('holYear').value;
 
-  var next = (current === '') ? 'H' : (current === 'H') ? 'OFF' : (current === 'OFF') ? 'S' : '';
+  var next = (forced !== undefined) ? forced : holNext_(current);
+  if (next === current) return;
   st.want = next;
   holPaintCell_(cell, next); // instant — never wait for the server to see the mark
+  holApplyData_(key, next, st.month, st.year);
 
   if (st.timer) clearTimeout(st.timer);
   st.timer = setTimeout(function() { holSendMark_(key); }, 600);
@@ -2818,8 +3013,7 @@ function holSendMark_(key) {
       var curMonth = document.getElementById('holMonth').value;
       var curYear = document.getElementById('holYear').value;
       if (holidaysData && String(curMonth) === String(st.month) && String(curYear) === String(st.year)) {
-        if (st.confirmed) holidaysData.marks[key] = st.confirmed; else delete holidaysData.marks[key];
-        renderHolidaysMonth(holidaysData, st.month, st.year);
+        holApplyData_(key, st.confirmed, st.month, st.year);
       }
     })
     .withFailureHandler(function(err) {
@@ -2827,6 +3021,7 @@ function holSendMark_(key) {
       st.cell.classList.remove('pending');
       st.want = st.confirmed; // roll back to the last value the SERVER has
       holPaintCell_(st.cell, st.confirmed);
+      holApplyData_(key, st.confirmed, st.month, st.year);
       onError(err);
     })
     .setHolidayMark(dateStr, parts[0], sending);
@@ -2841,36 +3036,8 @@ function holFlushPending_() {
   });
 }
 
-function renderHolidaysToday(rows) {
-  var wrap = document.getElementById('holidaysTodayWrap');
-  if (!rows.length) { wrap.innerHTML = '<p style="color:#888">Nobody is off today.</p>'; return; }
-  var labels = { H: 'Holiday', OFF: 'Off', S: 'Sick' };
-  var colors = { H: '#1F6FEB', OFF: '#9C4B00', S: '#9C0006' };
-  var html = '<div class="row">';
-  rows.forEach(function(r) {
-    html += '<div class="kpi" style="flex:0 0 auto;min-width:140px">' +
-      '<div class="label">' + esc(r.name) + ' (' + esc(r.dept) + ')</div>' +
-      '<div class="value" style="color:' + (colors[r.type] || '#333') + ';font-size:16px">' + esc(labels[r.type] || r.type) + '</div>' +
-      '</div>';
-  });
-  html += '</div>';
-  wrap.innerHTML = html;
-}
-
-function renderHolidaysSummary(rows) {
-  var wrap = document.getElementById('holidaysSummaryWrap');
-  var html = '<table class="track-rows"><thead><tr><th>Staff</th><th>Department</th><th>Entitlement</th><th>Holiday Days</th><th>Remaining</th><th>Off Days</th><th>Sick Days</th></tr></thead><tbody>';
-  rows.forEach(function(r) {
-    var remColor = r.remaining < 0 ? '#9C0006' : '#2e7d32';
-    var rowClass = r.active ? '' : ' class="inactive-row"';
-    html += '<tr' + rowClass + '><td>' + esc(r.name) + '</td><td class="' + deptClass(r.dept) + '">' + esc(r.dept) + '</td>' +
-      '<td>' + r.entitlement + '</td><td>' + r.holidayDays + '</td>' +
-      '<td style="color:' + remColor + ';font-weight:600">' + r.remaining + '</td>' +
-      '<td>' + r.offDays + '</td><td>' + r.sickDays + '</td></tr>';
-  });
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-}
+function renderHolidaysToday(rows) { /* shown in the "Off today" tile */ }
+function renderHolidaysSummary(rows) { holRenderPanels_(); }
 
 // ============================================================
 // PAY PERIOD
@@ -2885,20 +3052,21 @@ function loadMonthEndDetail() {
   google.script.run.withSuccessHandler(function(d) {
     document.getElementById('meTitle').textContent = 'End of Month (' + d.label + ')';
     var order = ['FLOOR', 'KITCHEN', 'CLEANING', 'OTHER'];
-    var html = '<div class="row" style="align-items:flex-start">';
+    var chips = '<div class="sum-chips"><div class="sum-chip main"><span>Total</span><b>' + hrs(d.grandTotal) + ' h</b></div>';
+    var html = '<div class="dept-grid">';
     order.forEach(function(g) {
       var rows = d.groups[g];
-      if (!rows.length) return;
-      html += '<div style="flex:1;min-width:220px"><table class="track-rows"><thead><tr><th colspan="2">' + g + '</th></tr></thead><tbody>';
+      if (!rows || !rows.length) return;
+      chips += '<div class="sum-chip"><span>' + DEPT_LABEL[g] + '</span><b>' + hrs(d.groupTotals[g]) + ' h</b></div>';
+      html += '<div class="dept-card"><div class="dept-head"><div><b>' + DEPT_LABEL[g] + '</b><small>' + rows.length + ' staff</small></div><div class="dept-tot">' + hrs(d.groupTotals[g]) + ' h</div></div>' +
+        '<table class="dept-table"><thead><tr><th>Name</th><th class="r">Hours</th></tr></thead><tbody>';
       rows.forEach(function(r) {
-        var cls = r.active ? '' : ' class="inactive-row"';
-        html += '<tr' + cls + '><td>' + esc(r.name) + '</td><td style="text-align:right">' + hrs(r.hours) + '</td></tr>';
+        var zero = !(Number(r.hours) > 0);
+        html += '<tr class="' + (r.active ? '' : 'inactive-row') + (zero ? ' zero' : '') + '"><td>' + esc(r.name) + '</td><td class="r">' + hrs(r.hours) + '</td></tr>';
       });
-      html += '<tr class="total-row"><td>TOTAL</td><td style="text-align:right">' + hrs(d.groupTotals[g]) + '</td></tr>';
       html += '</tbody></table></div>';
     });
-    html += '</div>';
-    html += '<p style="font-weight:bold;margin-top:8px">GRAND TOTAL: ' + hrs(d.grandTotal) + ' h</p>';
+    html = chips + '</div>' + html + '</div>';
     wrap.innerHTML = html;
   }).withFailureHandler(onError).getMonthEndDetail(month, year);
 }
@@ -2912,42 +3080,34 @@ function renderPeriodSummary(data) {
     var g = (r.dept === 'FOH') ? 'FLOOR' : (r.dept === 'BOH') ? 'KITCHEN' : (r.dept === 'CLEANING') ? 'CLEANING' : 'OTHER';
     groups[g].push(r);
   });
-  var grandH = 0, grandA = 0;
-  var html = '<div class="row" style="align-items:flex-start">';
+  var grandH = 0, grandA = 0, cards = '', chipDept = '';
   ['FLOOR', 'KITCHEN', 'CLEANING', 'OTHER'].forEach(function(g) {
     var rows = groups[g];
     if (!rows.length) return;
-    var th = 0, ta = 0;
-    html += '<div style="flex:1;min-width:300px"><table class="track-rows"><thead>' +
-      '<tr><th colspan="6">' + g + '</th></tr>' +
-      '<tr><th>Name</th><th>In</th><th>Out</th><th style="text-align:right">Hours</th><th style="text-align:right">Advance</th><th>Notes</th></tr>' +
-      '</thead><tbody>';
+    var th = 0, ta = 0, body = '';
     rows.forEach(function(r) {
       var adv = Number(r.advances) || 0;
       th += Number(r.totalHours) || 0; ta += adv;
-      var cls = r.active ? '' : ' class="inactive-row"';
-      var notes = [];
-      var hWeeks = 0, sWeeks = 0;
-      (r.weeklyHours || []).forEach(function(w) {
-        if (w === 'H') hWeeks++; else if (w === 'S') sWeeks++;
-      });
-      // v2.5.8: Holiday is NOT shown in the report notes (user request);
-      // the week mark still wins over the day count for Sick.
-      if (sWeeks > 0) notes.push('<span style="color:#9C4B00;font-weight:600">Sick ' + sWeeks + 'wk</span>');
-      else if (Number(r.sickDays) > 0) notes.push('<span style="color:#9C4B00;font-weight:600">Sick ' + r.sickDays + 'd</span>');
-      html += '<tr' + cls + '><td>' + esc(r.name) + '</td>' +
-        '<td style="font-size:11px;color:#375623">' + (r.startDate ? dmy(r.startDate) : '') + '</td>' +
-        '<td style="font-size:11px;color:#9C0006">' + (r.endDate ? dmy(r.endDate) : '') + '</td>' +
-        '<td style="text-align:right">' + hrs(r.totalHours) + '</td>' +
-        '<td style="text-align:right">' + (adv > 0 ? money(adv) : '') + '</td>' +
-        '<td style="font-size:11px">' + notes.join(' \u00b7 ') + '</td></tr>';
+      var tags = [];
+      var sWeeks = 0;
+      (r.weeklyHours || []).forEach(function(w) { if (w === 'S') sWeeks++; });
+      // v2.5.8: Holiday is NOT shown in the report notes; the week mark wins over the day count for Sick.
+      if (sWeeks > 0) tags.push('<span class="tag sick">Sick ' + sWeeks + 'wk</span>');
+      else if (Number(r.sickDays) > 0) tags.push('<span class="tag sick">Sick ' + r.sickDays + 'd</span>');
+      if (r.startDate) tags.push('<span class="tag in">Started ' + dmy(r.startDate) + '</span>');
+      if (r.endDate) tags.push('<span class="tag out">Left ' + dmy(r.endDate) + '</span>');
+      var zero = !(Number(r.totalHours) > 0);
+      body += '<tr class="' + (r.active ? '' : 'inactive-row') + (zero ? ' zero' : '') + '"><td><div class="nm">' + esc(r.name) + '</div>' + (tags.length ? '<div class="tags">' + tags.join('') + '</div>' : '') + '</td>' +
+        '<td class="r">' + hrs(r.totalHours) + '</td><td class="r adv">' + (adv > 0 ? money(adv) : '<span class="muted">–</span>') + '</td></tr>';
     });
-    html += '<tr class="total-row"><td>TOTAL</td><td></td><td></td><td style="text-align:right">' + hrs(th) + '</td><td style="text-align:right">' + (ta > 0 ? money(ta) : '') + '</td><td></td></tr>';
-    html += '</tbody></table></div>';
+    cards += '<div class="dept-card"><div class="dept-head"><div><b>' + DEPT_LABEL[g] + '</b><small>' + rows.length + ' staff' + (ta > 0 ? ' · advances ' + money(ta) : '') + '</small></div><div class="dept-tot">' + hrs(th) + ' h</div></div>' +
+      '<table class="dept-table"><thead><tr><th>Name</th><th class="r">Hours</th><th class="r">Advance</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+    chipDept += '<div class="sum-chip"><span>' + DEPT_LABEL[g] + '</span><b>' + hrs(th) + ' h</b></div>';
     grandH += th; grandA += ta;
   });
-  html += '</div>';
-  html += '<p style="font-weight:bold;margin-top:8px">GRAND TOTAL: ' + hrs(grandH) + ' h' + (grandA > 0 ? ' &nbsp;|&nbsp; Advances: ' + money(grandA) : '') + '</p>';
+  var html = '<div class="sum-chips"><div class="sum-chip main"><span>Total hours</span><b>' + hrs(grandH) + ' h</b></div>' + chipDept +
+    (grandA > 0 ? '<div class="sum-chip adv"><span>Advances</span><b>' + money(grandA) + '</b></div>' : '') + '</div>' +
+    '<div class="dept-grid">' + cards + '</div>';
   wrap.innerHTML = html;
 }
 
