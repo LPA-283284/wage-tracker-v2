@@ -58,6 +58,8 @@
   table.bk-dep { width:100%; border-collapse:collapse; font-size:12.5px; } table.bk-dep th { text-align:left; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:#8A6A4F; padding:6px; background:#FBF1E0; }
   table.bk-dep td { padding:7px 6px; border-bottom:1px solid #F1E7DA; vertical-align:top; } table.bk-dep .num { text-align:right; }
   .bk-k { display:inline-block; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:700; } .bk-k.in { background:#E7F4EA; color:#1E6B34; } .bk-k.used { background:#EEF2FB; color:#2A4A8A; } .bk-k.refund { background:#FBE6E3; color:#A3261A; }
+  .bk-done { text-align:center; padding:34px 20px; } .bk-done .big { font-family:'Playfair Display',serif; font-size:26px; color:#1E6B34; margin-bottom:6px; } .bk-done .muted { font-size:14px; }
+  #page-banking #bkDaysSec .card { margin-top:0; }
   .bk-banner.live { background:#E7F4EA; color:#1E6B34; border:1px solid #BFE3C8; }
   .bk-cmp { margin-top:12px; border:1px solid #EEE2D3; border-radius:12px; padding:10px 12px; font-size:12.5px; }
   .bk-cmp .t { font-weight:700; color:#6D1B2F; margin-bottom:6px; }
@@ -560,15 +562,20 @@
     <section class="page" id="page-banking">
       <div class="pg-head">
         <div><div class="pg-title">End of Day</div><div class="pg-sub">Daily banking — Z report, cards, cash and the envelope</div></div>
-        <div class="pg-tools"><div class="period">
-          <button type="button" title="Previous day" onclick="bkShift(-1)">&#8249;</button>
-          <input type="date" id="bkDate" onchange="bkLoad()">
-          <button type="button" title="Next day" onclick="bkShift(1)">&#8250;</button>
-        </div></div>
+        <div class="pg-tools">
+          <div class="seg hidden" id="bkSeg"><button data-v="enter" class="active" onclick="bkTab('enter')">Enter day</button><button data-v="days" onclick="bkTab('days')">Saved days</button></div>
+          <div class="period" id="bkDatePill">
+            <button type="button" title="Previous day" onclick="bkShift(-1)">&#8249;</button>
+            <input type="date" id="bkDate" onchange="bkLoad()">
+            <button type="button" title="Next day" onclick="bkShift(1)">&#8250;</button>
+          </div>
+        </div>
       </div>
+      <div id="bkEnterSec">
       <div id="bkBanner"></div>
       <div id="bkDrift"></div>
-      <div class="side-grid bk-grid-wrap">
+      <div class="card bk-done hidden" id="bkDone"></div>
+      <div class="side-grid bk-grid-wrap" id="bkFormWrap">
         <div>
           <div class="card">
             <div class="list-head"><h2 style="margin:0">Z report</h2><span class="bk-state" id="bkState"></span></div>
@@ -644,9 +651,15 @@
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="list-head"><h2 style="margin:0">Recent days</h2><span class="muted" style="font-size:12px">Tap a day to open it</span></div>
-        <div class="scroll"><table id="bkTable"></table></div>
+      </div>
+      <div id="bkDaysSec" class="hidden">
+        <div class="card">
+          <div class="list-head"><h2 style="margin:0">Saved days</h2>
+            <div class="period"><button type="button" onclick="shiftMonth('bkMonth',-1);bkLoadList()">&#8249;</button><input type="month" id="bkMonth" onchange="bkLoadList()"><button type="button" onclick="shiftMonth('bkMonth',1);bkLoadList()">&#8250;</button></div></div>
+          <div class="sum-line" id="bkDaysSum"></div>
+          <div class="scroll"><table id="bkTable"></table></div>
+          <div class="muted" style="font-size:12px;margin-top:8px">Tap a day to open it. Only admins and people with the "End of Day – saved days" permission can see this.</div>
+        </div>
       </div>
     </section>
 
@@ -1183,7 +1196,15 @@ async function bkInit() {
     document.querySelectorAll('#page-banking .bk-n').forEach(el => { el.setAttribute('inputmode', 'decimal'); el.setAttribute('autocomplete', 'off'); el.addEventListener('input', bkRecalc); });
     $('bkFiles').addEventListener('change', bkPickFiles);
   }
-  bkLoad(); bkLoadList();
+  if (!$('bkMonth').value) $('bkMonth').value = bkLocalDate().slice(0, 7);
+  bkLoad();
+}
+const bkCanView = () => isHR() || can('banking_view');
+function bkTab(v) {
+  $('bkSeg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  $('bkEnterSec').classList.toggle('hidden', v !== 'enter'); $('bkDaysSec').classList.toggle('hidden', v !== 'days');
+  $('bkDatePill').classList.toggle('hidden', v !== 'enter');
+  if (v === 'days') bkLoadList();
 }
 function bkShift(n) { const d = new Date($('bkDate').value + 'T12:00:00'); d.setDate(d.getDate() + n); if (bkLocalDate(d) > bkLocalDate()) return; $('bkDate').value = bkLocalDate(d); bkLoad(); }
 function bkClear() {
@@ -1200,9 +1221,19 @@ async function bkLoad() {
   BK.pre = data; BK.existing = data.existing; BK.editing = false;
   $('bkBanner').innerHTML = data.live
     ? '<div class="bk-banner live">✓ <b>TeamOS End of Day is the main system.</b> Submitting writes Take-in, Tips and the Cash List straight away.</div>'
-    : '<div class="bk-banner trial">🧪 <b>Trial run.</b> This is saved in TeamOS only — Take-in, Tips and Cash List still come from the old LPA Banking for now. Please fill in <b>both</b> for a while; the Summary box compares them.</div>';
+    : data.can_view ? '<div class="bk-banner trial">🧪 <b>Trial run.</b> This is saved in TeamOS only — Take-in, Tips and Cash List still come from the old LPA Banking for now. The Summary box compares the two.</div>'
+    : '<div class="bk-banner trial">🧪 <b>Trial run.</b> Please also fill in the old LPA Banking for now.</div>';
   bkClear();
+  $('bkSeg').classList.toggle('hidden', !data.can_view);
   const ex = data.existing;
+  // someone who only enters the day: no figures of a saved day, just "done"
+  const hiddenDone = !!(ex && ex.hidden);
+  $('bkDone').classList.toggle('hidden', !hiddenDone); $('bkFormWrap').classList.toggle('hidden', hiddenDone); $('bkDrift').classList.toggle('hidden', hiddenDone);
+  if (hiddenDone) {
+    const at = ex.created_at ? new Date(ex.created_at).toLocaleString('en-GB', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+    $('bkDone').innerHTML = `<div class="big">✓ End of day submitted</div><div class="muted">${dmy(date)} · by ${esc(ex.created_by_name || '?')}${at ? ' · ' + at : ''}</div><div class="muted" style="margin-top:10px">Thank you. If something needs changing, please tell an admin.</div>`;
+    return;
+  }
   if (ex) {
     $('bk_z').value = ex.z_number || ''; $('bk_depnote').value = ex.deposit_details || ''; $('bk_pettynote').value = ex.petty_cash_note || ''; $('bk_manager').value = ex.manager || '';
     BK_KEYS.forEach(k => { const v = ex.amounts?.[k]; bkInp(k).value = v ? (v / 100).toFixed(2) : ''; });
@@ -1282,23 +1313,25 @@ async function bkSubmit(confirmZ) {
       throw new Error(data?.error || 'Could not save');
     }
     BK.photos = photos; BK.newFiles = [];
-    await bkLoad(); bkLoadList();
+    await bkLoad();
     setMsg('bkMsg', data.live ? '✓ Saved — Take-in, Tips and Cash List updated.' : '✓ Saved (trial run).', true);
   } catch (e) { setMsg('bkMsg', e.message || String(e)); }
   finally { btn.disabled = false; }
 }
 async function bkLoadList() {
-  const to = bkLocalDate(), f = new Date(); f.setDate(f.getDate() - 30);
-  const { data, error } = await sb.rpc('banking_list', { p_from: bkLocalDate(f), p_to: to });
+  const m = $('bkMonth').value || bkLocalDate().slice(0, 7), [yy, mm] = m.split('-').map(Number);
+  const { data, error } = await sb.rpc('banking_list', { p_from: m + '-01', p_to: m + '-' + String(new Date(yy, mm, 0).getDate()).padStart(2, '0') });
   const t = $('bkTable');
   if (error || !data?.ok) { t.innerHTML = `<tr><td class="neg">${esc(error?.message || data?.error)}</td></tr>`; return; }
-  if (!data.rows.length) { t.innerHTML = '<tr><td class="muted">No days entered in TeamOS yet.</td></tr>'; return; }
+  const tot = k => data.rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  $('bkDaysSum').textContent = data.rows.length ? `${data.rows.length} days · Taken in ${bkGbp(tot('taken_in'))} · Difference ${bkGbp(tot('difference'))}` : '';
+  if (!data.rows.length) { t.innerHTML = '<tr><td class="muted">No days for this month.</td></tr>'; return; }
   const trial = !(BK.pre && BK.pre.live);
   t.innerHTML = `<tr><th>Date</th><th>Z</th><th class="num">Taken in</th><th class="num">Till</th><th class="num">Cash in hand</th><th class="num">Difference</th>${trial ? '<th>Old system</th>' : ''}<th>By</th></tr>` +
     data.rows.map(r => {
       const d = r.difference, cls = Math.abs(d) < 100 ? 'bk-zero' : d < 0 ? 'bk-neg' : 'bk-pos';
       const old = r.st_taken_in == null ? '<span class="muted">not entered</span>' : Math.abs(r.st_taken_in - r.taken_in) < 1 ? '<span class="bk-zero">✓ same</span>' : `<span class="bk-neg">≠ ${bkGbp(r.st_taken_in)}</span>`;
-      return `<tr class="click" onclick="$('bkDate').value='${r.date}';bkLoad();window.scrollTo({top:0,behavior:'smooth'})"><td class="nowrap"><b>${dmy(r.date)}</b></td><td>${esc(r.z)}</td><td class="num">${bkGbp(r.taken_in)}</td><td class="num">${bkGbp(r.till)}</td><td class="num">${bkGbp(r.cash_in_hand)}</td><td class="num ${cls}">${Math.abs(d) < 1 ? '✓' : (d > 0 ? '+' : '−') + bkGbp(Math.abs(d))}</td>${trial ? '<td>' + old + '</td>' : ''}<td>${esc(r.by || r.manager)}${r.photos ? ' · 📷' + r.photos : ''}</td></tr>`;
+      return `<tr class="click" onclick="$('bkDate').value='${r.date}';bkTab('enter');bkLoad();window.scrollTo({top:0,behavior:'smooth'})"><td class="nowrap"><b>${dmy(r.date)}</b></td><td>${esc(r.z)}</td><td class="num">${bkGbp(r.taken_in)}</td><td class="num">${bkGbp(r.till)}</td><td class="num">${bkGbp(r.cash_in_hand)}</td><td class="num ${cls}">${Math.abs(d) < 1 ? '✓' : (d > 0 ? '+' : '−') + bkGbp(Math.abs(d))}</td>${trial ? '<td>' + old + '</td>' : ''}<td>${esc(r.by || r.manager)}${r.photos ? ' · 📷' + r.photos : ''}</td></tr>`;
     }).join('');
 }
 function bkShareDay() {
@@ -1874,13 +1907,13 @@ function filterRows(tableId, q) {
 }
 // ===== TeamOS Users & Permissions (shared by TeamOS App and TeamOS HR) =====
 window.TeamOSUsers = (function () {
-  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'banking', 'accountant', 'requests_add', 'requests', 'hr', 'notify_payments'];
+  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'banking', 'banking_view', 'accountant', 'requests_add', 'requests', 'hr', 'notify_payments'];
   var INFO = {
     wages_pay: ['Pay wages', 'Pay wages — sees only what is due'], wages_view: ['Wages view', 'All wage amounts, history and signatures'],
     advance_add: ['Give advance', 'Give advances only (cannot see the list)'], deposits: ['Deposits', 'Add deposits and see the list'],
     deposits_view: ['Deposits view', 'See deposits only'], cash: ['Cash', 'Cash list and cash in hand'], takein: ['Take-in', 'Take-in and staff cost %'],
     signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'],
-    banking: ['End of Day', 'Enter the daily banking (Z report, cards, cash) — can only add a day, not change a saved one'], accountant: ['Accountant', 'Read-only Banking for the accountant (same columns as the sheet, Excel download). Sees nothing else'], requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
+    banking: ['End of Day', 'Enter and submit the daily banking (Z report, cards, cash). Cannot see or change saved days'], banking_view: ['End of Day – saved days', 'See the saved days (figures, differences, photos). Without it, a person can only enter and submit the day'], accountant: ['Accountant', 'Read-only Banking for the accountant (same columns as the sheet, Excel download). Sees nothing else'], requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
     notify_payments: ['Payment alerts', 'Phone notification (app) when a wage payment is made']
   };
   var ROLES = ['VIEWER', 'PAYER', 'EDITOR', 'ADMIN'];

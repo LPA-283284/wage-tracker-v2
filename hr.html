@@ -4685,13 +4685,13 @@ function stApplyFilter_() {
 
 // ===== TeamOS Users & Permissions (shared by TeamOS App and TeamOS HR) =====
 window.TeamOSUsers = (function () {
-  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'banking', 'accountant', 'requests_add', 'requests', 'hr', 'notify_payments'];
+  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'banking', 'banking_view', 'accountant', 'requests_add', 'requests', 'hr', 'notify_payments'];
   var INFO = {
     wages_pay: ['Pay wages', 'Pay wages — sees only what is due'], wages_view: ['Wages view', 'All wage amounts, history and signatures'],
     advance_add: ['Give advance', 'Give advances only (cannot see the list)'], deposits: ['Deposits', 'Add deposits and see the list'],
     deposits_view: ['Deposits view', 'See deposits only'], cash: ['Cash', 'Cash list and cash in hand'], takein: ['Take-in', 'Take-in and staff cost %'],
     signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'],
-    banking: ['End of Day', 'Enter the daily banking (Z report, cards, cash) — can only add a day, not change a saved one'], accountant: ['Accountant', 'Read-only Banking for the accountant (same columns as the sheet, Excel download). Sees nothing else'], requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
+    banking: ['End of Day', 'Enter and submit the daily banking (Z report, cards, cash). Cannot see or change saved days'], banking_view: ['End of Day – saved days', 'See the saved days (figures, differences, photos). Without it, a person can only enter and submit the day'], accountant: ['Accountant', 'Read-only Banking for the accountant (same columns as the sheet, Excel download). Sees nothing else'], requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
     notify_payments: ['Payment alerts', 'Phone notification (app) when a wage payment is made']
   };
   var ROLES = ['VIEWER', 'PAYER', 'EDITOR', 'ADMIN'];
