@@ -704,6 +704,17 @@
     .status-pill:hover { box-shadow:0 0 0 2px rgba(109,27,47,.2); }
     #view-staff .entry-foot { margin-top:14px; }
     @media (max-width:640px) { .pill-input { width:100%; } .entry-top .et-hint { margin-left:0; } .dow-it { grid-template-columns:36px 1fr 100px; } }
+    /* reports share sheet */
+    .rpt-bg { position:fixed; inset:0; background:rgba(30,10,15,.45); display:none; align-items:center; justify-content:center; z-index:300; padding:16px; }
+    .rpt-bg.open { display:flex; }
+    .rpt-box { background:#fff; border-radius:18px; width:100%; max-width:520px; max-height:92vh; overflow:auto; padding:22px; box-shadow:0 20px 60px rgba(46,3,12,.35); }
+    .rpt-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:16px; }
+    .rpt-t { font-size:19px; font-weight:700; color:#4A0817; } .rpt-s { font-size:12.5px; color:#8A7D74; margin-top:3px; }
+    .rpt-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .rpt-b { display:flex; align-items:center; gap:10px; border:1px solid #EADFCF; background:#FFFDFA; border-radius:12px; padding:14px; font:inherit; font-weight:700; color:#4A0817; cursor:pointer; font-size:14px; }
+    .rpt-b span { font-size:20px; } .rpt-b:hover { background:#FBF1E0; border-color:#E7C48A; }
+    .rpt-b.wa { background:#E9F8EE; border-color:#BFE6CC; color:#14692F; } .rpt-b.wa:hover { background:#D7F2E0; }
+    .rpt-b.wide { grid-column:1/-1; justify-content:center; }
   </style>
 </head>
 <body>
@@ -1088,7 +1099,7 @@
       <button type="button" data-t="end">End of month</button>
     </div>
     <div class="card pp-sec" data-sec="report">
-      <h2>Hours & Payments Report</h2>
+      <div class="list-head"><h2 style="margin:0">Weekly hours &amp; advances</h2><button type="button" class="tool-btn" onclick="rptOpen('weekly')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Send</button></div>
       <p class="hint">Weekly hours are entered by hand; the Preview column fills automatically from Hours entries. Former staff appear only if they have data in this period. Type <b>H</b> in a week box for holiday (green) or <b>S</b> for sick (orange) — they count as 0 hours and show in the Period Summary notes. Nothing is written while you type: changed boxes turn yellow and totals update live; ONE press of <b>SAVE CHANGES</b> writes everything in a single fast call — no more lock timeouts, and a failed save never wipes what you typed.</p>
       <div id="ppSaveBar" style="display:none;background:#FFF3CD;border-left:6px solid #C99700;border-radius:8px;padding:10px 14px;margin-bottom:10px">
         <b><span id="ppPendCnt">0</span> unsaved change(s)</b>
@@ -1111,18 +1122,16 @@
 
 
     <div class="card pp-sec" data-sec="summary" style="display:none">
-      <h2 id="psTitle">Period Summary</h2>
+      <div class="list-head"><h2 id="psTitle" style="margin:0">Period Summary</h2><button type="button" class="tool-btn" onclick="rptOpen('summary')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Send</button></div>
       <p class="hint">Per-person total for the whole 26th→25th period (your manual weekly entries) plus advances — the old Excel's summary block. One tap makes a PDF for WhatsApp.</p>
-      <button class="btn" id="psPdfBtn" onclick="downloadPeriodPdf(this)">DOWNLOAD PDF</button>
-      <span id="psLink" style="margin-left:10px"></span>
+      <span id="psLink" style="display:none"></span>
       <div id="psWrap" style="margin-top:12px"><div class="loading">Loading…</div></div>
     </div>
 
     <div class="card pp-sec" data-sec="end" style="display:none">
-      <h2 id="meTitle">End of Month (26–…)</h2>
+      <div class="list-head"><h2 id="meTitle" style="margin:0">End of Month (26–…)</h2><button type="button" class="tool-btn" onclick="rptOpen('monthEnd')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Send</button></div>
       <p class="hint">The pay period closes on the 25th; these are the hours from the 26th to the end of the selected month — the tail that belongs to the NEXT period. One tap makes a PDF for WhatsApp.</p>
-      <button class="btn" id="mePdfBtn" onclick="downloadMonthEndPdf(this)">DOWNLOAD PDF</button>
-      <span id="meLink" style="margin-left:10px"></span>
+      <span id="meLink" style="display:none"></span>
       <div id="meWrap" style="margin-top:12px"><div class="loading">Loading…</div></div>
     </div>
   </div>
@@ -3194,6 +3203,7 @@ function loadMonthEndDetail() {
   var year = document.getElementById('ppYear').value;
 
   google.script.run.withSuccessHandler(function(d) {
+    window.meData = d;
     document.getElementById('meTitle').textContent = 'End of Month (' + d.label + ')';
     var order = ['FLOOR', 'KITCHEN', 'CLEANING', 'OTHER'];
     var chips = '<div class="sum-chips"><div class="sum-chip main"><span>Total</span><b>' + hrs(d.grandTotal) + ' h</b></div>';
@@ -4001,10 +4011,10 @@ monthly: 'Month by month performance and cost exclusions',
     if (m) cleanup({ parentNode: wm }); cleanup({ parentNode: wy });
     return p;
   }
-  function printBtn() {
+  function printBtn(kind) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'tool-btn';
-    b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print';
-    b.onclick = function () { window.print(); }; return b;
+    b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Send';
+    b.onclick = function () { if (kind) rptOpen(kind); else window.print(); }; return b;
   }
   function moveHint(fromCard, toCard) {
     if (!fromCard || !toCard) return;
@@ -4043,7 +4053,7 @@ monthly: 'Month by month performance and cost exclusions',
     var ht = tools(head('holidays'));
     ht.appendChild(pill('holMonth', 'holYear'));
     if (holOldPrint) { var hr = holOldPrint.parentNode; hr.parentNode.removeChild(hr); }
-    ht.appendChild(printBtn());
+    ht.appendChild(printBtn('holidays'));
 
     // Cash List — month + year (ledger card gets a title)
     var cashCard = $('cashListWrap').parentNode;
@@ -4056,7 +4066,7 @@ monthly: 'Month by month performance and cost exclusions',
     tp.appendChild(arrow('&#8249;', 'Previous week', function () { shiftTipsWeek(-7); }));
     tp.appendChild(tw);
     tp.appendChild(arrow('&#8250;', 'Next week', function () { shiftTipsWeek(7); }));
-    var tt = tools(head('tips')); tt.appendChild(tp); tt.appendChild(printBtn());
+    var tt = tools(head('tips')); tt.appendChild(tp); tt.appendChild(printBtn('tips'));
     moveHint(twCard, tipsCard);
     var th2 = document.createElement('h2'); th2.className = 'no-print'; th2.textContent = 'Weekly distribution'; tipsCard.insertBefore(th2, tipsCard.firstChild);
     twCard.parentNode.removeChild(twCard);
@@ -4285,6 +4295,7 @@ function renderRecentRevenue_() {
 
 // ---------------- TIPS ----------------
 function renderWeeklyTips(data) {
+  window.tipsData = data;
   var wrap = document.getElementById('tipsTableWrap');
   document.getElementById('tipsPrintTitle').textContent = 'Weekly Tip Distribution: ' + dmy(data.days[0]) + ' – ' + dmy(data.days[6]);
   var totH = (data.dailyTotalHours || []).reduce(function(a, h) { return a + (Number(h) || 0); }, 0);
@@ -4726,6 +4737,342 @@ window.HRSHIM_ready.then(function(ok) {
     TeamOSUsers.mount(document.getElementById('usersRoot'), window.HR_SB, me);
   }
 });
+
+
+// ============================================================
+// v2.8 REPORTS — one good-looking PDF for Print / Download / WhatsApp / Email
+// (jsPDF + autoTable, loaded on first use)
+// ============================================================
+var RPT_LIBS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'
+];
+var rptLibsP = null;
+function rptLoadLibs() {
+  if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API.autoTable) return Promise.resolve();
+  if (rptLibsP) return rptLibsP;
+  rptLibsP = RPT_LIBS.reduce(function(p, src) {
+    return p.then(function() { return new Promise(function(ok, bad) {
+      var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function() { rptLibsP = null; bad(new Error('Could not load the PDF tool — check the internet connection.')); };
+      document.head.appendChild(s);
+    }); });
+  }, Promise.resolve());
+  return rptLibsP;
+}
+var RC = { wine: [109, 27, 47], wineDeep: [74, 8, 23], gold: [201, 154, 85], goldSoft: [231, 196, 138], cream: [255, 244, 224],
+  ink: [42, 31, 28], soft: [138, 125, 116], line: [234, 223, 207], head: [251, 245, 236], headTxt: [122, 91, 58], zebra: [253, 251, 248], total: [251, 241, 224],
+  H: [217, 232, 251], Htxt: [31, 111, 235], OFF: [251, 231, 208], OFFtxt: [156, 75, 0], S: [251, 217, 217], Stxt: [156, 0, 6], we: [246, 241, 234] };
+function rptNowTxt() { var d = new Date(); return dmy(fmtDate(d)) + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+
+// spec: { title, subtitle, orientation, chips:[{l,v}], sections:[{title, sub, head:[], rows:[[]], foot:[], right:[colIdx], half:bool, cellHook}], note }
+function rptBuild(spec) {
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({ orientation: spec.orientation || 'portrait', unit: 'mm', format: 'a4' });
+  var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 12;
+  // header band
+  doc.setFillColor.apply(doc, RC.wineDeep); doc.rect(0, 0, W, 30, 'F');
+  doc.setFillColor.apply(doc, RC.wine); doc.rect(0, 0, W * 0.62, 30, 'F');
+  doc.setFillColor.apply(doc, RC.gold); doc.rect(0, 30, W, 0.9, 'F');
+  doc.setTextColor.apply(doc, RC.goldSoft); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+  doc.text('TeamOS  ·  LPA', M, 9.5);
+  doc.setTextColor(255, 255, 255); doc.setFontSize(17); doc.text(spec.title, M, 19);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor.apply(doc, RC.cream);
+  if (spec.subtitle) doc.text(spec.subtitle, M, 25.5);
+  doc.setFontSize(8); doc.setTextColor.apply(doc, RC.goldSoft);
+  doc.text('Generated ' + rptNowTxt(), W - M, 9.5, { align: 'right' });
+  var y = 38;
+  // chips
+  if (spec.chips && spec.chips.length) {
+    var n = spec.chips.length, gap = 4, cw = Math.min(46, (W - 2 * M - gap * (n - 1)) / n);
+    spec.chips.forEach(function(c, i) {
+      var x = M + i * (cw + gap);
+      if (i === 0) doc.setFillColor.apply(doc, RC.wine); else doc.setFillColor.apply(doc, RC.head);
+      doc.roundedRect(x, y, cw, 15, 2.5, 2.5, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8);
+      if (i === 0) doc.setTextColor.apply(doc, RC.goldSoft); else doc.setTextColor.apply(doc, RC.soft);
+      doc.text(String(c.l).toUpperCase(), x + 3.5, y + 5.2);
+      doc.setFontSize(11.5);
+      if (i === 0) doc.setTextColor(255, 255, 255); else doc.setTextColor.apply(doc, RC.wineDeep);
+      doc.text(String(c.v), x + 3.5, y + 11.8);
+    });
+    y += 21;
+  }
+  // sections (half-width ones are laid out two per row)
+  var colW = (W - 2 * M - 6) / 2, rowStartY = y, rowMaxY = y, col = 0;
+  spec.sections.forEach(function(sec) {
+    var half = !!sec.half, x, tw;
+    if (!half) { if (col === 1) { y = rowMaxY + 6; col = 0; } x = M; tw = W - 2 * M; }
+    else {
+      if (col === 0) { rowStartY = y; rowMaxY = y; }
+      x = col === 0 ? M : M + colW + 6; tw = colW; y = rowStartY;
+    }
+    if (y > H - 40) { doc.addPage(); y = 16; rowStartY = y; rowMaxY = y; }
+    doc.setFillColor.apply(doc, RC.gold); doc.rect(x, y - 3.4, 1.2, 4.6, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor.apply(doc, RC.wineDeep);
+    doc.text(sec.title, x + 3, y);
+    if (sec.sub) { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor.apply(doc, RC.soft); doc.text(sec.sub, x + tw, y, { align: 'right' }); }
+    var colStyles = {};
+    (sec.right || []).forEach(function(i) { colStyles[i] = { halign: 'right' }; });
+    (sec.center || []).forEach(function(i) { colStyles[i] = { halign: 'center' }; });
+    if (sec.widths) Object.keys(sec.widths).forEach(function(i) { colStyles[i] = Object.assign(colStyles[i] || {}, { cellWidth: sec.widths[i] }); });
+    doc.autoTable({
+      startY: y + 2.5, margin: { left: x, right: W - x - tw }, tableWidth: tw,
+      head: [sec.head], body: sec.rows, foot: sec.foot ? [sec.foot] : undefined, showFoot: 'lastPage',
+      theme: 'grid', rowPageBreak: 'avoid',
+      styles: { font: 'helvetica', fontSize: sec.fontSize || 8.6, cellPadding: sec.pad || { top: 1.8, bottom: 1.8, left: 2.4, right: 2.4 }, lineColor: RC.line, lineWidth: 0.15, textColor: RC.ink, overflow: 'linebreak' },
+      headStyles: { fillColor: RC.head, textColor: RC.headTxt, fontStyle: 'bold', fontSize: 7.2 },
+      footStyles: { fillColor: RC.total, textColor: RC.wineDeep, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: RC.zebra },
+      columnStyles: colStyles,
+      didParseCell: function(data) {
+        if (data.section !== 'head' && data.section !== 'foot' && colStyles[data.column.index]) data.cell.styles.halign = colStyles[data.column.index].halign || data.cell.styles.halign;
+        if (data.section === 'head' && colStyles[data.column.index] && colStyles[data.column.index].halign) data.cell.styles.halign = colStyles[data.column.index].halign;
+        if (data.section === 'foot' && colStyles[data.column.index] && colStyles[data.column.index].halign) data.cell.styles.halign = colStyles[data.column.index].halign;
+        if (sec.cellHook) sec.cellHook(data);
+      }
+    });
+    var endY = doc.lastAutoTable.finalY;
+    if (half) {
+      rowMaxY = Math.max(rowMaxY, endY);
+      if (col === 0) col = 1; else { col = 0; y = rowMaxY + 9; }
+    } else { y = endY + 9; }
+  });
+  if (col === 1) y = rowMaxY + 9;
+  if (spec.note) {
+    if (y > H - 20) { doc.addPage(); y = 16; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor.apply(doc, RC.wineDeep);
+    doc.text(spec.note, M, y);
+  }
+  // footer on every page
+  var pages = doc.internal.getNumberOfPages();
+  for (var p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setDrawColor.apply(doc, RC.line); doc.setLineWidth(0.2); doc.line(M, H - 10, W - M, H - 10);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor.apply(doc, RC.soft);
+    doc.text('TeamOS HR · ' + spec.title, M, H - 6);
+    doc.text('Page ' + p + ' of ' + pages, W - M, H - 6, { align: 'right' });
+  }
+  return doc;
+}
+
+// ---------- the reports ----------
+var RPT_DEPT = [['FOH', 'Floor'], ['BOH', 'Kitchen'], ['CLEANING', 'Cleaning']];
+function rptGroups(rows, deptOf) {
+  var g = {}; rows.forEach(function(r) { var d = deptOf(r); var k = (d === 'FOH' || d === 'BOH' || d === 'CLEANING') ? d : 'OTHER'; (g[k] = g[k] || []).push(r); });
+  return RPT_DEPT.concat([['OTHER', 'Other']]).filter(function(x) { return g[x[0]]; }).map(function(x) { return { key: x[0], name: x[1], rows: g[x[0]] }; });
+}
+function rptPeriodTxt() { return ppData ? dmy(ppData.periodStart) + ' – ' + dmy(ppData.periodEnd) : ''; }
+function rptMoney(n) { return Number(n) > 0 ? money(n) : ''; }
+
+var REPORTS = {
+  weekly: function() {
+    if (!ppData) throw new Error('Load Staff Hours first.');
+    var d = ppData, weeks = d.weekLabels;
+    var gh = 0, gp = 0, ga = 0;
+    var sections = rptGroups(d.rows, function(r) { return r.dept; }).map(function(g) {
+      var th = 0, tp = 0, ta = 0, wk = weeks.map(function() { return 0; });
+      var rows = g.rows.map(function(r) {
+        th += Number(r.totalHours) || 0; tp += Number(r.previewHours) || 0; ta += Number(r.advances) || 0;
+        r.weeklyHours.forEach(function(v, i) { wk[i] += Number(v) || 0; });
+        var info = [r.startDate ? 'in ' + dmy(r.startDate) : '', r.endDate ? 'out ' + dmy(r.endDate) : ''].filter(Boolean).join(' · ');
+        return [r.name + (info ? '\n' + info : '')].concat(r.weeklyHours.map(function(v) { return v === '' || v == null ? '' : String(v); }))
+          .concat([hrs(r.totalHours), hrs(r.previewHours), rptMoney(r.advances)]);
+      });
+      gh += th; gp += tp; ga += ta;
+      return { title: g.name, sub: g.rows.length + ' staff', head: ['Staff'].concat(weeks).concat(['Total', 'Preview', 'Advance']), rows: rows,
+        foot: ['Total'].concat(wk.map(function(w) { return w ? hrs(w) : ''; })).concat([hrs(th), hrs(tp), rptMoney(ta)]),
+        center: weeks.map(function(_, i) { return i + 1; }), right: [weeks.length + 1, weeks.length + 2, weeks.length + 3], widths: { 0: 46 },
+        cellHook: function(c) {
+          if (c.section === 'body' && c.column.index >= 1 && c.column.index <= weeks.length) {
+            var v = String(c.cell.raw || '').toUpperCase();
+            if (v === 'H') { c.cell.styles.fillColor = RC.H; c.cell.styles.textColor = RC.Htxt; c.cell.styles.fontStyle = 'bold'; }
+            if (v === 'S') { c.cell.styles.fillColor = RC.S; c.cell.styles.textColor = RC.Stxt; c.cell.styles.fontStyle = 'bold'; }
+          }
+          if (c.section === 'body' && c.column.index === 0 && String(c.cell.raw).indexOf('\n') > 0) c.cell.styles.fontSize = 8.2;
+        } };
+    });
+    var chips = [{ l: 'Period hours', v: hrs(gh) + ' h' }, { l: 'Preview', v: hrs(gp) + ' h' }];
+    sections.forEach(function(s) { chips.push({ l: s.title, v: s.foot[s.foot.length - 3] + ' h' }); });
+    if (ga > 0) chips.push({ l: 'Advances', v: money(ga) });
+    var text = 'Weekly hours & advances\n' + rptPeriodTxt() + '\n\n' + d.rows.filter(function(r) { return Number(r.totalHours) > 0 || Number(r.advances) > 0; })
+      .map(function(r) { return r.name + ': ' + hrs(r.totalHours) + 'h' + (Number(r.advances) > 0 ? ' · advance ' + money(r.advances) : ''); }).join('\n') +
+      '\n\nTotal: ' + hrs(gh) + 'h' + (ga > 0 ? ' · Advances ' + money(ga) : '');
+    return { file: 'Weekly hours ' + rptPeriodTxt(), text: text,
+      spec: { title: 'Weekly Hours & Advances', subtitle: 'Pay period ' + rptPeriodTxt() + '  ·  Preview from Hours: ' + dmy(d.previewStart) + ' – ' + dmy(d.previewEnd), orientation: 'landscape', chips: chips, sections: sections,
+        note: 'Grand total: ' + hrs(gh) + ' h' + (ga > 0 ? '   ·   Advances: ' + money(ga) : '') } };
+  },
+  summary: function() {
+    if (!ppData) throw new Error('Load Staff Hours first.');
+    var gh = 0, ga = 0, lines = [];
+    var sections = rptGroups(ppData.rows, function(r) { return r.dept; }).map(function(g) {
+      var th = 0, ta = 0;
+      var rows = g.rows.map(function(r) {
+        th += Number(r.totalHours) || 0; ta += Number(r.advances) || 0;
+        var sW = (r.weeklyHours || []).filter(function(w) { return w === 'S'; }).length;
+        var notes = [sW ? 'Sick ' + sW + 'wk' : (Number(r.sickDays) > 0 ? 'Sick ' + r.sickDays + 'd' : ''), r.startDate ? 'In ' + dmy(r.startDate) : '', r.endDate ? 'Out ' + dmy(r.endDate) : ''].filter(Boolean).join(', ');
+        if (Number(r.totalHours) > 0) lines.push(r.name + ': ' + hrs(r.totalHours) + 'h' + (Number(r.advances) > 0 ? ' (adv ' + money(r.advances) + ')' : ''));
+        return [r.name, hrs(r.totalHours), rptMoney(r.advances), notes];
+      });
+      gh += th; ga += ta;
+      return { title: g.name, sub: g.rows.length + ' staff', half: true, head: ['Name', 'Hours', 'Advance', 'Notes'], rows: rows,
+        foot: ['Total', hrs(th), rptMoney(ta), ''], right: [1, 2], widths: { 1: 15, 2: 19 },
+        cellHook: function(c) { if (c.section === 'body' && c.column.index === 3 && c.cell.raw) { c.cell.styles.textColor = RC.OFFtxt; c.cell.styles.fontSize = 7.6; } } };
+    });
+    var chips = [{ l: 'Total hours', v: hrs(gh) + ' h' }];
+    sections.forEach(function(s) { chips.push({ l: s.title, v: s.foot[1] + ' h' }); });
+    if (ga > 0) chips.push({ l: 'Advances', v: money(ga) });
+    return { file: 'Pay period ' + rptPeriodTxt(), text: 'Pay period summary\n' + rptPeriodTxt() + '\n\n' + lines.join('\n') + '\n\nTotal: ' + hrs(gh) + 'h' + (ga > 0 ? ' · Advances ' + money(ga) : ''),
+      spec: { title: 'Pay Period Summary', subtitle: rptPeriodTxt() + '  (26th to 25th)', chips: chips, sections: sections,
+        note: 'Grand total: ' + hrs(gh) + ' h' + (ga > 0 ? '   ·   Advances: ' + money(ga) : '') } };
+  },
+  monthEnd: function() {
+    var d = window.meData; if (!d) throw new Error('Load Staff Hours first.');
+    var lines = [];
+    var sections = [['FLOOR', 'Floor'], ['KITCHEN', 'Kitchen'], ['CLEANING', 'Cleaning'], ['OTHER', 'Other']].filter(function(x) { return d.groups[x[0]] && d.groups[x[0]].length; }).map(function(x) {
+      var rows = d.groups[x[0]].map(function(r) { if (Number(r.hours) > 0) lines.push(r.name + ': ' + hrs(r.hours) + 'h'); return [r.name, hrs(r.hours)]; });
+      return { title: x[1], sub: rows.length + ' staff', half: true, head: ['Name', 'Hours'], rows: rows, foot: ['Total', hrs(d.groupTotals[x[0]])], right: [1],
+        cellHook: function(c) { if (c.section === 'body' && c.column.index === 1 && !(parseFloat(c.cell.raw) > 0)) c.cell.styles.textColor = [190, 180, 170]; } };
+    });
+    var chips = [{ l: 'Total hours', v: hrs(d.grandTotal) + ' h' }];
+    sections.forEach(function(s) { chips.push({ l: s.title, v: s.foot[1] + ' h' }); });
+    return { file: 'End of month ' + d.label, text: 'End of month — ' + d.label + '\n(hours from the 26th, belong to the next pay period)\n\n' + (lines.join('\n') || 'No hours yet') + '\n\nTotal: ' + hrs(d.grandTotal) + 'h',
+      spec: { title: 'End of Month', subtitle: d.label + '  ·  hours from the 26th — they belong to the next pay period', chips: chips, sections: sections, note: 'Grand total: ' + hrs(d.grandTotal) + ' h' } };
+  },
+  holidays: function() {
+    var d = holidaysData; if (!d) throw new Error('Load Holidays first.');
+    var c = holMonthCtx_(), label = MONTHS_EN[c.m - 1] + ' ' + c.y, days = [];
+    for (var i = 1; i <= d.daysInMonth; i++) days.push(i);
+    var DL = ['S', 'M', 'T', 'W', 'T', 'F', 'S'], tot = { H: 0, OFF: 0, S: 0 }, lines = [];
+    var sections = rptGroups(d.staff, function(s) { return s.dept; }).map(function(g) {
+      var rows = g.rows.map(function(s) {
+        var cnt = { H: [], OFF: [], S: [] };
+        var cells = days.map(function(dd) { var m = d.marks[s.id + '|' + dd] || ''; if (m) { cnt[m].push(dd); tot[m]++; } return m === 'OFF' ? 'O' : m; });
+        var bits = ['H', 'OFF', 'S'].filter(function(t) { return cnt[t].length; }).map(function(t) { return HOL_LBL[t] + ' ' + holRanges_(cnt[t]); });
+        if (bits.length) lines.push(s.name + ': ' + bits.join('; '));
+        return [s.name].concat(cells).concat([cnt.H.length || '', cnt.OFF.length || '', cnt.S.length || '']);
+      });
+      return { title: g.name, head: ['Staff'].concat(days.map(function(dd) { return DL[holDow_(c.y, c.m, dd)] + '\n' + dd; })).concat(['H', 'Off', 'Sick']), rows: rows,
+        center: days.map(function(_, i) { return i + 1; }).concat([days.length + 1, days.length + 2, days.length + 3]), widths: { 0: 30 }, fontSize: 7.2, pad: { top: 1.6, bottom: 1.6, left: 0.6, right: 0.6 },
+        cellHook: function(cc) {
+          var ix = cc.column.index;
+          if (ix >= 1 && ix <= days.length) {
+            var w = holDow_(c.y, c.m, ix);
+            if ((w === 0 || w === 6) && cc.section === 'body') cc.cell.styles.fillColor = RC.we;
+            if (cc.section === 'head') cc.cell.styles.fontSize = 6;
+            var v = cc.cell.raw;
+            if (cc.section === 'body' && v) {
+              var k = v === 'O' ? 'OFF' : v;
+              cc.cell.styles.fillColor = RC[k]; cc.cell.styles.textColor = RC[k + 'txt']; cc.cell.styles.fontStyle = 'bold';
+            }
+          }
+          if (cc.column.index === 0 && cc.section === 'body') cc.cell.styles.cellPadding = { top: 1.6, bottom: 1.6, left: 2, right: 1 };
+        } };
+    });
+    return { file: 'Holidays ' + label, text: 'Holidays, days off and sick — ' + label + '\n\n' + (lines.join('\n') || 'Nothing logged'),
+      spec: { title: 'Holiday Calendar', subtitle: label + '  ·  H = holiday, O = day off, S = sick', orientation: 'landscape',
+        chips: [{ l: label, v: (tot.H + tot.OFF + tot.S) + ' days' }, { l: 'Holiday', v: tot.H }, { l: 'Day off', v: tot.OFF }, { l: 'Sick', v: tot.S }], sections: sections } };
+  },
+  tips: function() {
+    var d = window.tipsData; if (!d) throw new Error('Load Tips first.');
+    var wk = dmy(d.days[0]) + ' – ' + dmy(d.days[6]);
+    var totH = (d.dailyTotalHours || []).reduce(function(a, h) { return a + (Number(h) || 0); }, 0);
+    var rows = d.staff.map(function(s) {
+      return [s.name + (s.tipWeight !== 1 ? ' (×' + s.tipWeight + ')' : '')].concat(s.hours.map(function(h, i) { return h > 0 ? money(s.tips[i]) + '\n' + hrs(h) + 'h' : '–'; })).concat([money(s.weekTips)]);
+    });
+    var sec = { title: 'Distribution', sub: 'FOH, by hours worked', head: ['Staff'].concat(d.days.map(function(x, i) { return DAYS[i].slice(0, 3) + ' ' + dmy(x).slice(0, 5); })).concat(['Week']), rows: rows,
+      foot: ['Tip pool'].concat(d.dailyPool.map(function(p) { return p ? money(p) : '–'; })).concat([money(d.weekTotalPool)]),
+      center: [1, 2, 3, 4, 5, 6, 7], right: [8], widths: { 0: 42 },
+      cellHook: function(c) { if (c.section === 'body' && c.column.index === 8) c.cell.styles.fontStyle = 'bold'; } };
+    return { file: 'Tips ' + wk, text: 'Weekly tips ' + wk + '\n\n' + d.staff.map(function(s) { return s.name + ': ' + money(s.weekTips); }).join('\n') + '\n\nPool: ' + money(d.weekTotalPool),
+      spec: { title: 'Weekly Tip Distribution', subtitle: 'Week ' + wk, orientation: 'landscape',
+        chips: [{ l: 'Tip pool', v: money(d.weekTotalPool) }, { l: 'Distributed', v: money(d.weekTotalTipsDistributed || 0) }, { l: 'FOH hours', v: hrs(totH) + ' h' }, { l: 'Per hour', v: totH ? money(d.weekTotalPool / totH) : '–' }],
+        sections: [sec] } };
+  }
+};
+
+// ---------- share sheet ----------
+var RPT_CUR = null;
+function rptOpen(kind) {
+  var r;
+  try { r = REPORTS[kind](); } catch (e) { toast(e.message); return; }
+  if (kind !== 'monthEnd' && kind !== 'holidays' && kind !== 'tips' && typeof ppDirty !== 'undefined' && Object.keys(ppDirty).length) toast('Note: unsaved changes are included — press SAVE CHANGES too.');
+  RPT_CUR = { r: r, blob: null };
+  document.getElementById('rptTitle').textContent = r.spec.title;
+  document.getElementById('rptSub').textContent = r.spec.subtitle || '';
+  document.getElementById('rptText').value = r.text;
+  document.getElementById('rptMsg').textContent = '';
+  document.getElementById('rptNative').style.display = (navigator.share && navigator.canShare) ? '' : 'none';
+  document.getElementById('rptModal').classList.add('open');
+}
+function rptClose() { document.getElementById('rptModal').classList.remove('open'); }
+async function rptPdf() {
+  if (RPT_CUR.blob) return RPT_CUR.blob;
+  document.getElementById('rptMsg').textContent = 'Creating PDF…';
+  await rptLoadLibs();
+  var doc = rptBuild(RPT_CUR.r.spec);
+  RPT_CUR.doc = doc;
+  RPT_CUR.blob = doc.output('blob');
+  document.getElementById('rptMsg').textContent = '';
+  return RPT_CUR.blob;
+}
+function rptFileName() { return RPT_CUR.r.file.replace(/[\\/:*?"<>|]+/g, '-') + '.pdf'; }
+function rptDownload(blob) {
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = rptFileName();
+  document.body.appendChild(a); a.click(); setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+async function rptDo(action) {
+  try {
+    var blob = await rptPdf();
+    var text = document.getElementById('rptText').value;
+    if (action === 'print') {
+      var doc = rptBuild(RPT_CUR.r.spec); doc.autoPrint();
+      var w = window.open(doc.output('bloburl'), '_blank');
+      if (!w) rptDownload(blob);
+    } else if (action === 'download') {
+      rptDownload(blob);
+    } else if (action === 'native') {
+      var file = new File([blob], rptFileName(), { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: RPT_CUR.r.spec.title, text: text });
+      else await navigator.share({ title: RPT_CUR.r.spec.title, text: text });
+    } else if (action === 'whatsapp') {
+      var f2 = new File([blob], rptFileName(), { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [f2] }) && /iPad|iPhone|Android|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document) {
+        await navigator.share({ files: [f2], text: text });   // phone / iPad: pick WhatsApp, the PDF goes with it
+      } else {
+        rptDownload(blob);
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+        document.getElementById('rptMsg').textContent = 'The PDF was downloaded — attach it in WhatsApp (📎) if you want to send the file too.';
+      }
+    } else if (action === 'email') {
+      rptDownload(blob);
+      location.href = 'mailto:?subject=' + encodeURIComponent(RPT_CUR.r.spec.title + ' — ' + (RPT_CUR.r.spec.subtitle || '').split('  ')[0]) + '&body=' + encodeURIComponent(text + '\n\n(PDF attached)');
+      document.getElementById('rptMsg').textContent = 'The PDF was downloaded — attach it to the email.';
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    document.getElementById('rptMsg').textContent = (e && e.message) || String(e);
+  }
+}
+(function() {
+  var m = document.createElement('div');
+  m.id = 'rptModal'; m.className = 'rpt-bg no-print';
+  m.innerHTML = '<div class="rpt-box">' +
+    '<div class="rpt-top"><div><div class="rpt-t" id="rptTitle"></div><div class="rpt-s" id="rptSub"></div></div><button type="button" class="ibtn" onclick="rptClose()" title="Close">' + IC.x + '</button></div>' +
+    '<div class="rpt-grid">' +
+      '<button type="button" class="rpt-b" onclick="rptDo(\'print\')"><span>🖨️</span>Print</button>' +
+      '<button type="button" class="rpt-b" onclick="rptDo(\'download\')"><span>⬇️</span>Download PDF</button>' +
+      '<button type="button" class="rpt-b wa" onclick="rptDo(\'whatsapp\')"><span>💬</span>WhatsApp</button>' +
+      '<button type="button" class="rpt-b" onclick="rptDo(\'email\')"><span>✉️</span>Email</button>' +
+      '<button type="button" class="rpt-b wide" id="rptNative" onclick="rptDo(\'native\')"><span>📤</span>Share… (other apps, with the PDF)</button>' +
+    '</div>' +
+    '<label style="margin-top:14px;display:block">Message text (WhatsApp / email)</label>' +
+    '<textarea id="rptText" rows="6" style="width:100%;border:1px solid #E3D8CB;border-radius:10px;padding:10px;font:inherit;font-size:13px;background:#FFFDFa"></textarea>' +
+    '<div class="hint" id="rptMsg" style="min-height:18px;margin-top:6px;color:#6D1B2F;font-weight:600"></div>' +
+    '<div class="hint" style="margin:0">On iPad / phone, WhatsApp gets the PDF itself. On a computer the PDF is downloaded and WhatsApp/email opens with the message — attach the file with 📎.</div>' +
+    '</div>';
+  document.body.appendChild(m);
+  m.addEventListener('click', function(e) { if (e.target === m) rptClose(); });
+})();
 
 // ============================================================
 // INIT
