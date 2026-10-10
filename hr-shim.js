@@ -99,7 +99,7 @@
       t: 'advances_log', header: ['Date', 'StaffID', 'Amount', 'Note'],
       toRow: function (r) { return [s2d(r.advance_date), r.staff_id, pounds(r.amount_pence), r.notes || '']; },
       toDb: function (v) { return { advance_date: dateOrNull(v[0]), staff_id: sid(v[1]), amount_pence: pence(v[2]), notes: String(v[3] || '') || null }; },
-      extraIns: function () { return { method: 'CASH', source: 'HR', paid_by: ME ? ME.name : 'HR' }; }
+      extraIns: function () { return { method: 'CASH', source: 'HR', paid_by: ME ? ME.name : 'HR', paid_from: window.HR_ADV_FROM || null }; }
     },
     PayPeriod_Manual_Log: {
       t: 'pay_period_manual_log', header: ['PeriodKey', 'StaffID', 'WeekIndex', 'Value'],

@@ -1161,6 +1161,7 @@
         <div><label>Date</label><input type="date" id="advDate"></div>
         <div><label>Staff</label><select id="advStaff"></select></div>
         <div><label>Amount (£)</label><input type="number" id="advAmount" step="0.01"></div>
+        <div><label>Paid from</label><select id="advFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="OWNER">Saruhan</option><option value="TILL">Today's till</option></select></div>
         <div style="flex:1"><label>Note</label><input type="text" id="advNotes"></div>
       </div>
       <button class="btn" onclick="submitAdvanceForm()">SAVE</button>
@@ -5310,6 +5311,19 @@ async function rrApply() {
     if (gridHelp) gridHelp.style.display = mode === 'grid' ? '' : 'none';
     tabs.querySelector('details.howto').style.display = (mode === 'view') ? 'none' : '';
     if (mode === 'view' && !document.getElementById('viewEntriesWrap').querySelector('table')) loadHoursEntries();
+  };
+})();
+
+
+// v2.11 — Add Advance: where the cash comes from (only "Cash List" takes it off the cash list)
+(function() {
+  var _sub = submitAdvanceForm;
+  submitAdvanceForm = function() {
+    var f = document.getElementById('advFrom');
+    if (f && !f.value) { toast('Choose where the cash comes from (Cash List / Saruhan / Today\'s till).'); f.focus(); return; }
+    window.HR_ADV_FROM = f ? f.value : null;
+    _sub();
+    setTimeout(function() { if (f) f.value = ''; }, 300);
   };
 })();
 

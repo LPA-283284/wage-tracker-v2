@@ -297,6 +297,9 @@
   .rq-meta { display:flex; flex-wrap:wrap; gap:6px 12px; font-size:12px; color:#8A7D74; margin-top:5px; align-items:center; }
   .chip { background:#FBF1E0; color:#6D1B2F; font-weight:700; padding:2px 9px; border-radius:999px; }
   .due { font-weight:700; color:#9C4B00; } .due.od { color:#C62828; }
+  .from-hint { display:block; color:#8A7D74; font-size:11.5px; margin-top:4px; }
+  .tag.from-cashlist { background:#FBE7D0; color:#9C4B00; } .tag.from-owner { background:#F4E4E8; color:#6E1A2F; } .tag.from-till { background:#E6EEF8; color:#0B3A9A; }
+  #pmFromWrap { margin-top:10px; }
   .side-urole { text-transform:none; letter-spacing:.02em; font-size:11.5px; }
   @media (max-width:640px) { .pill-input { width:100%; } .seg { flex-wrap:wrap; } .pg-tools { width:100%; } .vform .two { grid-template-columns:1fr; } }
     /* ===== v2.9 — headings & amounts in Playfair Display, like the phone app ===== */
@@ -454,7 +457,8 @@
           <h2>Give an advance</h2>
           <div class="vform">
             <div><label>Person</label><select id="advPerson"></select></div>
-            <div class="two"><div><label>Amount (£)</label><input id="advAmount" type="number" step="0.01" min="0"></div><div><label>Method</label><select id="advMethod"><option>CASH</option><option>BANK</option></select></div></div>
+            <div class="two"><div><label>Amount (£)</label><input id="advAmount" type="number" step="0.01" min="0"></div><div><label>Method</label><select id="advMethod" onchange="$('advFromWrap').classList.toggle('hidden', this.value !== 'CASH')"><option>CASH</option><option>BANK</option></select></div></div>
+            <div id="advFromWrap"><label>Paid from</label><select id="advFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="OWNER">Saruhan</option><option value="TILL">Today's till</option></select><small class="from-hint">Only "Cash List" takes the money off the cash list.</small></div>
             <div><label>Given by</label><input id="advBy"></div>
             <div><label>Note</label><input id="advNote"></div>
             <button class="btn" onclick="startAdvance()">Sign &amp; save</button>
@@ -644,7 +648,8 @@
     </div>
     <div class="row">
       <div><label>Amount (£)</label><input id="pmAmount" type="number" step="0.01" min="0"></div>
-      <div id="pmMethodWrap"><label>Method</label><select id="pmMethod"><option>CASH</option><option>BANK</option></select></div>
+      <div id="pmMethodWrap"><label>Method</label><select id="pmMethod" onchange="pmFromToggle()"><option>CASH</option><option>BANK</option></select></div>
+      <div id="pmFromWrap"><label>Paid from</label><select id="pmFrom"><option value="">Choose…</option><option value="CASHLIST">Cash List</option><option value="OWNER">Saruhan</option><option value="TILL">Today's till</option></select></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div><label>Paid by</label><input id="pmBy"></div>
@@ -907,7 +912,7 @@ function fillPeople() {
 
 async function loadWageHistory() {
   if (!$('whFrom').value) { const d = new Date(); $('whFrom').value = monthStr(d) + '-01'; $('whTo').value = today(); }
-  let q = sb.from('payments').select('id,date,person,method,amount,paid_by,note,archived,created_at').eq('is_deleted', false).order('date', { ascending:false }).order('created_at', { ascending:false }).limit(1000);
+  let q = sb.from('payments').select('id,date,person,method,amount,paid_by,note,archived,created_at,paid_from').eq('is_deleted', false).order('date', { ascending:false }).order('created_at', { ascending:false }).limit(1000);
   if ($('whFrom').value) q = q.gte('date', $('whFrom').value);
   if ($('whTo').value) q = q.lte('date', $('whTo').value);
   if ($('whPerson').value.trim()) q = q.ilike('person', '%' + $('whPerson').value.trim() + '%');
@@ -917,7 +922,7 @@ async function loadWageHistory() {
   const bank = data.filter(r => r.method === 'BANK').reduce((a,r) => a + Number(r.amount), 0);
   $('whSum').textContent = `${data.length} payments · Cash ${gbp(cash)} · Bank ${gbp(bank)} · Total ${gbp(cash + bank)}`;
   $('whTable').innerHTML = `<tr><th>Date</th><th>Person</th><th>Method</th><th class="num">Amount</th><th>Paid by</th><th>Note</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
-    data.map(r => `<tr><td>${dmy(r.date)}</td><td>${esc(r.person)}</td><td>${r.method === 'BANK' ? '<span class="bank">BANK</span>' : 'CASH'}</td>
+    data.map(r => `<tr><td>${dmy(r.date)}</td><td>${esc(r.person)}</td><td>${r.method === 'BANK' ? '<span class="bank">BANK</span>' : 'CASH' + fromTag(r.paid_from)}</td>
       <td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
       ${isAdmin() ? `<td class="num"><button class="btn danger small" onclick="softDelete('${r.id}','payment')">Delete</button></td>` : ''}</tr>`).join('');
 }
@@ -961,7 +966,7 @@ function openPay(i) {
   $('pmName').textContent = p.person;
   $('pmDue').textContent = 'Due: ' + gbp(p.cash_due);
   $('pmAmount').value = p.cash_due > 0 ? Number(p.cash_due).toFixed(2) : '';
-  $('pmBy').value = ME.name; $('pmNote').value = ''; $('pmMethod').value = 'CASH';
+  $('pmBy').value = ME.name; $('pmNote').value = ''; $('pmMethod').value = 'CASH'; $('pmFrom').value = ''; pmFromToggle();
   setMsg('pmMsg', '');
   $('pmSeg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.k === 'payment'));
   $('pmMethodWrap').classList.remove('hidden');
@@ -970,12 +975,14 @@ function openPay(i) {
 $('pmSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
   PAY.kind = b.dataset.k;
   $('pmSeg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
-  $('pmMethodWrap').classList.toggle('hidden', PAY.kind === 'debt');
+  $('pmMethodWrap').classList.toggle('hidden', PAY.kind === 'debt'); pmFromToggle();
 });
 function startPayment() {
   const amount = Number($('pmAmount').value);
   if (!(amount > 0)) return setMsg('pmMsg', 'Enter a valid amount');
-  const rec = { kind: PAY.kind, person: PAY.person, amount, method: PAY.kind === 'debt' ? 'CASH' : $('pmMethod').value, paid_by: $('pmBy').value.trim() || ME.name, note: $('pmNote').value.trim() };
+  const method = PAY.kind === 'debt' ? 'CASH' : $('pmMethod').value;
+  if (PAY.kind !== 'debt' && method === 'CASH' && !$('pmFrom').value) return setMsg('pmMsg', 'Choose where the cash comes from');
+  const rec = { kind: PAY.kind, person: PAY.person, amount, method, paid_from: (PAY.kind !== 'debt' && method === 'CASH') ? $('pmFrom').value : null, paid_by: $('pmBy').value.trim() || ME.name, note: $('pmNote').value.trim() };
   closeModal('payModal');
   askSignature(rec, () => { loadWages(); });
 }
@@ -983,8 +990,9 @@ function startAdvance() {
   const amount = Number($('advAmount').value);
   if (!$('advPerson').value) return setMsg('advMsg', 'Choose a person');
   if (!(amount > 0)) return setMsg('advMsg', 'Enter a valid amount');
-  const rec = { kind: 'advance', person: $('advPerson').value, amount, method: $('advMethod').value, paid_by: $('advBy').value.trim() || ME.name, note: $('advNote').value.trim() };
-  askSignature(rec, () => { $('advAmount').value = ''; $('advNote').value = ''; setMsg('advMsg', '✅ Advance saved with signature', true); loadAdvances(); });
+  if ($('advMethod').value === 'CASH' && !$('advFrom').value) return setMsg('advMsg', 'Choose where the cash comes from');
+  const rec = { kind: 'advance', person: $('advPerson').value, amount, method: $('advMethod').value, paid_from: $('advMethod').value === 'CASH' ? $('advFrom').value : null, paid_by: $('advBy').value.trim() || ME.name, note: $('advNote').value.trim() };
+  askSignature(rec, () => { $('advAmount').value = ''; $('advNote').value = ''; $('advFrom').value = ''; setMsg('advMsg', '✅ Advance saved with signature', true); loadAdvances(); });
 }
 
 // Signature pad
@@ -1007,8 +1015,8 @@ function askSignature(rec, done) {
     const id = crypto.randomUUID();
     const base = { id, date: today(), person: rec.person, amount: rec.amount, paid_by: rec.paid_by, note: rec.note || (rec.kind === 'debt' ? 'Debt collected' : '') };
     let res;
-    if (rec.kind === 'payment') res = await sb.from('payments').insert({ ...base, method: rec.method });
-    else if (rec.kind === 'advance') res = await sb.from('advances').insert({ ...base, method: rec.method });
+    if (rec.kind === 'payment') res = await sb.from('payments').insert({ ...base, method: rec.method, paid_from: rec.paid_from });
+    else if (rec.kind === 'advance') res = await sb.from('advances').insert({ ...base, method: rec.method, paid_from: rec.paid_from });
     else res = await sb.from('debt_collections').insert(base);
     if (res.error) { $('sigOk').disabled = false; return setMsg('sigMsg', res.error.message); }
     const sig = await sb.from('signatures').insert({
@@ -1025,13 +1033,13 @@ async function loadAdvances() {
   if (!SUMMARY) { const { data } = await sb.rpc('wage_summary'); if (data?.ok) { SUMMARY = data; fillPeople(); } }
   $('advBy').value = $('advBy').value || ME.name;
   if (!can('wages_view')) { $('advTable').innerHTML = '<tr><td class="muted">You can give advances; history needs “wages_view”.</td></tr>'; return; }
-  const { data, error } = await sb.from('advances').select('id,date,person,method,amount,paid_by,note,settled_at,settled_by').eq('is_deleted', false).order('date', { ascending:false }).limit(500);
+  const { data, error } = await sb.from('advances').select('id,date,person,method,amount,paid_by,note,settled_at,settled_by,paid_from').eq('is_deleted', false).order('date', { ascending:false }).limit(500);
   if (error) { $('advTable').innerHTML = `<tr><td class="neg">${esc(error.message)}</td></tr>`; return; }
   const rows = [...data].sort((a, b) => (!!a.settled_at - !!b.settled_at) || (a.date < b.date ? 1 : -1));
   const open = rows.filter(r => !r.settled_at);
   $('advSum').textContent = open.length ? `${open.length} open · ${gbp(open.reduce((a, r) => a + Number(r.amount), 0))}` : 'All advances are done';
   $('advTable').innerHTML = `<tr><th>Date</th><th>Person</th><th>Method</th><th class="num">Amount</th><th>Given by</th><th>Note</th><th>Status</th>${isAdmin() ? '<th></th>' : ''}</tr>` +
-    rows.map(r => `<tr class="${r.settled_at ? 'zero' : ''}"><td>${dmy(r.date)}</td><td><b>${esc(r.person)}</b></td><td>${esc(r.method)}</td><td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
+    rows.map(r => `<tr class="${r.settled_at ? 'zero' : ''}"><td>${dmy(r.date)}</td><td><b>${esc(r.person)}</b></td><td>${esc(r.method)}${fromTag(r.paid_from)}</td><td class="num">${gbp(r.amount)}</td><td>${esc(r.paid_by)}</td><td class="muted">${esc(r.note)}</td>
       <td style="white-space:nowrap">${r.settled_at
         ? `<span class="pos" style="font-weight:700">✓ Done ${dmy(String(r.settled_at).slice(0,10))}</span>${r.settled_by ? ' <small class="muted">· ' + esc(r.settled_by) + '</small>' : ''} <button class="btn ghost small" onclick="settleAdv('${r.id}',false)">Undo</button>`
         : `<button class="btn small" onclick="settleAdv('${r.id}',true)">✓ Done</button>`}</td>
@@ -1352,6 +1360,9 @@ async function settleAdv(id, done) {
   loadAdvances();
 }
 
+const FROM_LBL = { CASHLIST: 'Cash List', OWNER: 'Saruhan', TILL: "Today's till" };
+function fromTag(f) { return f ? ` <span class="tag from-${f.toLowerCase()}">${FROM_LBL[f] || f}</span>` : ''; }
+function pmFromToggle() { $('pmFromWrap').classList.toggle('hidden', !PAY || PAY.kind === 'debt' || $('pmMethod').value !== 'CASH'); }
 function filterRows(tableId, q) {
   q = String(q || '').trim().toLowerCase();
   $(tableId).querySelectorAll('tr').forEach(tr => { if (tr.querySelector('th')) return; tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none'; });
