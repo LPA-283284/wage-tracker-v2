@@ -447,6 +447,60 @@
     #hoursTotalsBox { background:linear-gradient(135deg,#7A1430,#4A0817); border-radius:14px; border:1px solid rgba(231,196,138,.4); }
     .hol-cell { border-color:#F0E6DA; }
     @media (max-width: 1100px) { main { padding:14px; } .pg-head { margin-right:0; } .pg-title { font-size:22px; } }
+
+    /* ===== layout fixes after the left sidebar (v2.6) ===== */
+    .pg-head { flex-wrap:wrap; align-items:center; }
+    .pg-head > div:first-child { min-width:0; }
+    .bell-wrap { position:absolute; }                       /* scrolls with the page — no longer floats over tables */
+    @media (max-width:1100px) { .bell-wrap { position:fixed; } }
+    #holidaysGridWrap table { table-layout:auto; width:100%; }
+    #holidaysGridWrap th { white-space:nowrap; word-break:normal; text-transform:none; letter-spacing:0; font-size:11.5px; padding:8px 6px; }
+    #ppReportWrap td:nth-child(2), #ppReportWrap td:nth-child(3) { white-space:nowrap; }
+    #staffMgmtTableWrap td { padding:8px 5px; }
+    #staffMgmtTableWrap input[type=text] { width:130px; }
+    #staffMgmtTableWrap input[type=number] { width:64px; padding:8px 6px; }
+    #staffMgmtTableWrap input[type=date] { width:132px; padding:8px 6px; }
+    #staffMgmtTableWrap select { padding:8px 6px; }
+    /* sticky entry footer: SUBMIT + live total stay visible, never over the rows */
+    .entry-foot { position:sticky; bottom:0; z-index:15; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+                  background:#fff; margin:14px -22px -20px; padding:12px 22px; border-top:1px solid #F0E6DA;
+                  border-radius:0 0 16px 16px; box-shadow:0 -8px 16px rgba(78,15,32,.05), 0 14px 0 0 #fff; }
+    .entry-foot .btn { margin:0; }
+    .entry-foot .hint { margin:0 !important; }
+    .entry-foot #hoursTotalsBox { position:static; margin-left:auto; box-shadow:none; padding:8px 14px; text-align:right; }
+    /* period picker pill in the page header */
+    .pg-tools { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .period { display:inline-flex; align-items:center; background:#fff; border:1px solid #E6D6C2; border-radius:999px; padding:4px;
+              box-shadow:0 4px 14px rgba(78,15,32,.08); }
+    .period button { width:34px; height:34px; border-radius:50%; border:0; background:transparent; color:#6D1B2F; font-size:20px; line-height:1;
+                     cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+    .period button:hover { background:#FBF1E0; }
+    .period select, .period input { border:0 !important; background:transparent !important; box-shadow:none !important; font-weight:700; color:#4A0817;
+                     font-size:15px; padding:6px 4px !important; font-family:inherit; cursor:pointer; }
+    .period select { -webkit-appearance:none; appearance:none; text-align:center; text-align-last:center; padding-right:2px !important; }
+    .period input[type=number] { width:58px !important; text-align:center; -moz-appearance:textfield; }
+    .period input[type=number]::-webkit-inner-spin-button, .period input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    .period input[type=date] { width:auto; }
+    .period .sep { width:1px; height:20px; background:#EADFCF; margin:0 2px; }
+    .period select:hover, .period input:hover { color:#7A1430; }
+    .tool-btn { display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 16px; border-radius:999px; border:1px solid #E6D6C2; background:#fff;
+                color:#6D1B2F; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(78,15,32,.08); font-family:inherit; }
+    .tool-btn:hover { background:#FFF8EE; }
+    .tool-chip { display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 14px; border-radius:999px; border:1px solid #E6D6C2; background:#fff;
+                 color:#8A7D74; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; box-shadow:0 4px 14px rgba(78,15,32,.08); }
+    .tool-chip input { border:0 !important; background:transparent !important; box-shadow:none !important; width:52px !important; font-size:15px; font-weight:700;
+                       color:#4A0817; padding:4px 2px !important; text-align:right; -moz-appearance:textfield; }
+    .tool-chip input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+    .pg-period { display:inline-flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .pg-period span { background:#FBF1E0; color:#6D1B2F; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:700; }
+    .pg-period span.alt { background:#F1EEEA; color:#6F625A; font-weight:600; }
+    @media (max-width:640px) {
+      .pg-tools { width:100%; } .period { flex:1; justify-content:space-between; }
+      .period select, .period input { width:auto !important; font-size:16px; }
+      .entry-foot { margin:12px -12px -12px; padding:10px 12px; border-radius:0 0 8px 8px; }
+      .entry-foot .btn { width:auto; }
+    }
+    @media print { .pg-tools, .entry-foot .btn { display:none !important; } .entry-foot { position:static; box-shadow:none; } }
   </style>
 </head>
 <body>
@@ -3599,6 +3653,134 @@ monthly: 'Month by month performance and cost exclusions',
     h.innerHTML = '<div><div class="pg-title">' + esc(nav.textContent.trim()) + '</div><div class="pg-sub">' + esc(SUB[k]) + '</div></div>';
     v.insertBefore(h, v.firstChild);
   });
+})();
+
+
+// ---- v2.6: period pickers live in the page header (‹ Month Year ›) ----
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function head(k) { return document.querySelector('#view-' + k + ' > .pg-head'); }
+  function tools(h) {
+    var t = h.querySelector(':scope > .pg-tools');
+    if (!t) { t = document.createElement('div'); t.className = 'pg-tools no-print'; h.appendChild(t); }
+    return t;
+  }
+  function arrow(txt, title, fn) {
+    var b = document.createElement('button'); b.type = 'button'; b.innerHTML = txt; b.title = title; b.setAttribute('aria-label', title);
+    b.addEventListener('click', fn); return b;
+  }
+  // remove the old "<div><label>…</label><input></div>" wrapper, then any row/card left empty
+  function cleanup(el) {
+    var wrap = el && el.parentNode; if (!wrap) return;
+    var row = wrap.parentNode; wrap.parentNode.removeChild(wrap);
+    if (row && row.classList && row.classList.contains('row') && !row.children.length) {
+      var card = row.parentNode; row.parentNode.removeChild(row);
+      if (card && card.classList.contains('card') && !card.children.length) card.parentNode.removeChild(card);
+    }
+  }
+  function pill(monthId, yearId) {
+    var m = monthId ? $(monthId) : null, y = $(yearId);
+    var p = document.createElement('div'); p.className = 'period';
+    function step(d) {
+      if (m) {
+        var mm = Number(m.value) + d, yy = Number(y.value);
+        if (mm < 1) { mm = 12; yy--; } if (mm > 12) { mm = 1; yy++; }
+        y.value = yy; m.value = mm; m.dispatchEvent(new Event('change'));   // one change = one reload
+      } else { y.value = Number(y.value) + d; y.dispatchEvent(new Event('change')); }
+    }
+    var wm = m && m.parentNode, wy = y.parentNode;
+    p.appendChild(arrow('&#8249;', m ? 'Previous month' : 'Previous year', function () { step(-1); }));
+    if (m) { p.appendChild(m); m.style.width = ''; }
+    p.appendChild(y); y.style.width = '';
+    p.appendChild(arrow('&#8250;', m ? 'Next month' : 'Next year', function () { step(1); }));
+    if (m) cleanup({ parentNode: wm }); cleanup({ parentNode: wy });
+    return p;
+  }
+  function printBtn() {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tool-btn';
+    b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print';
+    b.onclick = function () { window.print(); }; return b;
+  }
+  function moveHint(fromCard, toCard) {
+    if (!fromCard || !toCard) return;
+    Array.prototype.slice.call(fromCard.querySelectorAll('p.hint')).forEach(function (p) { toCard.insertBefore(p, toCard.firstChild); });
+  }
+  try {
+    // Monthly Summary — year only
+    tools(head('monthly')).appendChild(pill(null, 'monthlyYear'));
+
+    // Hours Report — month + year; the small intro card folds into the table card
+    tools(head('staffsummary')).appendChild(pill('sumMonth', 'sumYear'));
+    var srCard = $('summaryTableWrap').parentNode, introCard = srCard.previousElementSibling;
+    if (introCard && introCard.classList.contains('card') && !introCard.querySelector('input,select')) {
+      moveHint(introCard, srCard); introCard.parentNode.removeChild(introCard);
+      var sh2 = document.createElement('h2'); sh2.textContent = 'Hours per person'; srCard.insertBefore(sh2, srCard.firstChild);
+    }
+
+    // Staff Hours — month + year, period dates as chips under the title
+    var ppLab = $('ppPeriodLabel'), ppCard = ppLab.parentNode, hp = head('payperiod');
+    tools(hp).appendChild(pill('ppMonth', 'ppYear'));
+    var chips = document.createElement('div'); chips.className = 'pg-period';
+    hp.firstElementChild.appendChild(chips);
+    ppLab.style.display = 'none'; hp.firstElementChild.appendChild(ppLab);
+    if (ppCard && ppCard.classList.contains('card') && !ppCard.children.length) ppCard.parentNode.removeChild(ppCard);
+    new MutationObserver(function () {
+      var parts = ppLab.textContent.split('|');
+      chips.innerHTML = parts.map(function (t, i) {
+        t = t.trim().replace(/^Preview \(auto from Hours\):/, 'Preview:');
+        return t ? '<span class="' + (i ? 'alt' : '') + '">' + esc(t) + '</span>' : '';
+      }).join('');
+    }).observe(ppLab, { childList: true, characterData: true, subtree: true });
+
+    // Holidays — month + year + Print
+    var holGridCard = $('holidaysGridWrap').parentNode;
+    var holOldPrint = holGridCard.querySelector('.row button');
+    var ht = tools(head('holidays'));
+    ht.appendChild(pill('holMonth', 'holYear'));
+    if (holOldPrint) { var hr = holOldPrint.parentNode; hr.parentNode.removeChild(hr); }
+    ht.appendChild(printBtn());
+
+    // Cash List — month + year (ledger card gets a title)
+    var cashCard = $('cashListWrap').parentNode;
+    tools(head('cashlist')).appendChild(pill('cashMonth', 'cashYear'));
+    if (!cashCard.querySelector('h2')) { var h2 = document.createElement('h2'); h2.textContent = 'Ledger'; cashCard.insertBefore(h2, cashCard.firstChild); }
+
+    // Tips — ‹ week › + Print
+    var tw = $('tipsWeekStart'), twCard = tw.closest('.card'), tipsCard = $('tipsTableWrap').parentNode;
+    var tp = document.createElement('div'); tp.className = 'period'; tp.title = 'Week starting (Monday)';
+    tp.appendChild(arrow('&#8249;', 'Previous week', function () { shiftTipsWeek(-7); }));
+    tp.appendChild(tw);
+    tp.appendChild(arrow('&#8250;', 'Next week', function () { shiftTipsWeek(7); }));
+    var tt = tools(head('tips')); tt.appendChild(tp); tt.appendChild(printBtn());
+    moveHint(twCard, tipsCard);
+    var th2 = document.createElement('h2'); th2.className = 'no-print'; th2.textContent = 'Weekly distribution'; tipsCard.insertBefore(th2, tipsCard.firstChild);
+    twCard.parentNode.removeChild(twCard);
+
+    // Dashboard › Year in detail — ‹ year › + target chip
+    var dy = $('dashYear'), dt = $('dashTarget'), yh = $('dashYearSec').querySelector('.pg-head'), oldRow = dy.closest('.row');
+    var dtools = document.createElement('div'); dtools.className = 'pg-tools no-print';
+    dtools.appendChild(pill(null, 'dashYear'));
+    var chip = document.createElement('label'); chip.className = 'tool-chip'; chip.title = 'Staff cost target';
+    chip.appendChild(document.createTextNode('Target'));
+    chip.appendChild(dt); dt.style.width = ''; chip.appendChild(document.createTextNode('%'));
+    dtools.appendChild(chip);
+    if (oldRow && oldRow.parentNode) oldRow.parentNode.removeChild(oldRow);
+    yh.appendChild(dtools);
+  } catch (e) { console.error('period pickers', e); }
+
+  // Hours entry: SUBMIT + live total in one sticky footer under the table
+  [['dailySubmitBtn', 'dailySubmitDateHint'], ['submitBtn', 'weeklySubmitDateHint']].forEach(function (ids) {
+    var b = $(ids[0]), h = $(ids[1]); if (!b) return;
+    var f = document.createElement('div'); f.className = 'entry-foot';
+    b.parentNode.insertBefore(f, b); f.appendChild(b); if (h) f.appendChild(h);
+  });
+  var _uhtv = updateHoursTotalsVisibility;
+  updateHoursTotalsVisibility = function () {
+    var box = $('hoursTotalsBox');
+    var foot = $(hoursMode === 'weekly' ? 'submitBtn' : 'dailySubmitBtn').parentNode;
+    if (box.parentNode !== foot) foot.appendChild(box);
+    _uhtv();
+  };
 })();
 
 // ============================================================

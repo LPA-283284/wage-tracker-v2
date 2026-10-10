@@ -141,6 +141,13 @@
   .msg.ok { color:var(--pos); } .msg.err { color:var(--neg); }
 
   /* KPI tiles */
+  .pbar { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-bottom:14px; }
+  .pbar-l { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#8A7D74; }
+  .period { display:inline-flex; align-items:center; background:#fff; border:1px solid #E6D6C2; border-radius:999px; padding:4px; box-shadow:0 4px 14px rgba(78,15,32,.08); }
+  .period button { width:34px; height:34px; border-radius:50%; border:0; background:transparent; color:#6D1B2F; font-size:20px; line-height:1; cursor:pointer; padding:0; }
+  .period button:hover { background:#FBF1E0; }
+  .period input { width:auto; border:0; background:transparent; box-shadow:none; font-weight:700; color:#4A0817; font-size:15px; padding:6px 4px; text-align:center; font-family:inherit; }
+  .period input:focus { outline:none; box-shadow:none; }
   .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:16px; }
   .kpi { background:var(--card); border-radius:14px; padding:16px; text-align:center; box-shadow:0 2px 10px rgba(78,15,32,.06); }
   .kpi .l { font-size:12px; color:var(--ink-soft); }
@@ -393,13 +400,12 @@
 
     <!-- CASH -->
     <section class="page" id="page-cash">
+      <div class="pbar"><div class="period">
+        <button type="button" title="Previous month" onclick="shiftMonth('cashMonth',-1);loadCash()">&#8249;</button>
+        <input type="month" id="cashMonth" onchange="loadCash()">
+        <button type="button" title="Next month" onclick="shiftMonth('cashMonth',1);loadCash()">&#8250;</button>
+      </div></div>
       <div class="kpis" id="cashKpis"></div>
-      <div class="card">
-        <div class="row">
-          <div><label>Month</label><input type="month" id="cashMonth"></div>
-          <div style="flex:0;min-width:auto"><button class="btn" onclick="loadCash()">Show</button></div>
-        </div>
-      </div>
       <div class="card">
         <h3 id="cashFormTitle">Add entry</h3>
         <div class="row">
@@ -425,9 +431,11 @@
       <div class="card">
         <h2>New Month Wages</h2>
         <div class="muted" style="margin-bottom:12px">Enter each person's wage for the new month and press Submit. The current month is closed and archived; any unpaid balance appears as a separate “- Geçen ay” line in Staff Status.</div>
-        <div class="row" style="margin-bottom:12px">
-          <div style="max-width:220px"><label>Month</label><input type="month" id="payMonth"></div>
-        </div>
+        <div class="pbar" style="justify-content:flex-start;margin-bottom:14px"><span class="pbar-l">Wages for</span><div class="period">
+          <button type="button" title="Previous month" onclick="shiftMonth('payMonth',-1)">&#8249;</button>
+          <input type="month" id="payMonth">
+          <button type="button" title="Next month" onclick="shiftMonth('payMonth',1)">&#8250;</button>
+        </div></div>
         <div class="scroll"><table id="payTable"></table></div>
         <div class="row" style="margin-top:12px">
           <div><label>Add staff to the list</label><input id="newStaffName" placeholder="Name"></div>
@@ -987,6 +995,11 @@ async function saveDeposit() {
 }
 
 // ═════════════ CASH LIST ═════════════
+function shiftMonth(id, d) {
+  const el = $(id); let [y, m] = (el.value || monthStr(new Date())).split('-').map(Number);
+  m += d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+  el.value = y + '-' + String(m).padStart(2, '0');
+}
 let CASH_EDIT = null;
 async function loadCash() {
   if (!$('cashMonth').value) $('cashMonth').value = monthStr(new Date());
