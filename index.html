@@ -31,6 +31,45 @@
   #appView { padding-left:252px; }
   /* v3.0 one site: HR pages run in a frame next to the App pages */
   .bell-panel .al-btn { flex:none; align-self:flex-start; border:1px solid #E6D6C3; background:#fff; color:#7A5C43; border-radius:999px; padding:3px 10px; font-size:11.5px; cursor:pointer; }
+  /* ---- End of Day ---- */
+  .bk-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+  .bk-grid input.bk-n { text-align:right; font-variant-numeric:tabular-nums; }
+  .bk-grid input.bad { border-color:#C0392B; box-shadow:0 0 0 3px rgba(192,57,43,.12); }
+  .bk-grid.bk-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  @media (max-width:640px) { .bk-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  #page-banking .card + .card { margin-top:16px; }
+  #page-banking > .card { margin-top:18px; }
+  .bk-calc { margin-top:14px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; background:#FBF1E0; border-radius:12px; padding:10px 14px; color:#6D1B2F; }
+  .bk-calc b { font-family:'Playfair Display',serif; font-size:22px; } .bk-calc small { color:#9A7B5F; font-size:11.5px; }
+  .bk-auto { font-size:11.5px; color:#7A5C43; margin-top:4px; line-height:1.35; }
+  .bk-auto a { color:var(--wine); font-weight:700; cursor:pointer; text-decoration:underline; }
+  .bk-side { position:sticky; top:18px; }
+  .bk-sum .bk-row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px dashed #EEE2D3; font-size:13.5px; }
+  .bk-sum .bk-row b { font-variant-numeric:tabular-nums; }
+  .bk-sum .bk-row.big { font-size:15px; } .bk-sum .bk-row.big b { font-family:'Playfair Display',serif; font-size:20px; color:var(--wine); }
+  .bk-diff { margin:10px 0; border-radius:12px; padding:12px 14px; font-weight:700; font-size:15px; text-align:center; background:#F3F0EA; color:#555; }
+  .bk-diff.ok { background:#E7F4EA; color:#1E6B34; } .bk-diff.short { background:#FBE6E3; color:#A3261A; } .bk-diff.over { background:#FFF4D6; color:#8A6100; }
+  .bk-state { font-size:12px; font-weight:700; border-radius:999px; padding:4px 10px; background:#F3F0EA; color:#6B5B4C; }
+  .bk-state.saved { background:#E7F4EA; color:#1E6B34; }
+  .bk-banner { border-radius:14px; padding:12px 16px; margin-bottom:16px; font-size:13.5px; line-height:1.45; }
+  .bk-banner.trial { background:#FFF4D6; color:#6B4E00; border:1px solid #F1DFA6; }
+  .bk-banner.drift { background:#FBE6E3; color:#7A1E14; border:1px solid #F0C4BD; } .bk-banner a { color:inherit; font-weight:700; text-decoration:underline; cursor:pointer; }
+  .bk-deplist { margin-top:12px; overflow-x:auto; }
+  table.bk-dep { width:100%; border-collapse:collapse; font-size:12.5px; } table.bk-dep th { text-align:left; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:#8A6A4F; padding:6px; background:#FBF1E0; }
+  table.bk-dep td { padding:7px 6px; border-bottom:1px solid #F1E7DA; vertical-align:top; } table.bk-dep .num { text-align:right; }
+  .bk-k { display:inline-block; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:700; } .bk-k.in { background:#E7F4EA; color:#1E6B34; } .bk-k.used { background:#EEF2FB; color:#2A4A8A; } .bk-k.refund { background:#FBE6E3; color:#A3261A; }
+  .bk-banner.live { background:#E7F4EA; color:#1E6B34; border:1px solid #BFE3C8; }
+  .bk-cmp { margin-top:12px; border:1px solid #EEE2D3; border-radius:12px; padding:10px 12px; font-size:12.5px; }
+  .bk-cmp .t { font-weight:700; color:#6D1B2F; margin-bottom:6px; }
+  .bk-cmp .r { display:flex; justify-content:space-between; padding:3px 0; } .bk-cmp .y { color:#1E6B34; font-weight:700; } .bk-cmp .n { color:#A3261A; font-weight:700; }
+  .bk-photos { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .bk-photos a, .bk-photos span { font-size:12px; background:#FBF1E0; color:#6D1B2F; border-radius:999px; padding:4px 10px; text-decoration:none; }
+  #page-banking input:disabled, #page-banking textarea:disabled { background:#F7F2EB; color:#3A2A20; }
+  #bkTable tr.click { cursor:pointer; } #bkTable tr.click:hover td { background:#FBF6EF; }
+  .bk-pos { color:#8A6100; font-weight:700; } .bk-neg { color:#A3261A; font-weight:700; } .bk-zero { color:#1E6B34; font-weight:700; }
+  .nowrap { white-space:nowrap; }
+  table.ac-t { font-size:12px; } table.ac-t th, table.ac-t td { white-space:nowrap; padding:7px 9px; } table.ac-t td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  table.ac-t td.wrap { white-space:pre-line; min-width:180px; max-width:260px; } table.ac-t tr.tot td { font-weight:700; background:#FBF1E0; }
   #page-hr { display:none; }
   body.hr-on #page-hr { display:block; }
   body.hr-on #appView > .wrap, body.hr-on #bellWrap { display:none !important; }
@@ -498,7 +537,7 @@
         <div class="scroll"><table id="depTable"></table></div>
       </div>
       <div id="deposits-used" class="card hidden">
-        <h2>Used deposits <span class="muted" style="font-weight:400;font-size:13px">kept as proof</span></h2>
+        <h2>Used &amp; refunded deposits <span class="muted" style="font-weight:400;font-size:13px">kept as proof</span></h2>
         <div class="scroll"><table id="depUsedTable"></table></div>
       </div>
       <div id="deposits-add" class="card hidden" style="max-width:760px">
@@ -514,6 +553,120 @@
         </div>
         <button class="btn" style="margin-top:16px" onclick="saveDeposit()">Save deposit</button>
         <div class="msg" id="depMsg"></div>
+      </div>
+    </section>
+
+    <!-- END OF DAY (LPA Banking inside TeamOS) -->
+    <section class="page" id="page-banking">
+      <div class="pg-head">
+        <div><div class="pg-title">End of Day</div><div class="pg-sub">Daily banking — Z report, cards, cash and the envelope</div></div>
+        <div class="pg-tools"><div class="period">
+          <button type="button" title="Previous day" onclick="bkShift(-1)">&#8249;</button>
+          <input type="date" id="bkDate" onchange="bkLoad()">
+          <button type="button" title="Next day" onclick="bkShift(1)">&#8250;</button>
+        </div></div>
+      </div>
+      <div id="bkBanner"></div>
+      <div id="bkDrift"></div>
+      <div class="side-grid bk-grid-wrap">
+        <div>
+          <div class="card">
+            <div class="list-head"><h2 style="margin:0">Z report</h2><span class="bk-state" id="bkState"></span></div>
+            <div class="bk-grid">
+              <div><label>Z Number *</label><input id="bk_z" autocomplete="off"><div class="bk-auto" id="bkZHint"></div></div>
+              <div><label>Gross (£)</label><input class="bk-n" data-k="gross"></div>
+              <div><label>Net (£)</label><input class="bk-n" data-k="net"></div>
+              <div><label>Service Charge (£)</label><input class="bk-n" data-k="service_charge"></div>
+              <div><label>Discount (£)</label><input class="bk-n" data-k="discount"></div>
+              <div><label>Complimentary (£)</label><input class="bk-n" data-k="complimentary"></div>
+              <div><label>Staff Food (£)</label><input class="bk-n" data-k="staff_food"></div>
+            </div>
+            <div class="bk-calc">Taken In <b id="bkTakenIn">£0.00</b><small>Gross − Discount − Complimentary − Staff food</small></div>
+          </div>
+          <div class="card">
+            <h2>Cards &amp; online</h2>
+            <div class="bk-grid">
+              <div><label>CC 1 (£)</label><input class="bk-n" data-k="cc1"></div>
+              <div><label>CC 2 (£)</label><input class="bk-n" data-k="cc2"></div>
+              <div><label>CC 3 (£)</label><input class="bk-n" data-k="cc3"></div>
+              <div><label>Amex 1 (£)</label><input class="bk-n" data-k="amex1"></div>
+              <div><label>Amex 2 (£)</label><input class="bk-n" data-k="amex2"></div>
+              <div><label>Amex 3 (£)</label><input class="bk-n" data-k="amex3"></div>
+              <div><label>Voucher (£)</label><input class="bk-n" data-k="voucher"></div>
+              <div><label>Deliveroo (£)</label><input class="bk-n" data-k="deliveroo"></div>
+              <div><label>Uber Eats (£)</label><input class="bk-n" data-k="ubereats"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Cash out &amp; deposits</h2>
+            <div class="bk-grid bk-2">
+              <div><label>Advance &amp; Cash Wages (£)</label><input class="bk-n" data-k="advance_cash_wages"><div class="bk-auto" id="bkAutoAdv"></div></div>
+              <div><label>Petty Cash (£)</label><input class="bk-n" data-k="petty_cash"></div>
+              <div><label>Deposit ( − ) used today (£)</label><input class="bk-n" data-k="deposit_minus"><div class="bk-auto" id="bkAutoDepMinus"></div></div>
+              <div><label>Deposit ( + ) taken today (£)</label><input class="bk-n" data-k="deposit_plus"><div class="bk-auto" id="bkAutoDepPlus"></div></div>
+            </div>
+            <div id="bkDepList" class="bk-deplist"></div>
+            <div class="vform" style="margin-top:12px">
+              <div><label>Deposit details (name, date, in / out)</label><textarea id="bk_depnote" rows="2"></textarea></div>
+              <div><label>Petty cash / advance details</label><textarea id="bk_pettynote" rows="2"></textarea></div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Cash &amp; envelope</h2>
+            <div class="bk-grid">
+              <div><label>Float (£)</label><input class="bk-n" data-k="float"></div>
+              <div><label>Cash Tips (£)</label><input class="bk-n" data-k="cash_tips"></div>
+              <div><label>Cash In Hand (£)</label><input class="bk-n" data-k="cash_in_hand"></div>
+            </div>
+            <div class="vform" style="margin-top:12px">
+              <div><label>Receipts / photos (max 10)</label><input type="file" id="bkFiles" multiple accept="image/*,application/pdf"><div id="bkPhotos" class="bk-photos"></div></div>
+              <div><label>Manager *</label><input id="bk_manager"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bk-side">
+          <div class="card bk-sum">
+            <h2>Summary</h2>
+            <div class="bk-row"><span>Taken In</span><b id="bkS_taken">£0.00</b></div>
+            <div class="bk-row"><span>− Cards, online, vouchers</span><b id="bkS_cards">£0.00</b></div>
+            <div class="bk-row"><span>− Cash out &amp; deposits used</span><b id="bkS_out">£0.00</b></div>
+            <div class="bk-row"><span>+ Service charge &amp; deposits taken</span><b id="bkS_add">£0.00</b></div>
+            <div class="bk-row big"><span>Till balance (should be in cash)</span><b id="bkS_till">£0.00</b></div>
+            <div class="bk-row"><span>Cash In Hand</span><b id="bkS_cih">£0.00</b></div>
+            <div class="bk-diff" id="bkS_diff">Difference £0.00</div>
+            <div class="bk-row"><span>Cash in envelope (cash + cash tips)</span><b id="bkS_env">£0.00</b></div>
+            <div class="bk-row"><span>Tips today (service charge + cash)</span><b id="bkS_tips">£0.00</b></div>
+            <div id="bkCompare"></div>
+            <button class="btn" id="bkSave" style="width:100%;margin-top:14px" onclick="bkSubmit()">Submit end of day</button>
+            <button class="btn ghost hidden" id="bkEdit" style="width:100%;margin-top:8px" onclick="bkStartEdit()">Edit this day</button>
+            <button class="btn ghost hidden" id="bkShare" style="width:100%;margin-top:8px" onclick="bkShareDay()">Share summary</button>
+            <div class="msg" id="bkMsg"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-head"><h2 style="margin:0">Recent days</h2><span class="muted" style="font-size:12px">Tap a day to open it</span></div>
+        <div class="scroll"><table id="bkTable"></table></div>
+      </div>
+    </section>
+
+    <!-- ACCOUNTANT (read-only Banking, same columns as the LPA Banking sheet) -->
+    <section class="page" id="page-accountant">
+      <div class="pg-head">
+        <div><div class="pg-title">Banking for the accountant</div><div class="pg-sub">Read-only · same columns and order as the LPA Banking sheet</div></div>
+        <div class="pg-tools">
+          <div class="period">
+            <button type="button" title="Previous month" onclick="shiftMonth('acMonth',-1);acLoad()">&#8249;</button>
+            <input type="month" id="acMonth" onchange="acLoad()">
+            <button type="button" title="Next month" onclick="shiftMonth('acMonth',1);acLoad()">&#8250;</button>
+          </div>
+          <button class="btn" onclick="acExcel()">Download Excel</button>
+        </div>
+      </div>
+      <div class="kpis" id="acKpis"></div>
+      <div class="card">
+        <div class="scroll"><table id="acTable" class="ac-t"></table></div>
+        <div class="muted" style="font-size:12px;margin-top:10px">Photo links open for 7 days after the page or file is made. Every time this page is opened it is recorded.</div>
       </div>
     </section>
 
@@ -610,6 +763,25 @@
 
   </div>
   <section id="page-hr"><iframe id="hrFrame" title="TeamOS HR"></iframe></section>
+</div>
+
+<!-- Refund deposit modal -->
+<div class="modal-bg" id="refundModal">
+  <div class="modal" style="max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <h2 style="margin:0">Refund deposit</h2>
+      <button class="btn ghost small" onclick="closeModal('refundModal')">✕</button>
+    </div>
+    <div class="muted" id="rfWho" style="margin:6px 0 12px"></div>
+    <div class="vform">
+      <div class="two"><div><label>Amount (£)</label><input id="rfAmount" inputmode="decimal"></div><div><label>Date</label><input type="date" id="rfDate"></div></div>
+      <div><label>Refunded by</label><select id="rfMethod"><option value="">Choose…</option><option value="CASH">Cash (from the till)</option><option value="CC">Card (back to the card)</option><option value="BANK">Bank transfer</option></select>
+        <small class="from-hint">Cash and card refunds are taken off that day's End of Day. Bank refunds are not.</small></div>
+      <div><label>Reason</label><input id="rfReason" placeholder="e.g. booking cancelled"></div>
+      <button class="btn" onclick="depRefundSave()">Save refund</button>
+      <div class="msg" id="rfMsg"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Share deposit modal -->
@@ -866,13 +1038,17 @@ const PAGES = [
   { key:'hr:revenue',      group:'Money',    label:'Take-in',          show:isHR },
   { key:'hr:tips',         group:'Money',    label:'Tips',             show:isHR },
   { key:'hr:cashlist',     group:'Money',    label:'Cash List',        show:isHR },
+  { key:'banking',  group:'Money',    label:'End of Day', show:() => can('banking') || isHR() },
   { key:'deposits', group:'Money',    label:'Deposits',  show:() => can('deposits_view') },
+  { key:'accountant', group:'Money',  label:'Accountant', show:() => can('accountant') || isHR() },
   { key:'hr:staff',        group:'People',   label:'Staff Management', show:isHR },
   { key:'hr:requests',     group:'People',   label:'Requests',         show:isHR },
   { key:'requests', group:'People',   label:'Requests',  show:() => !isHR() && can('requests_add') },
   { key:'users',    group:'Settings', label:'Users',     show:() => isAdmin() },
 ];
 const NAV_ICONS = {"dashboard": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "wages": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1\"/><path d=\"M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4\"/></svg>", "advances": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><path d=\"M2 10h20\"/></svg>", "payroll": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M12 14v4M10 16h4\"/></svg>", "cash": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "deposits": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><path d=\"M12 11h4M12 16h4M8 11h.01M8 16h.01\"/></svg>", "users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>", "requests": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></svg>", "hr": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg>"};
+NAV_ICONS.accountant = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M8 13h8M8 17h8M8 9h2"/></svg>';
+NAV_ICONS.banking = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10M19 21V10M9 21v-6h6v6M2 10l10-7 10 7"/></svg>';
 Object.assign(NAV_ICONS, {"hr:home": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg>", "hr:monthly": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"M18 17V9M13 17V5M8 17v-3\"/></svg>", "hr:hours": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></svg>", "hr:staffsummary": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8\"/></svg>", "hr:payperiod": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01\"/></svg>", "hr:holidays": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></svg>", "hr:revenue": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 7l-8.5 8.5-5-5L2 17\"/><path d=\"M16 7h6v6\"/></svg>", "hr:tips": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"8\" r=\"6\"/><path d=\"M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82\"/></svg>", "hr:cashlist": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"12\" x=\"2\" y=\"6\" rx=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M6 12h.01M18 12h.01\"/></svg>", "hr:staff": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M10 15H6a4 4 0 0 0-4 4v2\"/><circle cx=\"18\" cy=\"16\" r=\"3\"/><path d=\"M18 11.5v1.5M18 19v1.5M22.5 16H21M15 16h-1.5\"/></svg>", "hr:requests": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></svg>", "hr:users": "<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\"/></svg>"});
 function buildTabs() {
   const tabs = $('tabs'); tabs.innerHTML = '';
@@ -923,8 +1099,256 @@ function showPage(key) {
   if (key.startsWith('hr:')) { showHr(key.slice(3)); window.scrollTo(0, 0); return; }
   HR_ON = false; document.body.classList.remove('hr-on');
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + key));
-  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, cash: loadCash, payroll: loadPayroll, requests: loadReqs, users: () => TeamOSUsers.load() })[key]?.();
+  ({ dashboard: loadDashboard, wages: loadWages, advances: loadAdvances, deposits: loadDeposits, banking: bkInit, accountant: acInit, cash: loadCash, payroll: loadPayroll, requests: loadReqs, users: () => TeamOSUsers.load() })[key]?.();
 }
+
+// ═════════════ END OF DAY (LPA Banking inside TeamOS) ═════════════
+// Same sums as the old Streamlit form. Saving goes through one checked database
+// function (banking_submit) — no master key anywhere in the browser.
+const BK_KEYS = ['gross','net','service_charge','discount','complimentary','staff_food','cc1','cc2','cc3','amex1','amex2','amex3','voucher','advance_cash_wages','deposit_minus','deliveroo','ubereats','petty_cash','deposit_plus','float','cash_tips','cash_in_hand'];
+let BK = { pre: null, existing: null, editing: false, photos: [], inited: false };
+const bkLocalDate = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const bkGbp = p => gbp((Number(p) || 0) / 100);
+function bkParse(v) {           // '12,5' -> 1250 pence ; '' -> 0 ; bad -> null
+  v = String(v ?? '').trim().replace(/£/g, '').replace(/\s/g, '');
+  if (!v) return 0;
+  if (/^\d+,\d{1,2}$/.test(v)) v = v.replace(',', '.'); else v = v.replace(/,/g, '');
+  if (!/^\d+(\.\d{0,2})?$/.test(v)) return null;
+  return Math.round(parseFloat(v) * 100);
+}
+const bkInp = k => document.querySelector('#page-banking .bk-n[data-k="' + k + '"]');
+function bkAmounts() {
+  const a = {}; let bad = false;
+  BK_KEYS.forEach(k => { const el = bkInp(k); const p = bkParse(el.value); el.classList.toggle('bad', p === null); if (p === null) bad = true; else a[k] = p; });
+  return bad ? null : a;
+}
+function bkRecalc() {
+  const a = {}; BK_KEYS.forEach(k => { const p = bkParse(bkInp(k).value); bkInp(k).classList.toggle('bad', p === null); a[k] = p || 0; });
+  const taken = a.gross - (a.discount + a.complimentary + a.staff_food);
+  const cards = a.cc1 + a.cc2 + a.cc3 + a.amex1 + a.amex2 + a.amex3 + a.voucher + a.deliveroo + a.ubereats;
+  const out = a.deposit_minus + a.advance_cash_wages + a.petty_cash;
+  const add = a.deposit_plus + a.service_charge;
+  const till = taken - cards - out + add, diff = a.cash_in_hand - till;
+  $('bkTakenIn').textContent = bkGbp(taken); $('bkS_taken').textContent = bkGbp(taken);
+  $('bkS_cards').textContent = bkGbp(cards); $('bkS_out').textContent = bkGbp(out); $('bkS_add').textContent = bkGbp(add);
+  $('bkS_till').textContent = bkGbp(till); $('bkS_cih').textContent = bkGbp(a.cash_in_hand);
+  $('bkS_env').textContent = bkGbp(a.cash_in_hand + a.cash_tips); $('bkS_tips').textContent = bkGbp(a.service_charge + a.cash_tips);
+  const d = $('bkS_diff'), hasCash = a.cash_in_hand > 0 || till !== 0;
+  d.className = 'bk-diff' + (!hasCash ? '' : Math.abs(diff) < 1 ? ' ok' : diff < 0 ? ' short' : ' over');
+  d.textContent = !hasCash ? 'Difference £0.00' : Math.abs(diff) < 1 ? '✓ Till balances' : (diff < 0 ? 'Short by ' : 'Over by ') + bkGbp(Math.abs(diff));
+  bkCompare(a, taken);
+  return { a, taken, till, diff };
+}
+function bkCompare(a, taken) {
+  const p = BK.pre; const box = $('bkCompare');
+  if (!p || p.live || !p.streamlit || (p.streamlit.source || '') === 'TEAMOS') { box.innerHTML = ''; return; }
+  const row = (l, mine, theirs) => `<div class="r"><span>${l}</span><span>${bkGbp(mine)} · old ${theirs == null ? '–' : bkGbp(theirs)} <span class="${theirs != null && Math.abs(mine - theirs) < 1 ? 'y' : 'n'}">${theirs != null && Math.abs(mine - theirs) < 1 ? '✓' : '≠'}</span></span></div>`;
+  box.innerHTML = `<div class="bk-cmp"><div class="t">Check against the old LPA Banking (same day)</div>${row('Taken In', taken, p.streamlit.taken_in)}${row('Service charge', a.service_charge, p.streamlit.service_charge)}${row('Cash tips', a.cash_tips, p.streamlit_tips)}${row('Cash in hand', a.cash_in_hand, p.streamlit_cash)}</div>`;
+}
+function bkSetDisabled(on) {
+  document.querySelectorAll('#page-banking .bk-n, #bk_z, #bk_depnote, #bk_pettynote, #bk_manager, #bkFiles').forEach(el => el.disabled = on);
+}
+function bkAutoLine(id, items, key, label) {
+  const el = $(id); if (!items || !items.length) { el.innerHTML = ''; return; }
+  const sum = items.reduce((s, x) => s + (Number(x.pence) || 0), 0);
+  el.innerHTML = 'From TeamOS: ' + items.map(x => esc((x.kind ? x.kind + ' ' : '') + (x.person || x.name || '')) + ' ' + bkGbp(x.pence)).join(' · ') +
+    (BK.existing && !BK.editing ? '' : ` — <a onclick="bkUse('${key}',${sum})">use ${bkGbp(sum)}</a>`);
+}
+const BK_M = { CASH: 'cash', CC: 'card', BANK: 'bank' };
+function bkDepLines(dep) {
+  const l = x => `${x.name} (${dmy(x.res_date)}${x.covers ? ', ' + x.covers + ' covers' : ''}) ${bkGbp(x.pence)} ${BK_M[x.method] || x.method || ''}`;
+  return [...(dep.in || []).map(x => 'IN ' + l(x)), ...(dep.out || []).map(x => (x.kind === 'REFUND' ? 'REFUND ' : 'OUT ') + l(x) + (x.reason ? ' – ' + x.reason : '')),
+          ...(dep.bank || []).map(x => (x.kind === 'REFUND' ? 'REFUND ' : 'IN ') + l(x) + ' – not in till')];
+}
+function bkRenderDeps(dep) {
+  const all = [...dep.in.map(x => ({ ...x, eff: '+' })), ...dep.out.map(x => ({ ...x, eff: '−' })), ...dep.bank.map(x => ({ ...x, eff: '' }))];
+  const box = $('bkDepList');
+  if (!all.length) { box.innerHTML = ''; return; }
+  const K = { IN: 'Taken', USED: 'Used', REFUND: 'Refund' };
+  box.innerHTML = '<table class="bk-dep"><tr><th></th><th>Customer</th><th>Booking</th><th>Taken</th><th>Paid</th><th class="num">£</th></tr>' + all.map(x =>
+    `<tr><td><span class="bk-k ${x.kind.toLowerCase()}">${K[x.kind] || x.kind}</span></td><td><b>${esc(x.name)}</b>${x.reason ? '<br><small class="muted">' + esc(x.reason) + '</small>' : ''}</td>` +
+    `<td class="nowrap">${dmy(x.res_date)}${x.covers ? ' · ' + x.covers + ' cov' : ''}</td><td class="nowrap">${x.taken_at ? dmy(x.taken_at) + ' ' + String(x.taken_at).slice(11, 16) : ''}${x.by ? '<br><small class="muted">' + esc(x.by) + '</small>' : ''}</td>` +
+    `<td>${BK_M[x.method] || esc(x.method || '')}</td><td class="num nowrap">${x.eff ? '<b>' + x.eff + '</b> ' : '<small class="muted">not in till</small> '}${bkGbp(x.pence)}</td></tr>`).join('') + '</table>';
+}
+function bkApplyDrift() {
+  const dep = BK.pre.deposits; bkStartEdit();
+  bkUse('deposit_plus', dep.in_pence); bkUse('deposit_minus', dep.out_pence);
+  $('bk_depnote').value = bkDepLines(dep).join('\n');
+  setMsg('bkMsg', 'Deposits updated — check the till and press Save changes.', true);
+}
+function bkUse(k, pence) { bkInp(k).value = (pence / 100).toFixed(2); bkRecalc(); }
+async function bkInit() {
+  if (!BK.inited) {
+    BK.inited = true; $('bkDate').value = bkLocalDate();
+    document.querySelectorAll('#page-banking .bk-n').forEach(el => { el.setAttribute('inputmode', 'decimal'); el.setAttribute('autocomplete', 'off'); el.addEventListener('input', bkRecalc); });
+    $('bkFiles').addEventListener('change', bkPickFiles);
+  }
+  bkLoad(); bkLoadList();
+}
+function bkShift(n) { const d = new Date($('bkDate').value + 'T12:00:00'); d.setDate(d.getDate() + n); if (bkLocalDate(d) > bkLocalDate()) return; $('bkDate').value = bkLocalDate(d); bkLoad(); }
+function bkClear() {
+  document.querySelectorAll('#page-banking .bk-n').forEach(el => { el.value = ''; el.classList.remove('bad'); });
+  ['bk_z', 'bk_depnote', 'bk_pettynote'].forEach(id => $(id).value = '');
+  bkInp('float').value = '75.00'; $('bk_manager').value = ME?.name || ''; $('bkFiles').value = ''; BK.photos = []; BK.newFiles = []; $('bkPhotos').innerHTML = '';
+}
+async function bkLoad() {
+  const date = $('bkDate').value; setMsg('bkMsg', '');
+  if (!date) return;
+  if (date > bkLocalDate()) { $('bkDate').value = bkLocalDate(); return bkLoad(); }
+  const { data, error } = await sb.rpc('banking_prefill', { p_date: date });
+  if (error || !data?.ok) { setMsg('bkMsg', error?.message || data?.error || 'Could not load'); return; }
+  BK.pre = data; BK.existing = data.existing; BK.editing = false;
+  $('bkBanner').innerHTML = data.live
+    ? '<div class="bk-banner live">✓ <b>TeamOS End of Day is the main system.</b> Submitting writes Take-in, Tips and the Cash List straight away.</div>'
+    : '<div class="bk-banner trial">🧪 <b>Trial run.</b> This is saved in TeamOS only — Take-in, Tips and Cash List still come from the old LPA Banking for now. Please fill in <b>both</b> for a while; the Summary box compares them.</div>';
+  bkClear();
+  const ex = data.existing;
+  if (ex) {
+    $('bk_z').value = ex.z_number || ''; $('bk_depnote').value = ex.deposit_details || ''; $('bk_pettynote').value = ex.petty_cash_note || ''; $('bk_manager').value = ex.manager || '';
+    BK_KEYS.forEach(k => { const v = ex.amounts?.[k]; bkInp(k).value = v ? (v / 100).toFixed(2) : ''; });
+    BK.photos = ex.photos || []; bkShowPhotos();
+    $('bkState').className = 'bk-state saved'; $('bkState').textContent = '✓ Saved by ' + (ex.created_by_name || '?') + (ex.updated_at ? ' · edited by ' + (ex.updated_by_name || '?') : '');
+  } else { $('bkState').className = 'bk-state'; $('bkState').textContent = 'Not entered yet'; }
+  bkSetDisabled(!!ex);
+  $('bkSave').classList.toggle('hidden', !!ex); $('bkSave').textContent = 'Submit end of day';
+  $('bkEdit').classList.toggle('hidden', !(ex && data.can_edit)); $('bkShare').classList.toggle('hidden', !ex);
+  bkAutoLine('bkAutoAdv', data.till_out, 'advance_cash_wages');
+  const dep = data.deposits || { in: [], out: [], bank: [], in_pence: 0, out_pence: 0 };
+  $('bkAutoDepPlus').innerHTML = dep.in.length ? 'From Deposits: ' + bkGbp(dep.in_pence) + (ex && !BK.editing ? '' : ` — <a onclick="bkUse('deposit_plus',${dep.in_pence})">use</a>`) : '';
+  $('bkAutoDepMinus').innerHTML = dep.out.length ? 'From Deposits: ' + bkGbp(dep.out_pence) + (ex && !BK.editing ? '' : ` — <a onclick="bkUse('deposit_minus',${dep.out_pence})">use</a>`) : '';
+  bkRenderDeps(dep);
+  // Z number: suggest last + 1 (can be changed)
+  $('bkZHint').textContent = data.last_z ? 'Last Z: ' + data.last_z + ' (' + dmy(data.last_z_date) + ')' : '';
+  if (!ex && data.last_z && /^\d+$/.test(String(data.last_z).trim())) $('bk_z').value = String(Number(data.last_z) + 1);
+  // deposits changed after the day was saved
+  const dr = data.deposit_drift;
+  $('bkDrift').innerHTML = dr ? `<div class="bk-banner drift">⚠️ <b>Deposits changed after this day was saved.</b> Deposit in: ${bkGbp(dr.in_was)} → <b>${bkGbp(dr.in_now)}</b> · Deposit out: ${bkGbp(dr.out_was)} → <b>${bkGbp(dr.out_now)}</b>.` +
+    (data.can_edit ? ` <a onclick="bkApplyDrift()">Update this day</a>` : ' Please tell an admin.') + '</div>' : '';
+  if (!ex) {   // new day: fill what TeamOS already knows
+    const sum = l => (l || []).reduce((s, x) => s + (Number(x.pence) || 0), 0);
+    if (sum(data.till_out)) bkUse('advance_cash_wages', sum(data.till_out));
+    if (dep.out_pence) bkUse('deposit_minus', dep.out_pence);
+    if (dep.in_pence) bkUse('deposit_plus', dep.in_pence);
+    const dl = bkDepLines(dep);
+    if (dl.length) $('bk_depnote').value = dl.join('\n');
+    const tl = (data.till_out || []).map(x => x.kind + ': ' + x.person + ' ' + bkGbp(x.pence));
+    if (tl.length) $('bk_pettynote').value = tl.join('\n');
+  }
+  bkRecalc();
+}
+function bkStartEdit() {
+  BK.editing = true; bkSetDisabled(false);
+  $('bkEdit').classList.add('hidden'); $('bkSave').classList.remove('hidden'); $('bkSave').textContent = 'Save changes';
+  setMsg('bkMsg', 'Editing — every change is kept in the history.', true);
+}
+function bkPickFiles() {
+  const f = [...$('bkFiles').files];
+  if (BK.photos.length + f.length > 10) { setMsg('bkMsg', 'Max 10 photos per day.'); $('bkFiles').value = ''; return; }
+  if (f.some(x => x.size > 15 * 1024 * 1024)) { setMsg('bkMsg', 'A file is bigger than 15 MB.'); $('bkFiles').value = ''; return; }
+  BK.newFiles = f; bkShowPhotos();
+}
+async function bkShowPhotos() {
+  const box = $('bkPhotos'); const paths = BK.photos || [];
+  let html = (BK.newFiles || []).map(f => `<span>📎 ${esc(f.name)}</span>`).join('');
+  if (paths.length) {
+    const { data } = await sb.storage.from('banking').createSignedUrls(paths, 3600);
+    html = (data || []).map((x, i) => `<a href="${esc(x.signedUrl || '#')}" target="_blank" rel="noopener">📷 Photo ${i + 1}</a>`).join('') + html;
+  }
+  box.innerHTML = html;
+}
+async function bkSubmit(confirmZ) {
+  const date = $('bkDate').value, a = bkAmounts();
+  if (!a) return setMsg('bkMsg', 'Some amounts are not valid numbers (marked in red).');
+  if (!$('bk_z').value.trim()) return setMsg('bkMsg', 'Please fill in the Z Number.');
+  if (!$('bk_manager').value.trim()) return setMsg('bkMsg', 'Please fill in the Manager.');
+  const c = bkRecalc();
+  if (c.taken < 0) return setMsg('bkMsg', 'Taken In cannot be negative — check Gross / Discount / Complimentary / Staff food.');
+  if (!confirmZ && !confirm(`Submit end of day for ${dmy(date)}?\n\nTaken In ${bkGbp(c.taken)}\nCash in hand ${bkGbp(a.cash_in_hand)}\n${Math.abs(c.diff) < 1 ? 'Till balances ✓' : (c.diff < 0 ? 'SHORT by ' : 'OVER by ') + bkGbp(Math.abs(c.diff))}`)) return;
+  const btn = $('bkSave'); btn.disabled = true; setMsg('bkMsg', 'Saving…', true);
+  try {
+    const photos = [...(BK.photos || [])];
+    for (const [i, f] of (BK.newFiles || []).entries()) {
+      const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg';
+      const path = `${date}/${Date.now()}-${i}.${ext}`;
+      const up = await sb.storage.from('banking').upload(path, f, { contentType: f.type || 'application/octet-stream' });
+      if (up.error) throw new Error('Photo upload failed: ' + up.error.message);
+      photos.push(path);
+    }
+    const { data, error } = await sb.rpc('banking_submit', { p_date: date, p_amounts: a, p_z: $('bk_z').value.trim(), p_manager: $('bk_manager').value.trim(),
+      p_deposit_details: $('bk_depnote').value, p_petty_note: $('bk_pettynote').value, p_photos: photos, p_update: !!BK.editing, p_confirm_z: !!confirmZ });
+    if (error) throw new Error(error.message);
+    if (!data?.ok) {
+      if (data?.code === 'z_dup' && confirm(data.error + '\n\nSave anyway?')) { btn.disabled = false; return bkSubmit(true); }
+      throw new Error(data?.error || 'Could not save');
+    }
+    BK.photos = photos; BK.newFiles = [];
+    await bkLoad(); bkLoadList();
+    setMsg('bkMsg', data.live ? '✓ Saved — Take-in, Tips and Cash List updated.' : '✓ Saved (trial run).', true);
+  } catch (e) { setMsg('bkMsg', e.message || String(e)); }
+  finally { btn.disabled = false; }
+}
+async function bkLoadList() {
+  const to = bkLocalDate(), f = new Date(); f.setDate(f.getDate() - 30);
+  const { data, error } = await sb.rpc('banking_list', { p_from: bkLocalDate(f), p_to: to });
+  const t = $('bkTable');
+  if (error || !data?.ok) { t.innerHTML = `<tr><td class="neg">${esc(error?.message || data?.error)}</td></tr>`; return; }
+  if (!data.rows.length) { t.innerHTML = '<tr><td class="muted">No days entered in TeamOS yet.</td></tr>'; return; }
+  const trial = !(BK.pre && BK.pre.live);
+  t.innerHTML = `<tr><th>Date</th><th>Z</th><th class="num">Taken in</th><th class="num">Till</th><th class="num">Cash in hand</th><th class="num">Difference</th>${trial ? '<th>Old system</th>' : ''}<th>By</th></tr>` +
+    data.rows.map(r => {
+      const d = r.difference, cls = Math.abs(d) < 100 ? 'bk-zero' : d < 0 ? 'bk-neg' : 'bk-pos';
+      const old = r.st_taken_in == null ? '<span class="muted">not entered</span>' : Math.abs(r.st_taken_in - r.taken_in) < 1 ? '<span class="bk-zero">✓ same</span>' : `<span class="bk-neg">≠ ${bkGbp(r.st_taken_in)}</span>`;
+      return `<tr class="click" onclick="$('bkDate').value='${r.date}';bkLoad();window.scrollTo({top:0,behavior:'smooth'})"><td class="nowrap"><b>${dmy(r.date)}</b></td><td>${esc(r.z)}</td><td class="num">${bkGbp(r.taken_in)}</td><td class="num">${bkGbp(r.till)}</td><td class="num">${bkGbp(r.cash_in_hand)}</td><td class="num ${cls}">${Math.abs(d) < 1 ? '✓' : (d > 0 ? '+' : '−') + bkGbp(Math.abs(d))}</td>${trial ? '<td>' + old + '</td>' : ''}<td>${esc(r.by || r.manager)}${r.photos ? ' · 📷' + r.photos : ''}</td></tr>`;
+    }).join('');
+}
+function bkShareDay() {
+  const c = bkRecalc(), a = c.a, date = $('bkDate').value;
+  const txt = [`LPA — End of Day ${dmy(date)}`, `Z: ${$('bk_z').value}`, `Taken In: ${bkGbp(c.taken)}`, `Service charge: ${bkGbp(a.service_charge)}`,
+    `Cards: ${bkGbp(a.cc1 + a.cc2 + a.cc3 + a.amex1 + a.amex2 + a.amex3)}`, `Till balance: ${bkGbp(c.till)}`, `Cash in hand: ${bkGbp(a.cash_in_hand)}`,
+    `Difference: ${Math.abs(c.diff) < 1 ? '✓ balances' : (c.diff < 0 ? '-' : '+') + bkGbp(Math.abs(c.diff))}`, `Cash tips: ${bkGbp(a.cash_tips)}`, `Envelope: ${bkGbp(a.cash_in_hand + a.cash_tips)}`, `Manager: ${$('bk_manager').value}`].join('\n');
+  if (navigator.share) navigator.share({ text: txt }).catch(() => {}); else window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
+// ═════════════ ACCOUNTANT (read-only) ═════════════
+let AC = null;
+const AC_TEXT = new Set([0, 1, 18, 21, 24, 25, 31]);   // columns that are words, not money
+function acInit() { if (!$('acMonth').value) $('acMonth').value = bkLocalDate().slice(0, 7); acLoad(); }
+async function acLoad() {
+  const m = $('acMonth').value; if (!m) return;
+  const [y, mo] = m.split('-').map(Number), last = new Date(y, mo, 0).getDate();
+  $('acTable').innerHTML = '<tr><td class="muted">Loading…</td></tr>';
+  const { data, error } = await sb.rpc('banking_accountant', { p_from: m + '-01', p_to: m + '-' + String(last).padStart(2, '0') });
+  if (error || !data?.ok) { $('acTable').innerHTML = `<tr><td class="neg">${esc(error?.message || data?.error)}</td></tr>`; return; }
+  const paths = data.rows.flatMap(r => r.photos || []);
+  const signed = {};
+  if (paths.length) { const { data: u } = await sb.storage.from('banking').createSignedUrls(paths, 604800); (u || []).forEach(x => signed[x.path] = x.signedUrl); }
+  AC = { header: data.header, rows: data.rows.map(r => [...r.row, ...[0, 1, 2, 3, 4, 5].map(i => (r.photos || [])[i] ? signed[r.photos[i]] || '' : '')]), month: m };
+  const col = i => AC.rows.reduce((a, r) => a + (Number(r[i]) || 0), 0);
+  $('acKpis').innerHTML = `<div class="kpi hero"><div class="l">Take-in · ${esc(m)}</div><div class="v">${gbp(col(8))}</div><div class="s">${AC.rows.length} days</div></div>
+    <div class="kpi"><div class="l">Cards + Amex</div><div class="v">${gbp(col(9) + col(10) + col(11) + col(12) + col(13) + col(14))}</div></div>
+    <div class="kpi"><div class="l">Cash in hand</div><div class="v">${gbp(col(28))}</div></div>
+    <div class="kpi"><div class="l">Difference</div><div class="v ${Math.abs(col(27)) >= 1 ? 'neg' : ''}">${gbp(col(27))}</div></div>`;
+  if (!AC.rows.length) { $('acTable').innerHTML = '<tr><td class="muted">No days for this month yet.</td></tr>'; return; }
+  const cell = (v, i) => i >= 32 ? `<td>${v ? `<a href="${esc(v)}" target="_blank" rel="noopener">📷 open</a>` : ''}</td>`
+    : AC_TEXT.has(i) ? `<td class="${i === 18 || i === 21 ? 'wrap' : ''}">${esc(v)}</td>` : `<td class="num">${v === '' || v == null ? '' : Number(v).toFixed(2)}</td>`;
+  $('acTable').innerHTML = '<tr>' + AC.header.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>' +
+    AC.rows.map(r => '<tr>' + r.map(cell).join('') + '</tr>').join('') +
+    '<tr class="tot">' + AC.header.map((h, i) => i === 0 ? '<td>Total</td>' : (AC_TEXT.has(i) || i >= 32 || i === 30) ? '<td></td>' : `<td class="num">${col(i).toFixed(2)}</td>`).join('') + '</tr>';
+}
+let xlsxP = null;
+function loadXlsx() {
+  if (window.XLSX) return Promise.resolve();
+  return xlsxP || (xlsxP = new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = ok; sc.onerror = () => { xlsxP = null; bad(new Error('Could not load the Excel tool')); }; document.head.appendChild(sc); }));
+}
+async function acExcel() {
+  if (!AC || !AC.rows.length) return alert('No days to download for this month.');
+  try { await loadXlsx(); } catch (e) { return alert(e.message); }
+  const ws = XLSX.utils.aoa_to_sheet([AC.header, ...AC.rows.map(r => r.map((v, i) => AC_TEXT.has(i) || i >= 32 ? v : (v === '' ? '' : Number(v))))]);
+  ws['!cols'] = AC.header.map((h, i) => ({ wch: i === 18 || i === 21 ? 40 : i >= 32 ? 14 : Math.max(10, h.length + 2) }));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'BANKING');
+  XLSX.writeFile(wb, 'LPA Banking ' + AC.month + '.xlsx');
+}
+
 function wireSeg(segId, prefix) {
   $(segId).querySelectorAll('button').forEach(b => b.onclick = () => {
     $(segId).querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
@@ -1109,7 +1533,7 @@ async function loadAdvances() {
 // ═════════════ DEPOSITS ═════════════
 async function loadDeposits() {
   if (!window.DEP_INIT) { window.DEP_INIT = true; if (can('deposits')) { $('depSeg').querySelector('[data-sub=add]').click(); return; } }
-  let q = sb.from('deposits').select('id,created_at,added_by,customer_name,res_date,covers,amount,method,note,image_url,image_path,used_at,used_by').eq('is_deleted', false).order('res_date', { ascending:true });
+  let q = sb.from('deposits').select('id,created_at,added_by,customer_name,res_date,covers,amount,method,note,image_url,image_path,used_at,used_by,refund_date,refund_pence,refund_method,refund_reason,refunded_by').eq('is_deleted', false).order('res_date', { ascending:true });
   if ($('depFrom').value) q = q.gte('res_date', $('depFrom').value);
   if ($('depTo').value) q = q.lte('res_date', $('depTo').value);
   const { data, error } = await q;
@@ -1119,7 +1543,7 @@ async function loadDeposits() {
   if (paths.length) { const { data: u } = await sb.storage.from('deposit-photos').createSignedUrls(paths, 3600); (u || []).forEach(x => signed[x.path] = x.signedUrl); }
   const METHOD = { CASH:'Cash', CC:'Card', BANK:'Bank' };
   window._deps = {}; data.forEach(d => { window._deps[d.id] = { ...d, img: d.image_path ? signed[d.image_path] : d.image_url }; });
-  const open = data.filter(d => !d.used_at), used = data.filter(d => d.used_at).sort((x, y) => x.used_at < y.used_at ? 1 : -1);
+  const open = data.filter(d => !d.used_at && !d.refund_date), used = data.filter(d => d.used_at || d.refund_date).sort((x, y) => (x.used_at || x.refund_date) < (y.used_at || y.refund_date) ? 1 : -1);
   const imgCell = d => { const img = d.image_path ? signed[d.image_path] : d.image_url; return img ? `<img class="thumb" src="${img}" onclick="showImg('${img}')">` : ''; };
   $('depSum').textContent = `${open.length} open deposits · ${gbp(open.reduce((a,d) => a + Number(d.amount), 0))} · ${open.reduce((a,d) => a + Number(d.covers), 0)} covers`;
   const td = today(), next = open.filter(d => d.res_date >= td)[0], wk = new Date(); wk.setDate(wk.getDate() + 7); const wkS = wk.toISOString().slice(0,10);
@@ -1133,12 +1557,12 @@ async function loadDeposits() {
   $('depTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Note</th><th>Photo</th><th></th></tr>` +
     (open.length ? open.map(d => `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${METHOD[d.method] || esc(d.method)}</td>
       <td>${esc(d.added_by)}</td><td class="muted">${esc(d.note)}</td><td>${imgCell(d)}</td>
-      <td class="num" style="white-space:nowrap"><button class="btn ghost small" onclick="depShare('${d.id}')">Share</button> ${can('deposits') ? `<button class="btn small" onclick="depUsed('${d.id}',true)">✓ Mark as used</button>` : ''}
+      <td class="num" style="white-space:nowrap"><button class="btn ghost small" onclick="depShare('${d.id}')">Share</button> ${can('deposits') ? `<button class="btn small" onclick="depUsed('${d.id}',true)">✓ Mark as used</button> <button class="btn ghost small" onclick="depRefundOpen('${d.id}')">↩ Refund</button>` : ''}
       ${isAdmin() ? ` <button class="btn danger small" onclick="delDeposit('${d.id}')">Delete</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="9" class="muted">No open deposits.</td></tr>');
   $('depUsedTable').innerHTML = `<tr><th>Reservation</th><th>Customer</th><th class="num">Covers</th><th class="num">Amount</th><th>Method</th><th>Added by</th><th>Used</th><th>Note</th><th>Photo</th><th></th></tr>` +
     (used.length ? used.map(d => `<tr><td>${dmy(d.res_date)}</td><td><b>${esc(d.customer_name)}</b></td><td class="num">${d.covers}</td><td class="num">${gbp(d.amount)}</td><td>${METHOD[d.method] || esc(d.method)}</td>
-      <td>${esc(d.added_by)}</td><td><span class="pos">✓ ${dmy(String(d.used_at).slice(0,10))}</span>${d.used_by ? ' · ' + esc(d.used_by) : ''}</td><td class="muted">${esc(d.note)}</td><td>${imgCell(d)}</td>
-      <td class="num" style="white-space:nowrap"><button class="btn ghost small" onclick="depShare('${d.id}')">Share</button>${isAdmin() ? ` <button class="btn ghost small" onclick="depUsed('${d.id}',false)">Undo</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="10" class="muted">No used deposits yet.</td></tr>');
+      <td>${esc(d.added_by)}</td><td>${d.refund_date ? `<span class="neg">↩ Refunded ${gbp(d.refund_pence / 100)} (${METHOD[d.refund_method] || d.refund_method}) ${dmy(d.refund_date)}</span>${d.refunded_by ? ' · ' + esc(d.refunded_by) : ''}${d.refund_reason ? '<br><small class="muted">' + esc(d.refund_reason) + '</small>' : ''}` : `<span class="pos">✓ ${dmy(String(d.used_at).slice(0,10))}</span>${d.used_by ? ' · ' + esc(d.used_by) : ''}`}</td><td class="muted">${esc(d.note)}</td><td>${imgCell(d)}</td>
+      <td class="num" style="white-space:nowrap"><button class="btn ghost small" onclick="depShare('${d.id}')">Share</button>${isAdmin() ? ` <button class="btn ghost small" onclick="${d.refund_date ? `depRefundUndo('${d.id}')` : `depUsed('${d.id}',false)`}">Undo</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="10" class="muted">No used or refunded deposits yet.</td></tr>');
 }
 function depText(d) {
   const M = { CASH:'Cash', CC:'Card', BANK:'Bank' };
@@ -1173,6 +1597,27 @@ async function depUsed(id, used) {
   if (used && !confirm('Mark this deposit as used? It moves to History.')) return;
   if (!used && !confirm('Move this deposit back to the open list?')) return;
   const { data, error } = await sb.rpc('mark_deposit_used', { p_id: id, p_used: used });
+  if (error || !data?.ok) return alert(error?.message || data?.error);
+  loadDeposits();
+}
+// v3.2: refunds — cash or card refunds are taken off that day's till in End of Day; bank refunds are not
+function depRefundOpen(id) {
+  const d = window._deps[id]; if (!d) return; window._refDep = d;
+  $('rfWho').textContent = d.customer_name + ' · ' + dmy(d.res_date) + ' · ' + gbp(d.amount);
+  $('rfAmount').value = Number(d.amount).toFixed(2); $('rfMethod').value = d.method === 'BANK' ? 'BANK' : (d.method || ''); $('rfDate').value = bkLocalDate(); $('rfReason').value = ''; setMsg('rfMsg', '');
+  openModal('refundModal');
+}
+async function depRefundSave() {
+  const d = window._refDep, amt = parseFloat(String($('rfAmount').value).replace(',', '.'));
+  if (!(amt > 0) || amt > Number(d.amount)) return setMsg('rfMsg', 'Amount must be between £0.01 and ' + gbp(d.amount));
+  if (!$('rfMethod').value) return setMsg('rfMsg', 'How was it refunded?');
+  const { data, error } = await sb.rpc('deposit_refund', { p_id: d.id, p_amount: amt, p_method: $('rfMethod').value, p_reason: $('rfReason').value, p_date: $('rfDate').value || null });
+  if (error || !data?.ok) return setMsg('rfMsg', error?.message || data?.error || 'Could not save');
+  closeModal('refundModal'); loadDeposits();
+}
+async function depRefundUndo(id) {
+  if (!confirm('Undo this refund? The deposit goes back to the open list.')) return;
+  const { data, error } = await sb.rpc('deposit_refund', { p_id: id, p_amount: null, p_method: null, p_reason: null, p_date: null, p_undo: true });
   if (error || !data?.ok) return alert(error?.message || data?.error);
   loadDeposits();
 }
@@ -1429,13 +1874,13 @@ function filterRows(tableId, q) {
 }
 // ===== TeamOS Users & Permissions (shared by TeamOS App and TeamOS HR) =====
 window.TeamOSUsers = (function () {
-  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'requests_add', 'requests', 'hr', 'notify_payments'];
+  var PERMS = ['wages_pay', 'wages_view', 'advance_add', 'deposits', 'deposits_view', 'cash', 'takein', 'signatures_view', 'payroll_entry', 'banking', 'accountant', 'requests_add', 'requests', 'hr', 'notify_payments'];
   var INFO = {
     wages_pay: ['Pay wages', 'Pay wages — sees only what is due'], wages_view: ['Wages view', 'All wage amounts, history and signatures'],
     advance_add: ['Give advance', 'Give advances only (cannot see the list)'], deposits: ['Deposits', 'Add deposits and see the list'],
     deposits_view: ['Deposits view', 'See deposits only'], cash: ['Cash', 'Cash list and cash in hand'], takein: ['Take-in', 'Take-in and staff cost %'],
     signatures_view: ['Signatures', 'See signatures only'], payroll_entry: ['New month', 'Enter new-month wages (accountant)'],
-    requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
+    banking: ['End of Day', 'Enter the daily banking (Z report, cards, cash) — can only add a day, not change a saved one'], accountant: ['Accountant', 'Read-only Banking for the accountant (same columns as the sheet, Excel download). Sees nothing else'], requests_add: ['Add requests', 'Write staff requests only (cannot see the list)'], requests: ['Requests', 'Add requests, see the list and mark them done'], hr: ['HR', 'TeamOS HR screens'],
     notify_payments: ['Payment alerts', 'Phone notification (app) when a wage payment is made']
   };
   var ROLES = ['VIEWER', 'PAYER', 'EDITOR', 'ADMIN'];
